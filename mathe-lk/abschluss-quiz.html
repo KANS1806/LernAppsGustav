@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Abschluss-Quiz Stunde 15</title>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Hausstil der LK-Reihen: navy Kopfband, Karten auf hellem Grund, orange Akzent für Eingaben/Lückenfelder */
+:root{--bg:#F6F7FB;--card:#FFFFFF;--text:#26314A;--navy:#1E2761;--band:#1E2761;--band-ink:#FFFFFF;--band-sub:#CADCFC;
+--primary:#1E2761;--on-primary:#FFFFFF;--acc:#B85042;--cream:#F3EAD9;--cream-line:#E5D6B8;--light:#EDEFF7;--blush:#FBF3EE;
+--grey:#6B7280;--line:#BFC5D2;--grid:#E5E7EB;--cmp:#9CA3AF;--ok:#2F7D4F;--okbg:#E7F3EC;--bad:#B3261E;--badbg:#FBEAEA;
+--shadow:rgba(30,39,97,.06);--c3:#2F7D4F;--c4:#7C3AED}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0F1326;--card:#181D38;--text:#E4E7F2;--navy:#C9D3FF;--band:#1A2147;
+--band-ink:#FFFFFF;--band-sub:#B8C6F5;--primary:#8FA2FF;--on-primary:#0F1326;--acc:#E59484;--cream:#2B2618;--cream-line:#5A4D2E;--light:#232A4D;
+--blush:#2E1E22;--grey:#9AA3B8;--line:#3A4266;--grid:#283052;--cmp:#6B7280;--ok:#6FCF97;--okbg:#16321F;--bad:#F28B82;--badbg:#3A1C1C;
+--shadow:rgba(0,0,0,.3);--c3:#6FCF97;--c4:#B69CFF;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1326;--card:#181D38;--text:#E4E7F2;--navy:#C9D3FF;--band:#1A2147;
+--band-ink:#FFFFFF;--band-sub:#B8C6F5;--primary:#8FA2FF;--on-primary:#0F1326;--acc:#E59484;--cream:#2B2618;--cream-line:#5A4D2E;--light:#232A4D;
+--blush:#2E1E22;--grey:#9AA3B8;--line:#3A4266;--grid:#283052;--cmp:#6B7280;--ok:#6FCF97;--okbg:#16321F;--bad:#F28B82;--badbg:#3A1C1C;
+--shadow:rgba(0,0,0,.3);--c3:#6FCF97;--c4:#B69CFF;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.5 Calibri,Carlito,"Segoe UI",Roboto,Arial,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--card)}
+header{background:var(--band);color:var(--band-ink);padding-block:22px 18px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+header .k{color:var(--band-sub);font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+header h1{font:700 30px/1.2 Cambria,Caladea,Georgia,serif;margin:6px 0 4px;text-wrap:balance}
+header .u{color:var(--band-sub);font-style:italic}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:14px;align-items:center}
+.bar .prog{flex:1;height:10px;background:var(--light);border-radius:6px;overflow:hidden}
+.bar .prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+.bar .pts{font-weight:700;color:var(--navy);white-space:nowrap}
+main{max-width:860px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h2.sec{font:700 22px/1.25 Cambria,Caladea,Georgia,serif;color:var(--navy);margin:28px 4px 6px}
+.sect-text{margin:0 4px 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0;box-shadow:0 1px 2px var(--shadow)}
+.card .lab{color:var(--acc);font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.card h3{margin:2px 0 8px;color:var(--navy);font-size:19px}
+.card.done{border-left:6px solid var(--ok)}
+.info{border-radius:10px;padding:12px 16px;margin:12px 0;border:1px solid var(--navy);background:var(--light)}
+.info.tipp{background:var(--cream);border-color:var(--acc)}
+.info b.t{color:var(--navy)}
+button{font:inherit;border-radius:8px;border:1px solid var(--primary);background:var(--primary);color:var(--on-primary);padding:8px 16px;margin:6px 8px 0 0;cursor:pointer;min-height:44px}
+button.sec{background:var(--card);color:var(--navy);border-color:var(--navy)}
+button:focus-visible,input:focus-visible,select:focus-visible,.opt:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+button.ghost{background:var(--card);color:var(--acc);border-color:var(--acc)}
+button:disabled{opacity:.45;cursor:default}
+input[type=text]{font:inherit;padding:8px 10px;border:1.5px dashed var(--acc);border-radius:8px;min-width:140px;min-height:44px;background:var(--card);color:var(--text)}
+input[type=text].ok{border:2px solid var(--ok);background:var(--okbg)}
+input[type=text].bad{border:2px solid var(--bad);background:var(--badbg)}
+select{font:inherit;padding:8px;border:1.5px dashed var(--acc);border-radius:8px;min-height:44px;background:var(--card);color:var(--text);max-width:100%}
+select.ok{border:2px solid var(--ok);background:var(--okbg)} select.bad{border:2px solid var(--bad);background:var(--badbg)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0}
+.row .l{font-weight:700;color:var(--navy);min-width:70px}
+.fb{margin-top:10px;padding:8px 12px;border-radius:8px;display:none}
+.fb.ok{display:block;background:var(--okbg);color:var(--ok);font-weight:700}
+.fb.bad{display:block;background:var(--badbg);color:var(--bad)}
+.hint{margin-top:8px;padding:8px 12px;border-radius:8px;background:var(--cream);border:1px solid var(--cream-line)}
+.sol{margin-top:8px;padding:10px 12px;border-radius:8px;background:var(--light);border-left:5px solid var(--navy)}
+.opt{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;cursor:pointer;background:var(--card);min-height:44px}
+.opt.sel{border-color:var(--navy);background:var(--light)}
+.opt.ok{border-color:var(--ok);background:var(--okbg)} .opt.bad{border-color:var(--bad);background:var(--badbg)}
+.opt .box{width:20px;height:20px;border:2px solid var(--navy);border-radius:5px;flex:none}
+.opt.sel .box{background:var(--navy)}
+.pairs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:center}
+.pairs select{width:100%}
+.pairs .left{background:var(--light);border-radius:8px;padding:8px 10px;min-height:44px}
+.tiles{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 14px}.tile{border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--card);flex:1 1 170px;max-width:240px}.tile b{color:var(--acc);font-size:18px}
+.steps .s{border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;margin:6px 0;background:var(--card);cursor:pointer;min-height:44px}
+.steps .s.used{opacity:.35;cursor:default}
+.steps .o{border:1.5px solid var(--navy);background:var(--light);border-radius:8px;padding:9px 12px;margin:6px 0;display:flex;gap:10px}
+.steps .o.ok{border-color:var(--ok);background:var(--okbg)} .steps .o.bad{border-color:var(--bad);background:var(--badbg)}
+.steps .n{font-weight:700;color:var(--navy);min-width:22px}
+.lines .z{border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;margin:6px 0;cursor:pointer;background:var(--card);display:flex;gap:12px;min-height:44px;align-items:center}
+.lines .z .n{color:var(--grey);font-weight:700;min-width:22px}
+.lines .z.ok{border-color:var(--ok);background:var(--okbg)} .lines .z.bad{border-color:var(--bad);background:var(--badbg)}
+.graph{width:100%;max-width:560px;display:block;margin:8px auto;background:var(--card);border-radius:8px}
+.mini{width:100%;max-width:240px;display:block}
+.sliders{display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:center;margin:8px 0 4px}
+.sliders .pn{font:italic 700 20px Cambria,Caladea,Georgia,serif;color:var(--navy)}
+.sliders input[type=range]{width:100%;accent-color:var(--acc);height:32px}
+.sliders .pv{font-weight:700;min-width:52px;text-align:right}
+.ftx .pvx{display:inline-block;margin:0 .9em;white-space:nowrap}
+.ftx{font:20px Cambria,Caladea,Georgia,serif;color:var(--navy);text-align:center;margin:4px 0}
+.quiz .q{font-size:19px;margin:6px 0 10px}
+.quiz .timer{height:8px;background:var(--light);border-radius:5px;overflow:hidden;margin:8px 0}
+.quiz .timer i{display:block;height:100%;background:var(--acc);width:100%}
+.quiz .big{font:700 44px Cambria,Caladea,Georgia,serif;color:var(--navy);text-align:center;margin:10px 0}
+.small{color:var(--grey);font-size:14px}
+.final{text-align:center}
+.final .big{font:700 52px Cambria,Caladea,Georgia,serif;color:var(--navy)}
+.final table{margin:12px auto;border-collapse:collapse;text-align:left}
+.final td{padding:4px 10px;border-bottom:1px solid var(--light)}
+.m{font-family:Cambria,Caladea,Georgia,serif;font-size:1.08em;white-space:nowrap}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .15em;font-size:.92em}
+.fr .nu{border-bottom:1.3px solid currentColor;padding:0 .15em .05em}
+.fr .de{padding:.05em .15em 0}
+.ss{display:inline-flex;flex-direction:column;vertical-align:middle;font-size:.75em;line-height:1}
+.ss sup,.ss sub{position:static;font-size:1em}
+.rt .rti{border-top:1.3px solid currentColor;padding:0 .1em}
+footer{color:var(--grey);font-size:13px;text-align:center;padding:24px 12px 40px}
+@media (max-width:560px){header h1{font-size:24px}.pairs{grid-template-columns:minmax(0,1fr)}.sliders{grid-template-columns:auto 1fr}.sliders .pv{grid-column:2;text-align:left}}
+</style>
+<header><div class="k">Mathematik LK Q1  ·  Reihe „Steckbriefaufgaben“  ·  Stunde 15</div><h1>Abschluss-Quiz: Steckbriefaufgaben</h1><div class="u">Fünf Runden zur ganzen Reihe – 25 Sekunden pro Frage · in der Stunde als Wettbewerb, zu Hause zur Klausurvorbereitung</div></header>
+<div class="bar"><div class="prog"><i id="prog"></i></div><div class="pts" id="pts">0 Punkte</div></div>
+<main id="app"></main>
+<footer>Selbstkontrolle – deine Eingaben werden nicht gespeichert oder übertragen.</footer>
+<script>
+"use strict";
+const DATA=[{"typ": "info", "titel": "So geht’s", "text": "Spiele die Runden der Reihe nach. Eine Runde gehört zu je einem Abschnitt der Checkliste. Schlecht gelaufen? Tippe „Noch eine Runde“ – und schau dir die passende App auf der Übersichtsseite an.", "art": "merk"}, {"typ": "abschnitt", "titel": "Runde 1 · Vom Steckbrief zum Gleichungssystem", "text": "Checkliste Nr. 1–5"}, {"typ": "quiz", "titel": "Runde 1", "text": "", "sek": 25, "fragen": [{"text": "Eine Wendestelle bei x = 3 übersetzt man mit …", "optionen": ["<span class=\"m\">f″(3) = 0<\/span>", "<span class=\"m\">f′(3) = 0<\/span>", "<span class=\"m\">f(3) = 0<\/span>"], "richtig": 0, "graph": null}, {"text": "Wie viele Bedingungen braucht man für eine ganzrationale Funktion vierten Grades (ohne Symmetrie)?", "optionen": ["5", "4", "6"], "richtig": 0, "graph": null}, {"text": "Der Graph einer Funktion vierten Grades ist achsensymmetrisch zur y-Achse. Welcher Ansatz passt?", "optionen": ["<span class=\"m\">ax<sup>4<\/sup> + bx<sup>2<\/sup> + c<\/span>", "<span class=\"m\">ax<sup>4<\/sup> + bx<sup>3<\/sup> + c<\/span>", "<span class=\"m\">ax<sup>4<\/sup> + bx<\/span>"], "richtig": 0, "graph": null}, {"text": "Ansatz <span class=\"m\">ax<sup>3<\/sup> + bx<sup>2<\/sup> + cx + d<\/span>: Die Bedingung <span class=\"m\">f′(0) = 5<\/span> liefert sofort …", "optionen": ["<span class=\"m\">c = 5<\/span>", "<span class=\"m\">d = 5<\/span>", "<span class=\"m\">b = 5<\/span>"], "richtig": 0, "graph": null}, {"text": "„Der Graph berührt die x-Achse bei x = 2“ bedeutet …", "optionen": ["<span class=\"m\">f(2) = 0<\/span> und <span class=\"m\">f′(2) = 0<\/span>", "<span class=\"m\">f(2) = 0<\/span> und <span class=\"m\">f″(2) = 0<\/span>", "nur <span class=\"m\">f(2) = 0<\/span>"], "richtig": 0, "graph": null}], "punkte": 5}, {"typ": "abschnitt", "titel": "Runde 2 · Gauß-Algorithmus und Lösungsmengen", "text": "Checkliste Nr. 6–9"}, {"typ": "quiz", "titel": "Runde 2", "text": "", "sek": 25, "fragen": [{"text": "I: <span class=\"m\">a + b + c = 4<\/span>,  II: <span class=\"m\">2a + b + c = 7<\/span>. Die Umformung II − I liefert …", "optionen": ["<span class=\"m\">a = 3<\/span>", "<span class=\"m\">a = 11<\/span>", "<span class=\"m\">b = 3<\/span>"], "richtig": 0, "graph": null}, {"text": "Stufenform: <span class=\"m\">z = 2<\/span>;  <span class=\"m\">y + z = 5<\/span>;  <span class=\"m\">x + y + z = 6<\/span>. Dann ist <span class=\"m\">x<\/span> = …", "optionen": ["1", "3", "2"], "richtig": 0, "graph": null}, {"text": "Am Ende der Stufenform steht die Zeile <span class=\"m\">0 = 5<\/span>. Das System hat …", "optionen": ["keine Lösung", "unendlich viele Lösungen", "genau eine Lösung"], "richtig": 0, "graph": null}, {"text": "Bei drei Unbekannten entsteht eine Nullzeile <span class=\"m\">0 = 0<\/span>, sonst Stufenform. Dann gibt es …", "optionen": ["unendlich viele Lösungen mit einem freien Parameter", "keine Lösung", "genau eine Lösung"], "richtig": 0, "graph": null}, {"text": "Die Probe macht man mit …", "optionen": ["allen Bedingungen", "der ersten Bedingung", "dem einfachsten Punkt"], "richtig": 0, "graph": null}], "punkte": 5}, {"typ": "abschnitt", "titel": "Runde 3 · Modellieren im Sachkontext", "text": "Checkliste Nr. 10–12"}, {"typ": "quiz", "titel": "Runde 3", "text": "", "sek": 25, "fragen": [{"text": "„Knickfrei“ heißt am Anschluss <span class=\"m\">x<sub>0<\/sub><\/span> …", "optionen": ["<span class=\"m\">f(x<sub>0<\/sub>) = g(x<sub>0<\/sub>)<\/span> und <span class=\"m\">f′(x<sub>0<\/sub>) = g′(x<sub>0<\/sub>)<\/span>", "nur <span class=\"m\">f(x<sub>0<\/sub>) = g(x<sub>0<\/sub>)<\/span>", "nur <span class=\"m\">f″(x<sub>0<\/sub>) = g″(x<sub>0<\/sub>)<\/span>"], "richtig": 0, "graph": null}, {"text": "Ein ruckfreier Übergang zwischen zwei Geraden braucht mindestens Grad …", "optionen": ["5", "3", "4"], "richtig": 0, "graph": null}, {"text": "Die Pumptrack-Welle hat am Boden <span class=\"m\">f′(2) = 0<\/span>, aber <span class=\"m\">f″(2) = 2<\/span>. Der Übergang ist …", "optionen": ["knickfrei, aber nicht ruckfrei", "ruckfrei", "weder knickfrei noch ruckfrei"], "richtig": 0, "graph": null}, {"text": "Warum ist eine Prognose des Meeresspiegels für 2100 mit einem ganzrationalen Modell unsicher?", "optionen": ["Man extrapoliert weit über die Daten hinaus.", "Der Taschenrechner rundet zu stark.", "Grad 3 hat zu wenige Nullstellen."], "richtig": 0, "graph": null}], "punkte": 4}, {"typ": "abschnitt", "titel": "Runde 4 · Steckbriefaufgaben mit Parameter", "text": "Checkliste Nr. 13–15"}, {"typ": "quiz", "titel": "Runde 4", "text": "", "sek": 25, "fragen": [{"text": "<span class=\"m\">f<sub>a<\/sub>(x) = 2x + (x<sup>3<\/sup> − x) · a<\/span>. Die gemeinsamen Punkte liegen bei x = …", "optionen": ["−1, 0 und 1", "nur 0", "1 und 2"], "richtig": 0, "graph": null}, {"text": "Eine Parabel soll nur durch zwei Punkte gehen. Das liefert …", "optionen": ["eine Funktionenschar", "keine Funktion", "genau eine Funktion"], "richtig": 0, "graph": null}, {"text": "Wie behandelt man einen Parameter beim Lösen eines Gleichungssystems?", "optionen": ["wie eine Zahl", "wie eine weitere Unbekannte", "man setzt ihn gleich 0"], "richtig": 0, "graph": null}, {"text": "<span class=\"m\">p<sub>k<\/sub>(x) = a · x · (x − 2k)<\/span> hat die Scheitelstelle …", "optionen": ["<span class=\"m\">x = k<\/span>", "<span class=\"m\">x = 2k<\/span>", "<span class=\"m\">x = 0<\/span>"], "richtig": 0, "graph": null}], "punkte": 4}, {"typ": "abschnitt", "titel": "Runde 5 · Sinusfunktion und Sinusmodelle", "text": "Checkliste Nr. 16–19"}, {"typ": "quiz", "titel": "Runde 5", "text": "", "sek": 25, "fragen": [{"text": "180° im Bogenmaß sind …", "optionen": ["<span class=\"m\">π<\/span>", "<span class=\"m\">2π<\/span>", "<span class=\"m\"><span class=\"fr\"><span class=\"nu\">π<\/span><span class=\"de\">2<\/span><\/span><\/span>"], "richtig": 0, "graph": null}, {"text": "<span class=\"m\">sin(x) = 0,5<\/span> hat im Intervall [0; π] die Lösungen …", "optionen": ["<span class=\"m\"><span class=\"fr\"><span class=\"nu\">π<\/span><span class=\"de\">6<\/span><\/span><\/span> und <span class=\"m\"><span class=\"fr\"><span class=\"nu\">5π<\/span><span class=\"de\">6<\/span><\/span><\/span>", "<span class=\"m\"><span class=\"fr\"><span class=\"nu\">π<\/span><span class=\"de\">6<\/span><\/span><\/span> und <span class=\"m\"><span class=\"fr\"><span class=\"nu\">7π<\/span><span class=\"de\">6<\/span><\/span><\/span>", "<span class=\"m\"><span class=\"fr\"><span class=\"nu\">π<\/span><span class=\"de\">3<\/span><\/span><\/span> und <span class=\"m\"><span class=\"fr\"><span class=\"nu\">2π<\/span><span class=\"de\">3<\/span><\/span><\/span>"], "richtig": 0, "graph": null}, {"text": "Welche Periode hat <span class=\"m\">sin(2x)<\/span>?", "optionen": ["<span class=\"m\">π<\/span>", "<span class=\"m\">2π<\/span>", "<span class=\"m\">4π<\/span>"], "richtig": 0, "graph": null}, {"text": "Amplitude und Mittellinie von <span class=\"m\">f(x) = 3 · sin(x) − 1<\/span>:", "optionen": ["3 und <span class=\"m\">y = −1<\/span>", "−1 und <span class=\"m\">y = 3<\/span>", "3 und <span class=\"m\">y = 1<\/span>"], "richtig": 0, "graph": null}, {"text": "TrendSin liefert für Tageslängen eine Periode von 375 Tagen. Was tust du?", "optionen": ["Periode 365 aus dem Kontext begründen und festlegen", "375 Tage übernehmen", "Sinusmodelle verwerfen"], "richtig": 0, "graph": null}], "punkte": 5}];
+const T={"pruefen": "Prüfen", "hilfe": "Hilfe", "loesung": "Lösung anzeigen", "nochmal": "Neu mischen", "richtig": "Richtig!", "falsch": "Noch nicht richtig – versuch es noch einmal.", "teil": "Teilweise richtig – prüfe die rot markierten Felder.", "eingabe": "Eingabe", "start": "Quiz starten", "weiter": "Weiter", "fertig": "Geschafft! Zeig dein Ergebnis deiner Lehrkraft oder deinem Nachbarn.", "zeit": "Zeit abgelaufen", "auswerten": "Auswertung anzeigen", "tipp_term": "Schreibweise: 2x^3 für 2x³, 1/2 für ½, sqrt(x) für √x, Dezimalkomma erlaubt.", "wahl": "Bitte wählen …"};
+const KEY="webapp:Steckbriefaufgaben:15:Abschluss-Quiz: Steckbriefaufgaben";
+/* ---------- Term-Parser (Dezimalkomma, implizites Mal, ^, sin/cos/tan/sqrt/ln/exp, pi, e) ---------- */
+function norm(s){return String(s).replace(/−|–/g,"-").replace(/·|×/g,"*").replace(/÷|:/g,"/").replace(/²/g,"^2").replace(/³/g,"^3")
+ .replace(/⁴/g,"^4").replace(/√/g,"sqrt").replace(/π/g,"pi").replace(/(\d),(\d)/g,"$1.$2").replace(/\s+/g,"");}
+function parse(src){
+ const s=norm(src);let i=0;const tok=[];
+ while(i<s.length){const c=s[i];
+  if(/[0-9.]/.test(c)){let j=i;while(j<s.length&&/[0-9.]/.test(s[j]))j++;tok.push({t:"n",v:parseFloat(s.slice(i,j))});i=j;continue}
+  if(/[a-zA-Z_]/.test(c)){let j=i;while(j<s.length&&/[a-zA-Z_]/.test(s[j]))j++;const w=s.slice(i,j);
+   const fn=["sqrt","sin","cos","tan","ln","exp","abs","log"];let k=0;
+   while(k<w.length){let hit=fn.find(f=>w.startsWith(f,k));
+    if(hit){tok.push({t:"f",v:hit});k+=hit.length;continue}
+    if(w.startsWith("pi",k)){tok.push({t:"c",v:Math.PI});k+=2;continue}
+    const ch=w[k];tok.push(ch==="e"?{t:"c",v:Math.E}:{t:"v",v:ch});k++}
+   i=j;continue}
+  if("+-*/^()".includes(c)){tok.push({t:"o",v:c});i++;continue}
+  if(c==="'"||c==="′"){i++;continue}
+  throw new Error("Zeichen nicht erlaubt: "+c)}
+ // implizites Mal
+ const t2=[];for(let k=0;k<tok.length;k++){const a=tok[k];t2.push(a);const b=tok[k+1];if(!b)continue;
+  const aEnd=a.t==="n"||a.t==="v"||a.t==="c"||(a.t==="o"&&a.v===")");
+  const bStart=b.t==="n"||b.t==="v"||b.t==="c"||b.t==="f"||(b.t==="o"&&b.v==="(");
+  if(aEnd&&bStart)t2.push({t:"o",v:"*"})}
+ let p=0;const peek=()=>t2[p],eat=v=>{const x=t2[p];if(!x||x.v!==v)throw new Error("Fehler im Term");p++};
+ function expr(){let n=term();while(peek()&&peek().t==="o"&&(peek().v==="+"||peek().v==="-")){const op=t2[p++].v;const r=term();const l=n;n=op==="+"?e=>l(e)+r(e):e=>l(e)-r(e)}return n}
+ function term(){let n=unary();while(peek()&&peek().t==="o"&&(peek().v==="*"||peek().v==="/")){const op=t2[p++].v;const r=unary();const l=n;n=op==="*"?e=>l(e)*r(e):e=>l(e)/r(e)}return n}
+ function unary(){if(peek()&&peek().t==="o"&&peek().v==="-"){p++;const u=unary();return e=>-u(e)}if(peek()&&peek().t==="o"&&peek().v==="+"){p++;return unary()}return power()}
+ function power(){const b=atom();if(peek()&&peek().t==="o"&&peek().v==="^"){p++;const ex=unary();return e=>Math.pow(b(e),ex(e))}return b}
+ function atom(){const x=t2[p++];if(!x)throw new Error("Term unvollständig");
+  if(x.t==="n"||x.t==="c"){const v=x.v;return()=>v}
+  if(x.t==="v"){const v=x.v;return e=>{if(!(v in e))throw new Error("Unbekannte Variable: "+v);return e[v]}}
+  if(x.t==="f"){const F={sqrt:Math.sqrt,sin:Math.sin,cos:Math.cos,tan:Math.tan,ln:Math.log,log:Math.log10,exp:Math.exp,abs:Math.abs}[x.v];
+   let a;if(peek()&&peek().v==="("){p++;a=expr();eat(")")}else a=power();return e=>F(a(e))}
+  if(x.t==="o"&&x.v==="("){const n=expr();eat(")");return n}
+  throw new Error("Fehler im Term")}
+ const f=expr();if(p<t2.length)throw new Error("Fehler im Term");return f}
+function num(s){const f=parse(s);const v=f({});if(!isFinite(v))throw new Error("keine Zahl");return v}
+/* ---------- Hilfen ---------- */
+const $=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function shuffledIdx(n){let s;do{s=shuffle([...Array(n).keys()])}while(n>2&&s.every((v,i)=>v===i));return s}
+let STATE={};try{STATE=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){STATE={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(STATE))}catch(e){}}
+const TASKS=[];let total=0;
+function award(id,pts,max){STATE[id]={p:pts,m:max};save();update()}
+function update(){let got=0,done=0;for(const t of TASKS){if(STATE[t.id]){got+=STATE[t.id].p;done++}}
+ document.getElementById("pts").textContent=got+" / "+total+" Punkte";
+ document.getElementById("prog").style.width=(TASKS.length?100*done/TASKS.length:0)+"%";
+ for(const t of TASKS){if(STATE[t.id])t.card.classList.add("done")}
+ const fin=document.getElementById("final");if(fin&&done===TASKS.length)showFinal()}
+/* ---------- Graphen (SVG) ---------- */
+const COLORS=["var(--navy)","var(--acc)","var(--c3)","var(--c4)"];
+function svgGraph(spec,funcs,opt){opt=opt||{};const W=opt.w||560,H=opt.h||380,pad=opt.mini?14:28;
+ const [x0,x1]=spec.xlim,[y0,y1]=spec.ylim;const sx=x=>pad+(x-x0)/(x1-x0)*(W-2*pad),sy=y=>H-pad-(y-y0)/(y1-y0)*(H-2*pad);
+ let s=`<svg viewBox="0 0 ${W} ${H}" class="${opt.mini?"mini":"graph"}" xmlns="http://www.w3.org/2000/svg">`;
+ const lim=opt.mini?7:14;const step=spec.step||niceStep(x1-x0,lim),ystep=spec.step||niceStep(y1-y0,lim);
+ for(let x=Math.ceil(x0/step)*step;x<=x1+1e-9;x+=step)s+=`<line x1="${sx(x)}" y1="${sy(y0)}" x2="${sx(x)}" y2="${sy(y1)}" style="stroke:var(--grid)"/>`;
+ for(let y=Math.ceil(y0/ystep)*ystep;y<=y1+1e-9;y+=ystep)s+=`<line x1="${sx(x0)}" y1="${sy(y)}" x2="${sx(x1)}" y2="${sy(y)}" style="stroke:var(--grid)"/>`;
+ const ax=Math.min(Math.max(0,y0),y1),ay=Math.min(Math.max(0,x0),x1);
+ s+=`<line x1="${sx(x0)}" y1="${sy(ax)}" x2="${sx(x1)}" y2="${sy(ax)}" style="stroke:var(--grey)" stroke-width="1.3"/>`;
+ s+=`<line x1="${sx(ay)}" y1="${sy(y0)}" x2="${sx(ay)}" y2="${sy(y1)}" style="stroke:var(--grey)" stroke-width="1.3"/>`;
+ {const fmt=v=>String(+v.toFixed(2)).replace("-","−").replace(".",",");const fs=opt.mini?11:12;
+  for(let x=Math.ceil(x0/step)*step;x<=x1+1e-9;x+=step){if(Math.abs(x)<1e-9)continue;s+=`<text x="${sx(x)}" y="${sy(ax)+(opt.mini?12:15)}" font-size="${fs}" style="fill:var(--grey)" text-anchor="middle">${fmt(x)}</text>`}
+  for(let y=Math.ceil(y0/ystep)*ystep;y<=y1+1e-9;y+=ystep){if(Math.abs(y)<1e-9)continue;s+=`<text x="${sx(ay)-5}" y="${sy(y)+4}" font-size="${fs}" style="fill:var(--grey)" text-anchor="end">${fmt(y)}</text>`}}
+ funcs.forEach((f,k)=>{if(!f)return;let d="",pen=false;const N=opt.mini?160:500;
+  for(let i=0;i<=N;i++){const x=x0+(x1-x0)*i/N;let y;try{y=f.fn(x)}catch(e){y=NaN}
+   if(!isFinite(y)||y<y0-(y1-y0)||y>y1+(y1-y0)){pen=false;continue}
+   d+=(pen?"L":"M")+sx(x).toFixed(1)+" "+sy(y).toFixed(1);pen=true}
+  s+=`<path d="${d}" fill="none" style="stroke:${f.color||COLORS[k%COLORS.length]}" stroke-width="${opt.mini?2.5:3}" ${f.dash?'stroke-dasharray="7 5"':""} stroke-linecap="round"/>`});
+ (spec.p||[]).forEach(p=>{s+=`<circle cx="${sx(p[0])}" cy="${sy(p[1])}" r="5" style="fill:var(--acc)"/>`;if(p[2])s+=`<text x="${sx(p[0])+8}" y="${sy(p[1])-8}" font-size="13" font-weight="700" style="fill:var(--acc)">${p[2]}</text>`});
+ return s+"</svg>"}
+function niceStep(r,lim){lim=lim||14;const c=[0.25,0.5,1,2,5,10,20,50,100];for(const v of c)if(r/v<=lim)return v;return 200}
+function staticGraph(spec,mini){if(!spec)return "";const fs=spec.f.map((src,k)=>{const f=parse(src);return{fn:x=>f({x:x}),dash:false}});return svgGraph(spec,fs,{mini:mini,w:mini?240:560,h:mini?170:360})}
+/* ---------- Bausteine ---------- */
+function card(it,idx,label){const c=$("div","card");if(label)c.appendChild($("div","lab",label));if(it.titel)c.appendChild($("h3",null,it.titel));if(it.text)c.appendChild($("div",null,it.text));return c}
+function feedback(c){const fb=$("div","fb");c.appendChild(fb);return(ok,msg)=>{fb.className="fb "+(ok===true?"ok":"bad");fb.innerHTML=msg||(ok===true?T.richtig:T.falsch)}}
+function hintsAndSolution(c,it,afterFails){let shown=0,fails=0;const box=$("div");const bar=$("div");
+ const hb=$("button","ghost",T.hilfe+(it.hilfen.length>1?" 1":""));const sb=$("button","sec",T.loesung);sb.style.display="none";
+ if(it.hilfen&&it.hilfen.length)bar.appendChild(hb);if(it.loesung)bar.appendChild(sb);c.appendChild(bar);c.appendChild(box);
+ hb.onclick=()=>{if(shown<it.hilfen.length){box.appendChild($("div","hint","<b>"+T.hilfe+" "+(shown+1)+":</b> "+it.hilfen[shown]));shown++;hb.textContent=T.hilfe+" "+(shown+1);if(shown>=it.hilfen.length)hb.disabled=true}};
+ sb.onclick=()=>{box.appendChild($("div","sol",it.loesung));sb.disabled=true};
+ return{fail(){fails++;if(fails>=(afterFails||2))sb.style.display=""},reveal(){if(it.loesung)sb.style.display=""}}}
+function mkTask(it,idx,c){const id="t"+idx;TASKS.push({id:id,card:c});total+=it.punkte;return id}
+const R={};
+R.abschnitt=(it)=>{const h=$("h2","sec",it.titel);const f=document.createDocumentFragment();f.appendChild(h);if(it.text)f.appendChild($("p","sect-text",it.text));return f};
+R.info=(it)=>{const d=$("div","info"+(it.art==="tipp"?" tipp":""));d.innerHTML=(it.titel?`<b class="t">${it.titel}</b><br>`:"")+it.text;return d};
+R.zahl=(it,idx)=>{const c=card(it,idx,"Aufgabe");const id=mkTask(it,idx,c);if(it.graph)c.insertAdjacentHTML("beforeend",staticGraph(it.graph));
+ const ins=it.felder.map(f=>{const r=$("div","row");r.appendChild($("span","l",f.label));const i=$("input");i.type="text";i.inputMode="decimal";i.autocomplete="off";r.appendChild(i);if(f.einheit)r.appendChild($("span",null,f.einheit));c.appendChild(r);return i});
+ const b=$("button",null,T.pruefen);c.appendChild(b);const fb=feedback(c);const hs=hintsAndSolution(c,it);
+ b.onclick=()=>{let ok=0;ins.forEach((i,k)=>{const f=it.felder[k];let v;try{v=num(i.value)}catch(e){v=NaN}const good=isFinite(v)&&Math.abs(v-f.wert)<=f.tol+1e-12;i.className=good?"ok":"bad";if(good)ok++});
+  if(ok===ins.length){fb(true);if(!STATE[id])award(id,it.punkte,it.punkte);hs.reveal()}else{fb(false,ok?T.teil:T.falsch);hs.fail()}};
+ return c};
+R.term=(it,idx)=>{const c=card(it,idx,"Aufgabe");const id=mkTask(it,idx,c);if(it.graph)c.insertAdjacentHTML("beforeend",staticGraph(it.graph));
+ const r=$("div","row");r.appendChild($("span","l",it.label));const i=$("input");i.type="text";i.autocomplete="off";i.style.minWidth="260px";r.appendChild(i);c.appendChild(r);
+ const pv=$("div","small",T.tipp_term);c.appendChild(pv);const b=$("button",null,T.pruefen);c.appendChild(b);const fb=feedback(c);const hs=hintsAndSolution(c,it);
+ const ref=parse(it.antwort);
+ b.onclick=()=>{let f;try{f=parse(i.value)}catch(e){i.className="bad";fb(false,e.message);return}
+  let good=true,tested=0;for(let k=0;k<9&&good;k++){const env={};it.vars.forEach((v,j)=>{env[v]=it.bereich[0]+(it.bereich[1]-it.bereich[0])*((k*0.618+j*0.37+0.13)%1)});
+   let a,bb;try{a=ref(env);bb=f(env)}catch(e){good=false;break}if(!isFinite(a))continue;tested++;if(!isFinite(bb)||Math.abs(a-bb)>1e-6*Math.max(1,Math.abs(a)))good=false}
+  good=good&&tested>0;i.className=good?"ok":"bad";if(good){fb(true);if(!STATE[id])award(id,it.punkte,it.punkte);hs.reveal()}else{fb(false);hs.fail()}};
+ return c};
+function optionsBlock(c,opts,multi){const els=opts.map((o,k)=>{const d=$("div","opt");d.innerHTML=`<span class="box"></span><span>${typeof o==="string"?o:staticGraph(o.graph,true)}</span>`;
+  d.onclick=()=>{if(d.dataset.lock)return;if(!multi)els.forEach(e=>e.classList.remove("sel"));d.classList.toggle("sel")};c.appendChild(d);return d});return els}
+R.auswahl=(it,idx)=>{const c=card(it,idx,"Aufgabe");const id=mkTask(it,idx,c);if(it.graph)c.insertAdjacentHTML("beforeend",staticGraph(it.graph));
+ const multi=it.richtig.length>1;if(multi)c.appendChild($("div","small","Mehrere Antworten können richtig sein."));
+ const order=shuffledIdx(it.optionen.length);const els=optionsBlock(c,order.map(k=>it.optionen[k]),multi);
+ const b=$("button",null,T.pruefen);c.appendChild(b);const fb=feedback(c);let fails=0;
+ b.onclick=()=>{const sel=els.map((e,k)=>e.classList.contains("sel")?order[k]:-1).filter(v=>v>=0).sort();const corr=it.richtig.slice().sort();
+  const good=sel.length===corr.length&&sel.every((v,k)=>v===corr[k]);
+  if(good){els.forEach((e,k)=>{if(it.richtig.includes(order[k]))e.classList.add("ok");e.dataset.lock=1});fb(true,T.richtig+(it.erklaerung?" "+it.erklaerung:""));if(!STATE[id])award(id,fails?0:it.punkte,it.punkte);b.disabled=true}
+  else{fails++;els.forEach(e=>{if(e.classList.contains("sel"))e.classList.add("bad");setTimeout(()=>e.classList.remove("bad"),900)});fb(false);
+   if(fails>=2&&it.erklaerung)fb(false,T.falsch+" <br><b>Tipp:</b> "+it.erklaerung)}};
+ return c};
+function pairCell(v){return v.graph?staticGraph(v.graph,true):v.html}
+R.zuordnen=(it,idx)=>{const c=card(it,idx,"Zuordnen");const id=mkTask(it,idx,c);const g=$("div","pairs");c.appendChild(g);
+ const order=shuffledIdx(it.rechts.length);const sels=it.links.map((l,k)=>{g.appendChild($("div","left",pairCell(l)));
+  const hasGraph=it.rechts.some(r=>r.graph);
+  if(hasGraph){const w=$("div");const s={value:"",el:w};const btns=order.map((ri,j)=>{const bt=$("button","sec",String.fromCharCode(65+j));bt.onclick=()=>{btns.forEach(x=>x.classList.add("sec"));bt.classList.remove("sec");s.value=String(ri)};w.appendChild(bt);return bt});g.appendChild(w);return s}
+  const s=$("select");s.innerHTML=`<option value="">${T.wahl}</option>`+order.map(ri=>`<option value="${ri}">${it.rechts[ri].html.replace(/<[^>]+>/g,"")}</option>`).join("");g.appendChild(s);return s});
+ if(it.rechts.some(r=>r.graph)){const leg=$("div","tiles");order.forEach((ri,j)=>{leg.appendChild($("div","tile","<b>"+String.fromCharCode(65+j)+"</b>"+pairCell(it.rechts[ri])))});c.insertBefore(leg,g);c.insertBefore($("div","small","Graphen A–"+String.fromCharCode(64+order.length)+":"),leg)}
+ const b=$("button",null,T.pruefen);c.appendChild(b);const fb=feedback(c);let fails=0;
+ b.onclick=()=>{let ok=0;sels.forEach((s,k)=>{const good=s.value===String(k);if(s.el){s.el.style.outline=good?"3px solid var(--ok)":"3px solid var(--bad)"}else s.className=good?"ok":"bad";if(good)ok++});
+  if(ok===sels.length){fb(true,T.richtig+(it.erklaerung?" "+it.erklaerung:""));if(!STATE[id])award(id,Math.max(0,it.punkte-fails),it.punkte)}else{fails++;fb(false,ok+" von "+sels.length+" richtig.")}};
+ return c};
+R.reihenfolge=(it,idx)=>{const c=card(it,idx,"Reihenfolge");const id=mkTask(it,idx,c);const wrap=$("div","steps");c.appendChild(wrap);
+ c.insertBefore($("div","small","Tippe die Schritte in der richtigen Reihenfolge an."),wrap);
+ const pool=$("div");const out=$("div");wrap.appendChild(out);wrap.appendChild(pool);let order=shuffledIdx(it.schritte.length),chosen=[];
+ function draw(){pool.innerHTML="";out.innerHTML="";chosen.forEach((k,j)=>{const o=$("div","o",`<span class="n">${j+1}.</span><span>${it.schritte[k]}</span>`);o.dataset.k=k;out.appendChild(o)});
+  order.forEach(k=>{const s=$("div","s"+(chosen.includes(k)?" used":""),it.schritte[k]);s.onclick=()=>{if(chosen.includes(k))return;chosen.push(k);draw()};pool.appendChild(s)})}
+ draw();const b=$("button",null,T.pruefen);const rs=$("button","sec","Zurücksetzen");c.appendChild(b);c.appendChild(rs);const fb=feedback(c);let fails=0;
+ rs.onclick=()=>{chosen=[];draw()};
+ b.onclick=()=>{if(chosen.length<it.schritte.length){fb(false,"Bitte alle Schritte anordnen.");return}let ok=true;[...out.children].forEach((o,j)=>{const good=+o.dataset.k===j;o.classList.add(good?"ok":"bad");if(!good)ok=false});
+  if(ok){fb(true,T.richtig+(it.erklaerung?" "+it.erklaerung:""));if(!STATE[id])award(id,fails?0:it.punkte,it.punkte)}else{fails++;fb(false)}};
+ return c};
+R.fehlersuche=(it,idx)=>{const c=card(it,idx,"Fehlersuche");const id=mkTask(it,idx,c);c.appendChild($("div","small","Tippe die Zeile an, in der der Fehler steckt."));
+ const l=$("div","lines");c.appendChild(l);const fb=feedback(c);let fails=0,solved=false;
+ it.zeilen.forEach((z,k)=>{const d=$("div","z",`<span class="n">${k+1}</span><span>${z}</span>`);l.appendChild(d);
+  d.onclick=()=>{if(solved)return;if(k===it.fehler){d.classList.add("bad");solved=true;fb(true,"Gefunden! "+it.erklaerung+(it.korrektur?"<br><b>Richtig wäre:</b> "+it.korrektur:""));if(!STATE[id])award(id,fails?0:it.punkte,it.punkte)}
+   else{fails++;d.classList.add("ok");fb(false,"Zeile "+(k+1)+" ist richtig. Such weiter!")}}});
+ return c};
+R.entdecken=(it,idx)=>{const c=card(it,idx,"Entdecken");const id=it.fragen.length?mkTask(it,idx,c):null;
+ const f=parse(it.f);const g=it.vergleich?parse(it.vergleich):null;const env={};const gdiv=$("div");const ftx=$("div","ftx");
+ const sl=$("div","sliders");Object.entries(it.par).forEach(([k,[mn,mx,st,start]])=>{env[k]=start;sl.appendChild($("span","pn",k));const r=$("input");r.type="range";r.min=mn;r.max=mx;r.step=st;r.value=start;
+  const pv=$("span","pv",fmt(start));r.oninput=()=>{env[k]=parseFloat(r.value);pv.textContent=fmt(env[k]);draw()};sl.appendChild(r);sl.appendChild(pv)});
+ function fmt(v){return String(+(+v).toFixed(3)).replace("-","−").replace(".",",")}
+ function draw(){const fs=[];if(g)fs.push({fn:x=>g(Object.assign({},env,{x:x})),color:"var(--cmp)",dash:true});fs.push({fn:x=>f(Object.assign({},env,{x:x})),color:"var(--navy)"});
+  gdiv.innerHTML=svgGraph({xlim:it.xlim,ylim:it.ylim,step:it.raster},fs,{});
+  ftx.innerHTML=Object.keys(it.par).map(k=>`<span class="pvx"><i>${k}</i> = ${fmt(env[k])}</span>`).join("")}
+ c.appendChild(gdiv);c.appendChild(ftx);c.appendChild(sl);if(g)c.appendChild($("div","small","Grau gestrichelt: Vergleichsgraph"));draw();
+ if(it.fragen.length){let right=0;const answered=new Set();it.fragen.forEach((q,qi)=>{const qc=$("div");qc.style.marginTop="14px";qc.appendChild($("div",null,"<b>"+(qi+1)+".</b> "+q.text));
+   const order=shuffledIdx(q.optionen.length);const els=optionsBlock(qc,order.map(k=>q.optionen[k]),q.richtig.length>1);const b=$("button","sec",T.pruefen);qc.appendChild(b);const fb=feedback(qc);let fails=0;
+   b.onclick=()=>{const sel=els.map((e,k)=>e.classList.contains("sel")?order[k]:-1).filter(v=>v>=0).sort();const corr=q.richtig.slice().sort();const good=sel.length===corr.length&&sel.every((v,k)=>v===corr[k]);
+    if(good){fb(true,T.richtig+(q.erklaerung?" "+q.erklaerung:""));b.disabled=true;if(!answered.has(qi)){answered.add(qi);if(!fails)right++}
+     if(answered.size===it.fragen.length&&!STATE[id])award(id,right,it.fragen.length)}else{fails++;fb(false)}};c.appendChild(qc)})}
+ return c};
+R.quiz=(it,idx)=>{const c=card(it,idx,"Quiz");c.classList.add("quiz");const id=mkTask(it,idx,c);const body=$("div");c.appendChild(body);
+ body.appendChild($("div","small",it.fragen.length+" Fragen · je "+it.sek+" Sekunden"));const st=$("button",null,T.start);body.appendChild(st);
+ let qi=0,score=0,timer=null,order=[];
+ st.onclick=()=>{order=shuffle([...Array(it.fragen.length).keys()]);qi=0;score=0;next()};
+ function next(){clearInterval(timer);body.innerHTML="";if(qi>=order.length){body.appendChild($("div","big",score+" / "+order.length));body.appendChild($("div",null,T.fertig));
+   if(!STATE[id]||STATE[id].p<score)award(id,score,it.punkte);const again=$("button","sec","Noch eine Runde");again.onclick=st.onclick;body.appendChild(again);return}
+  const q=it.fragen[order[qi]];body.appendChild($("div","small","Frage "+(qi+1)+" von "+order.length+"  ·  "+score+" richtig"));
+  const tb=$("div","timer");const ti=$("i");tb.appendChild(ti);body.appendChild(tb);body.appendChild($("div","q",q.text));if(q.graph)body.insertAdjacentHTML("beforeend",staticGraph(q.graph));
+  const oo=shuffledIdx(q.optionen.length);let locked=false;const fb=$("div","fb");
+  const els=oo.map(k=>{const d=$("div","opt",`<span class="box"></span><span>${q.optionen[k]}</span>`);d.onclick=()=>{if(locked)return;locked=true;clearInterval(timer);
+    if(k===q.richtig){d.classList.add("ok");score++;fb.className="fb ok";fb.innerHTML=T.richtig}else{d.classList.add("bad");els[oo.indexOf(q.richtig)].classList.add("ok");fb.className="fb bad";fb.innerHTML="Leider falsch."}
+    wb.disabled=false};body.appendChild(d);return d});
+  body.appendChild(fb);const wb=$("button",null,T.weiter);wb.disabled=true;wb.onclick=()=>{qi++;next()};body.appendChild(wb);
+  const t0=Date.now();timer=setInterval(()=>{const r=1-(Date.now()-t0)/(it.sek*1000);ti.style.width=Math.max(0,r*100)+"%";
+   if(r<=0&&!locked){locked=true;clearInterval(timer);els[oo.indexOf(q.richtig)].classList.add("ok");fb.className="fb bad";fb.innerHTML=T.zeit;wb.disabled=false}},100)}
+ return c};
+/* ---------- Aufbau ---------- */
+const app=document.getElementById("app");
+DATA.forEach((it,idx)=>{const el=R[it.typ](it,idx);app.appendChild(el)});
+const fin=$("div","card final");fin.id="final";fin.innerHTML=`<div class="lab">Auswertung</div><div class="small">Bearbeite alle Aufgaben – dann erscheint hier deine Auswertung.</div>`;
+const fb2=$("button","sec",T.auswerten);fb2.onclick=showFinal;fin.appendChild(fb2);
+const rst=$("button","ghost","Alles zurücksetzen");rst.onclick=()=>{STATE={};save();location.reload()};fin.appendChild(rst);
+app.appendChild(fin);
+function showFinal(){let got=0;let rows="";TASKS.forEach((t,k)=>{const s=STATE[t.id];const h=t.card.querySelector("h3");const lab=t.card.querySelector(".lab");const tx=(h?h.textContent:((lab?lab.textContent+": ":"")+(t.card.children[1]?t.card.children[1].textContent.slice(0,48)+"…":"")));rows+=`<tr><td>${k+1}. ${tx}</td><td>${s?(s.p+" / "+s.m):"–"}</td></tr>`;if(s)got+=s.p});
+ fin.innerHTML=`<div class="lab">Auswertung</div><div class="big">${got} / ${total}</div><div>Punkte</div><table>${rows}</table><p>${T.fertig}</p>`;
+ const r2=$("button","ghost","Alles zurücksetzen");r2.onclick=()=>{STATE={};save();location.reload()};fin.appendChild(r2)}
+update();
+</script>
+</body>
+</html>

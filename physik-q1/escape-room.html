@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Chronoskop Escape Room</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/chakra-petch.css">
+<link rel="stylesheet" href="../fonts/jetbrains-mono.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: Instrumententafel eines „Chronoskops“ – Kopfband mit Team und Uhr, darunter der Zeitstrahl als Spektrum (violett → rot),
+   dann die aktuelle Epoche: links Geschichte, Auftrag, Hinweise; rechts das Codeschloss und die Modellfrage; darunter die Modelltabelle.
+   Bewusst ein einziger dunkler Look (Labor bei abgedunkeltem Raum), alle Farben explizit gesetzt. */
+:root{
+  color-scheme:dark;
+  --bg:#0a111d;
+  --panel:#111b2b;
+  --panel-2:#162236;
+  --line:#26364f;
+  --fg:#e7edf5;
+  --muted:#97a6ba;
+  --brass:#f2a25c;      /* Codes und Zahlen (abgeleitet aus dem Reihen-Orange C1440E) */
+  --brass-soft:#3a2614;
+  --navy:#6f9bc7;       /* Reihen-Blau 1B4965, aufgehellt */
+  --navy-soft:#16273d;
+  --ok:#5fd08e; --ok-soft:#12301f;
+  --bad:#ff8f84; --bad-soft:#3a1916;
+  --warn:#f0c15c; --warn-soft:#3a2d12;
+  --team:#97a6ba;
+  --f-display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --spectrum:linear-gradient(90deg,#7a4dff 0%,#3d6bff 18%,#19b6e0 34%,#3fd46b 50%,#e9e23c 66%,#ff9a2e 82%,#ff4a3d 100%);
+}
+:root[data-team="rot"]{--team:#ff6a5c}
+:root[data-team="gruen"]{--team:#4fdc79}
+:root[data-team="violett"]{--team:#a98bff}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+.wrap{max-width:1160px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{text-wrap:balance;margin:0}
+p{margin:0}
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,label:focus-within{outline:3px solid var(--brass);outline-offset:2px}
+
+/* Kopf */
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.eyebrow{font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.9rem,4.4vw,2.9rem);line-height:1;letter-spacing:.02em}
+h1 span{background:var(--spectrum);-webkit-background-clip:text;background-clip:text;color:transparent}
+.status{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.chip small{font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.chip b{font-family:var(--f-mono);font-size:1.25rem;font-variant-numeric:tabular-nums}
+.chip.team b{color:var(--team);font-family:var(--f-display)}
+.chip.penalty b{color:var(--warn)}
+.chip.btnchip{cursor:pointer;color:var(--fg);text-align:left;min-height:44px}
+.chip.btnchip:hover{border-color:var(--muted)}
+.chip.btnchip[aria-pressed="false"] b{color:var(--muted)}
+
+/* Zeitstrahl */
+.timeline{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px 12px;overflow-x:auto}
+.tl-track{position:relative;min-width:640px;display:grid;grid-template-columns:repeat(8,1fr);gap:0}
+.tl-bar{position:absolute;left:6.25%;right:6.25%;top:15px;height:4px;border-radius:2px;background:var(--line)}
+.tl-fill{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--spectrum);background-size:calc(100% / var(--p,0.0001)) 100%;transition:width .6s ease}
+.tl-node{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;z-index:1}
+.tl-dot{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--bg);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:.9rem;color:var(--muted)}
+.tl-node.done .tl-dot{background:var(--c);border-color:var(--c);color:#0a111d}
+.tl-node.now .tl-dot{border-color:var(--team);color:var(--team);box-shadow:0 0 0 4px rgba(255,255,255,.06)}
+.tl-node b{font-family:var(--f-mono);font-size:.82rem}
+.tl-node span{font-size:.74rem;color:var(--muted);line-height:1.2}
+
+/* Hauptbereich */
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.epoch{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.epoch .year{font-family:var(--f-display);font-weight:700;font-size:2.6rem;line-height:1;color:var(--c,var(--brass))}
+.epoch .who{display:flex;flex-direction:column}
+.epoch .who b{font-family:var(--f-display);font-size:1.25rem;line-height:1.2}
+.epoch .who span{color:var(--muted);font-size:.9rem}
+.story{font-size:1.02rem;max-width:62ch}
+h2{font-family:var(--f-display);font-weight:600;font-size:1.15rem;letter-spacing:.02em}
+h3{font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.task{background:var(--navy-soft);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.task ol,.task ul{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:4px}
+.envelope{display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--brass)}
+.envelope i{font-style:normal;font-family:var(--f-mono);border:1.5px solid var(--brass);border-radius:5px;padding:0 7px}
+a{color:var(--navy)}
+a:hover{color:var(--fg)}
+
+.btn{border:1px solid var(--line);background:var(--panel-2);color:var(--fg);border-radius:8px;padding:10px 16px;cursor:pointer;min-height:44px;font-weight:700}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:#1b1006}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:default}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* Hinweise */
+.hints{display:flex;flex-direction:column;gap:8px}
+.hint{border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;background:var(--panel-2);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.hint b{color:var(--warn);font-size:.86rem}
+.hintbtn{align-self:flex-start;border:1px dashed var(--warn);color:var(--warn);background:transparent}
+
+/* Schloss */
+.lock{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--panel-2),var(--panel));padding:18px;display:flex;flex-direction:column;gap:14px}
+.lock-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lock-head h2{display:flex;align-items:center;gap:10px}
+.padlock{width:26px;height:26px;flex:none}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:700}
+.field .unitwrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.field input[type=text]{background:var(--bg);color:var(--brass);border:2px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--f-mono);font-size:1.35rem;font-weight:700;letter-spacing:.12em;width:min(100%,260px);text-transform:uppercase}
+.field input[type=text]::placeholder{color:var(--line);letter-spacing:.1em}
+.field .unit{color:var(--muted);font-family:var(--f-mono)}
+.field.ok input{border-color:var(--ok)}
+.field.bad input{border-color:var(--bad)}
+.choices{display:flex;flex-direction:column;gap:6px}
+.choices label{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;background:var(--bg);font-weight:400}
+.choices label:hover{border-color:var(--muted)}
+.choices input{margin-top:4px;accent-color:var(--brass);width:18px;height:18px;flex:none}
+.field.ok .choices label:has(input:checked){border-color:var(--ok)}
+.field.bad .choices label:has(input:checked){border-color:var(--bad)}
+.msg{border-radius:8px;padding:8px 12px;font-size:.95rem}
+.msg.ok{background:var(--ok-soft);color:var(--ok)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.msg.info{background:var(--navy-soft);color:var(--fg)}
+.opened{border:1px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.opened b{color:var(--ok);font-family:var(--f-display);font-size:1.2rem}
+.shake{animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}.tl-fill{transition:none}}
+/* Zeitsprung-Overlay: zwei Torflügel als Hintergrund, Zeittunnel-Ringe, Uhr mit rasenden Zeigern, rollende Jahreszahl */
+.warp{position:fixed;inset:0;z-index:100;display:grid;place-items:center;overflow:hidden;opacity:1;transition:opacity .45s ease;--wc:var(--brass)}
+.warp.fade{opacity:0}
+.warp-door{position:absolute;top:0;bottom:0;width:50.5%;transition:transform .95s cubic-bezier(.7,0,.3,1)}
+.warp-door.l{left:0;background:radial-gradient(ellipse at 100% 50%,#18294a 0%,var(--bg) 75%);border-right:1px solid var(--line)}
+.warp-door.r{right:0;background:radial-gradient(ellipse at 0% 50%,#18294a 0%,var(--bg) 75%);border-left:1px solid var(--line)}
+.warp.open .warp-door.l{transform:translateX(-101%)}
+.warp.open .warp-door.r{transform:translateX(101%)}
+.warp-rings{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;transition:opacity .3s}
+.warp-rings span{position:absolute;width:42vmin;height:42vmin;border-radius:50%;border:2px solid var(--wc);opacity:0;animation:warpring 1.1s linear infinite}
+.warp-rings span:nth-child(2){animation-delay:.275s}
+.warp-rings span:nth-child(3){animation-delay:.55s}
+.warp-rings span:nth-child(4){animation-delay:.825s}
+.warp.reverse .warp-rings span{animation-direction:reverse}
+.warp.arrived .warp-rings span{animation-play-state:paused;opacity:0}
+@keyframes warpring{0%{transform:scale(.25);opacity:.75}100%{transform:scale(3.4);opacity:0}}
+.warp-inner{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding-inline:16px;transition:opacity .3s}
+.warp.open .warp-inner,.warp.open .warp-rings{opacity:0}
+.warp-eyebrow{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.warp-clock{width:min(44vmin,250px);height:auto;display:block}
+.warp-clock .face{fill:var(--panel);stroke:var(--wc);stroke-width:4}
+.warp-clock .tick{stroke:var(--muted);stroke-width:1.2}
+.warp-clock .tick.big{stroke:var(--fg);stroke-width:3}
+.warp-clock text{font-family:var(--f-display);font-weight:600;font-size:15px;fill:var(--fg)}
+.warp-clock .hh{stroke:var(--fg);stroke-width:6;stroke-linecap:round}
+.warp-clock .hm{stroke:var(--fg);stroke-width:4;stroke-linecap:round}
+.warp-clock .hs{stroke:var(--wc);stroke-width:2;stroke-linecap:round}
+.warp-clock .hub{fill:var(--wc)}
+.warp-year{font-family:var(--f-display);font-weight:700;font-size:clamp(3rem,12vmin,6.2rem);line-height:1;color:var(--wc);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.warp-dest{font-size:1.15rem;min-height:1.6em;opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s}
+.warp-dest.show{opacity:1;transform:none}
+.warp-skip{position:absolute;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:8px;padding:8px 14px;min-height:44px;cursor:pointer;font-weight:700}
+.warp-skip:hover{color:var(--fg)}
+.warp.open .warp-skip,.warp.arrived .warp-skip{opacity:0;pointer-events:none;transition:opacity .2s}
+.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:101}
+@media (prefers-reduced-motion:reduce){.warp-rings span{animation:none;opacity:0}.warp-door{transition:none}}
+
+
+/* Modelltabelle */
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.95rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+td.m{font-family:var(--f-mono);font-weight:700;text-align:center;width:120px}
+td.m.y{color:var(--ok)} td.m.n{color:var(--bad)} td.m.q{color:var(--warn)}
+tr.empty td{color:var(--line)}
+td small{color:var(--muted);display:block}
+
+/* Startbildschirm */
+.teams{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.teams{grid-template-columns:1fr}}
+.teambtn{border:2px solid var(--line);background:var(--panel-2);color:var(--fg);border-radius:12px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:4px;text-align:left;min-height:96px}
+.teambtn b{font-family:var(--f-display);font-size:1.35rem;color:var(--tc)}
+.teambtn span{color:var(--muted);font-size:.9rem;font-family:var(--f-mono)}
+.teambtn:hover{border-color:var(--tc)}
+
+/* Finale */
+.final-time{font-family:var(--f-display);font-weight:700;font-size:clamp(2.6rem,8vw,4.4rem);line-height:1;color:var(--brass);font-variant-numeric:tabular-nums}
+.outlook{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:720px){.outlook{grid-template-columns:1fr}}
+.outlook .card{background:var(--panel-2)}
+.outlook .year{font-family:var(--f-display);font-weight:700;font-size:1.6rem;color:var(--brass)}
+
+/* Lehrkraft */
+details.teacher{border:1px dashed var(--line);border-radius:10px;padding:10px 14px;color:var(--muted)}
+details.teacher summary{cursor:pointer;font-size:.9rem;min-height:32px;display:flex;align-items:center}
+.teacher-body{display:flex;flex-direction:column;gap:10px;padding-top:10px}
+.teacher-body input{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:var(--f-mono);width:140px}
+.solution{background:var(--brass-soft);color:var(--fg);border-radius:8px;padding:10px 12px;font-size:.92rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.formula{font-family:var(--f-mono);font-size:.92rem;background:var(--bg);border-radius:6px;padding:4px 8px;display:inline-block}
+</style>
+
+<div class="wrap" id="app">
+  <header>
+    <div>
+      <p class="eyebrow">Q1 Physik GK · 2. Reihe · Stunde 9 · Escape Room</p>
+      <h1>Chrono<span>skop</span></h1>
+    </div>
+    <div class="status" id="status" aria-live="polite">
+      <div class="chip team"><small>Team</small><b id="st-team">–</b></div>
+      <div class="chip"><small>Zeit</small><b id="st-time">00:00</b></div>
+      <div class="chip penalty"><small>Strafzeit</small><b id="st-pen">+0 Min.</b></div>
+      <button class="chip btnchip" type="button" id="st-sound" aria-pressed="true" aria-label="Ton ein- oder ausschalten"><small>Ton</small><b id="st-sound-l">an</b></button>
+    </div>
+  </header>
+
+  <nav class="timeline" aria-label="Zeitstrahl der Epochen">
+    <div class="tl-track" id="tl"></div>
+  </nav>
+
+  <main id="main"></main>
+
+  <section class="card" id="modelcard" aria-labelledby="mt-h">
+    <div class="btnrow" style="justify-content:space-between">
+      <h2 id="mt-h">Modelltabelle: Was erklärt welches Modell?</h2>
+      <span class="eyebrow">füllt sich mit jeder Epoche</span>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Phänomen</th><th style="text-align:center">Teilchenmodell<br>(Newton)</th><th style="text-align:center">Wellenmodell<br>(Huygens)</th></tr></thead>
+      <tbody id="mt-body"></tbody>
+    </table></div>
+  </section>
+
+  <details class="teacher" id="teacher">
+    <summary>Lehrkraft</summary>
+    <div class="teacher-body">
+      <div class="btnrow">
+        <label for="pin" class="sr">PIN der Lehrkraft</label>
+        <input id="pin" type="password" inputmode="numeric" placeholder="PIN" autocomplete="off">
+        <button class="btn" id="t-joker" type="button">Tür öffnen (Joker, +5 Min.)</button>
+        <button class="btn" id="t-sol" type="button">Lösung zeigen</button>
+        <button class="btn" id="t-pause" type="button">Uhr anhalten</button>
+        <button class="btn ghost" id="t-reset" type="button">Spiel zurücksetzen</button>
+      </div>
+      <p id="t-msg" class="sub"></p>
+      <div id="t-sol-box"></div>
+    </div>
+  </details>
+</div>
+
+<div class="warp" id="warp" hidden role="status" aria-live="polite">
+  <div class="warp-door l"></div><div class="warp-door r"></div>
+  <div class="warp-rings" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  <div class="warp-inner">
+    <p class="warp-eyebrow" id="warp-eyebrow">Zeitsprung</p>
+    <svg class="warp-clock" viewBox="0 0 200 200" aria-hidden="true">
+      <circle class="face" cx="100" cy="100" r="92"/><line class="tick big" x1="100.0" y1="26.0" x2="100.0" y2="12.0"/><line class="tick" x1="108.6" y1="18.4" x2="109.2" y2="12.5"/><line class="tick" x1="117.0" y1="19.8" x2="118.3" y2="13.9"/><line class="tick" x1="125.3" y1="22.0" x2="127.2" y2="16.3"/><line class="tick" x1="133.4" y1="25.1" x2="135.8" y2="19.6"/><line class="tick big" x1="137.0" y1="35.9" x2="144.0" y2="23.8"/><line class="tick" x1="148.2" y1="33.7" x2="151.7" y2="28.8"/><line class="tick" x1="154.9" y1="39.1" x2="158.9" y2="34.6"/><line class="tick" x1="160.9" y1="45.1" x2="165.4" y2="41.1"/><line class="tick" x1="166.3" y1="51.8" x2="171.2" y2="48.3"/><line class="tick big" x1="164.1" y1="63.0" x2="176.2" y2="56.0"/><line class="tick" x1="174.9" y1="66.6" x2="180.4" y2="64.2"/><line class="tick" x1="178.0" y1="74.7" x2="183.7" y2="72.8"/><line class="tick" x1="180.2" y1="83.0" x2="186.1" y2="81.7"/><line class="tick" x1="181.6" y1="91.4" x2="187.5" y2="90.8"/><line class="tick big" x1="174.0" y1="100.0" x2="188.0" y2="100.0"/><line class="tick" x1="181.6" y1="108.6" x2="187.5" y2="109.2"/><line class="tick" x1="180.2" y1="117.0" x2="186.1" y2="118.3"/><line class="tick" x1="178.0" y1="125.3" x2="183.7" y2="127.2"/><line class="tick" x1="174.9" y1="133.4" x2="180.4" y2="135.8"/><line class="tick big" x1="164.1" y1="137.0" x2="176.2" y2="144.0"/><line class="tick" x1="166.3" y1="148.2" x2="171.2" y2="151.7"/><line class="tick" x1="160.9" y1="154.9" x2="165.4" y2="158.9"/><line class="tick" x1="154.9" y1="160.9" x2="158.9" y2="165.4"/><line class="tick" x1="148.2" y1="166.3" x2="151.7" y2="171.2"/><line class="tick big" x1="137.0" y1="164.1" x2="144.0" y2="176.2"/><line class="tick" x1="133.4" y1="174.9" x2="135.8" y2="180.4"/><line class="tick" x1="125.3" y1="178.0" x2="127.2" y2="183.7"/><line class="tick" x1="117.0" y1="180.2" x2="118.3" y2="186.1"/><line class="tick" x1="108.6" y1="181.6" x2="109.2" y2="187.5"/><line class="tick big" x1="100.0" y1="174.0" x2="100.0" y2="188.0"/><line class="tick" x1="91.4" y1="181.6" x2="90.8" y2="187.5"/><line class="tick" x1="83.0" y1="180.2" x2="81.7" y2="186.1"/><line class="tick" x1="74.7" y1="178.0" x2="72.8" y2="183.7"/><line class="tick" x1="66.6" y1="174.9" x2="64.2" y2="180.4"/><line class="tick big" x1="63.0" y1="164.1" x2="56.0" y2="176.2"/><line class="tick" x1="51.8" y1="166.3" x2="48.3" y2="171.2"/><line class="tick" x1="45.1" y1="160.9" x2="41.1" y2="165.4"/><line class="tick" x1="39.1" y1="154.9" x2="34.6" y2="158.9"/><line class="tick" x1="33.7" y1="148.2" x2="28.8" y2="151.7"/><line class="tick big" x1="35.9" y1="137.0" x2="23.8" y2="144.0"/><line class="tick" x1="25.1" y1="133.4" x2="19.6" y2="135.8"/><line class="tick" x1="22.0" y1="125.3" x2="16.3" y2="127.2"/><line class="tick" x1="19.8" y1="117.0" x2="13.9" y2="118.3"/><line class="tick" x1="18.4" y1="108.6" x2="12.5" y2="109.2"/><line class="tick big" x1="26.0" y1="100.0" x2="12.0" y2="100.0"/><line class="tick" x1="18.4" y1="91.4" x2="12.5" y2="90.8"/><line class="tick" x1="19.8" y1="83.0" x2="13.9" y2="81.7"/><line class="tick" x1="22.0" y1="74.7" x2="16.3" y2="72.8"/><line class="tick" x1="25.1" y1="66.6" x2="19.6" y2="64.2"/><line class="tick big" x1="35.9" y1="63.0" x2="23.8" y2="56.0"/><line class="tick" x1="33.7" y1="51.8" x2="28.8" y2="48.3"/><line class="tick" x1="39.1" y1="45.1" x2="34.6" y2="41.1"/><line class="tick" x1="45.1" y1="39.1" x2="41.1" y2="34.6"/><line class="tick" x1="51.8" y1="33.7" x2="48.3" y2="28.8"/><line class="tick big" x1="63.0" y1="35.9" x2="56.0" y2="23.8"/><line class="tick" x1="66.6" y1="25.1" x2="64.2" y2="19.6"/><line class="tick" x1="74.7" y1="22.0" x2="72.8" y2="16.3"/><line class="tick" x1="83.0" y1="19.8" x2="81.7" y2="13.9"/><line class="tick" x1="91.4" y1="18.4" x2="90.8" y2="12.5"/><text x="100.0" y="45.0" text-anchor="middle">XII</text><text x="160.0" y="105.0" text-anchor="middle">III</text><text x="100.0" y="165.0" text-anchor="middle">VI</text><text x="40.0" y="105.0" text-anchor="middle">IX</text>
+      <line class="hh" id="hand-h" x1="100" y1="100" x2="100" y2="58"/>
+      <line class="hm" id="hand-m" x1="100" y1="100" x2="100" y2="28"/>
+      <line class="hs" id="hand-s" x1="100" y1="112" x2="100" y2="20"/>
+      <circle class="hub" cx="100" cy="100" r="5"/>
+    </svg>
+    <div class="warp-year" id="warp-year">2026</div>
+    <p class="warp-dest" id="warp-dest"></p>
+  </div>
+  <button class="warp-skip" id="warp-skip" type="button">Überspringen</button>
+</div>
+
+<script>
+/* =====================================================================
+   EINSTELLUNGEN (Lehrkraft)
+   START_CODE muss zu den Codeziffern der Lösungsseite aus Std. 8 passen
+   (dort: const CODE = { A: 3, B: 1, C: 4 }  →  Startcode "314").
+   Ändert ihr dort die Ziffern, hier ebenfalls anpassen und neu veröffentlichen.
+   ===================================================================== */
+const START_CODE   = "314";
+const LEHRKRAFT_PIN = "8642";
+const HINT_PENALTY = [1, 1, 2];   // Minuten für Hinweis 1, 2, 3
+const JOKER_PENALTY = 5;          // Minuten, wenn die Lehrkraft eine Tür öffnet
+const KLAUSURTRAINING_URL = "klausurtraining.html";
+
+const TEAMS = {
+  rot:     {name:"Rot",     lam:"650 nm", col:"#ff6a5c"},
+  gruen:   {name:"Grün",    lam:"532 nm", col:"#4fdc79"},
+  violett: {name:"Violett", lam:"405 nm", col:"#a98bff"}
+};
+const EPOCH_COLORS = ["#97a6ba","#7a4dff","#3d6bff","#19b6e0","#3fd46b","#e9e23c","#ff9a2e","#ff4a3d"];
+
+const MODEL_CHOICES = {
+  A:"Nur das Teilchenmodell",
+  B:"Nur das Wellenmodell",
+  C:"Beide Modelle",
+  D:"Keines der beiden Modelle"
+};
+const MARKS = {A:["✓","✗"],B:["✗","✓"],C:["✓","✓"],D:["✗","✗"]};
+
+const num = v => { const x = parseFloat(String(v).replace(",",".").replace(/\s/g,"")); return isNaN(x) ? null : x; };
+const word = v => String(v||"").toUpperCase().replace(/[^A-ZÄÖÜ]/g,"");
+const near = (x,a,b) => x!==null && x>=a && x<=b;
+
+/* ---------------------------------------------------------------------
+   Epochen. Index 0 = Start (Lichtlabor heute), 1–7 = Türen.
+   Jedes Feld hat eine check-Funktion: {ok, msg}
+   --------------------------------------------------------------------- */
+const DOORS = [
+  { year:"2026", who:"Lichtlabor", where:"heute, Raum der Physik",
+    story:"Die Tür des Lichtlabors ist verriegelt. Auf dem Bildschirm des Chronoskops blinkt: »Lichtmodell beschädigt.« Um herauszukommen, reist ihr zu sieben Entdeckungen über das Licht zurück und repariert das Modell Epoche für Epoche. Jede Epoche hat ein Codeschloss.",
+    task:`<p>Gebt den <b>Startcode</b> ein: die drei Codeziffern vom Laufzettel aus Stunde 8, in der Reihenfolge Station A, B, C.</p>`,
+    hints:["Der Startcode steht im Codefeld auf Seite 2 eures Laufzettels.","Die Reihenfolge ist A – B – C.","Laufzettel verloren? Fragt die Lehrkraft (Joker)."],
+    fields:[{id:"c",label:"Startcode",ph:"• • •",check:v=>{
+      const w=String(v).replace(/\D/g,"");
+      if(w===START_CODE) return {ok:true};
+      if(w.length!==START_CODE.length) return {ok:false,msg:`Der Startcode hat ${START_CODE.length} Ziffern.`};
+      if(w.split("").sort().join("")===START_CODE.split("").sort().join("")) return {ok:false,msg:"Die Ziffern stimmen, die Reihenfolge nicht: A – B – C."};
+      return {ok:false,msg:"Code falsch. Prüft das Codefeld auf dem Laufzettel."};}}],
+    solution:`Startcode ${START_CODE} (Station A, B, C).`,
+    model:{phen:"Geradlinige Ausbreitung und Reflexion (α = α′)",q:"Welches Modell erklärt, dass Licht sich geradlinig ausbreitet und mit Einfallswinkel = Reflexionswinkel zurückgeworfen wird?",correct:"C",
+      explain:"Beide Modelle erklären das: Newtons Teilchen fliegen geradeaus und prallen ab wie Billardkugeln, Huygens' Wellenfronten laufen geradeaus und werden reflektiert. Diese Phänomene entscheiden nichts."}
+  },
+  { year:"1690", who:"Christiaan Huygens", where:"Den Haag",
+    story:"Huygens veröffentlicht seine »Abhandlung über das Licht«: Jeder Punkt einer Wellenfront ist Ausgangspunkt einer Elementarwelle. Sein Rivale Isaac Newton hält Licht für einen Strom winziger Teilchen. In Huygens' Werkstatt liegen fünf Bilder von Lichtflecken hinter Spalten – aber die Beschriftung der Spaltbreiten ist verloren gegangen.",
+    env:1,
+    task:`<ol><li>Ordnet die fünf Schirmbilder vom <b>breitesten</b> zum <b>schmalsten</b> Spalt. Die Buchstaben ergeben das Lösungswort.</li><li>Beantwortet die Kontrollfrage.</li></ol>`,
+    hints:["Je schmaler der Spalt, desto stärker wird das Licht gebeugt – der helle Fleck in der Mitte wird breiter.","Das Bild mit dem schmalsten hellen Mittelstreifen gehört zum breitesten Spalt. Dort steht der erste Buchstabe.","Das Wort hat fünf Buchstaben und bezeichnet das Bauteil, durch das das Licht fällt. Kontrollfrage: Beugung fällt erst auf, wenn eine Öffnung nicht mehr viel größer ist als die Wellenlänge."],
+    fields:[
+      {id:"w",label:"Lösungswort",ph:"_ _ _ _ _",check:v=>{
+        const w=word(v);
+        if(w==="SPALT") return {ok:true};
+        if(w==="TLAPS") return {ok:false,msg:"Genau umgekehrt sortiert: Beginnt mit dem breitesten Spalt – dort ist der Lichtfleck am schmalsten."};
+        if(w.length===5 && w.split("").sort().join("")==="ALPST") return {ok:false,msg:"Die Buchstaben stimmen, die Reihenfolge nicht. Breiter Spalt → schmaler Lichtfleck."};
+        return {ok:false,msg:"Noch nicht. Vergleicht die Breite des hellen Mittelstreifens auf den fünf Bildern."};}},
+      {id:"s",label:"Kontrollfrage: Wann darf man trotz der Wellennatur mit dem Strahlenmodell rechnen?",type:"choice",
+       options:[["a","Wenn das Licht einfarbig ist, z. B. Laserlicht."],["b","Wenn Öffnungen und Hindernisse sehr groß gegenüber der Wellenlänge sind."],["c","Wenn die Öffnung kleiner als die Wellenlänge ist."],["d","Nur wenn sich das Licht im Vakuum ausbreitet."]],
+       check:v=>{
+        if(v==="b") return {ok:true};
+        if(v==="a") return {ok:false,msg:"Auch Laserlicht wird an einem schmalen Spalt gebeugt (Stunde 1)."};
+        if(v==="c") return {ok:false,msg:"Gerade dann ist die Beugung am stärksten – das Strahlenmodell versagt."};
+        if(v==="d") return {ok:false,msg:"Mit dem Medium hat das nichts zu tun. Entscheidend ist das Verhältnis von Öffnung und Wellenlänge."};
+        return {ok:false,msg:"Wählt eine Antwort."};}}
+    ],
+    solution:"Lösungswort SPALT (S = breitester Spalt, schmalster Fleck … T = schmalster Spalt). Kontrollfrage: b – Öffnungen ≫ λ (Fenster, Linsen, Schatten).",
+    model:{phen:"Beugung am schmalen Spalt",q:"Welches Modell erklärt, dass Licht hinter einem schmalen Spalt in den Schattenraum gelangt?",correct:"B",
+      explain:"Nur das Wellenmodell: Nach Huygens geht von jedem Punkt im Spalt eine Elementarwelle aus, die sich auch seitlich ausbreitet. Teilchen würden geradeaus fliegen und einen scharfen Fleck erzeugen."}
+  },
+  { year:"1802", who:"Thomas Young", where:"London",
+    story:"Young lässt Licht durch zwei eng benachbarte Spalte fallen – und sieht dunkle Streifen. Licht plus Licht ergibt Dunkelheit! Seine Notizen bestehen aus zwei Teilen: einem Raster mit Gangunterschieden und einem Bild seines Schirms mit Maßband.",
+    env:2,
+    task:`<ol><li><b>Teil A:</b> Malt im Raster alle Felder aus, an denen auf dem Schirm ein <b>dunkler</b> Streifen liegt (λ = 500 nm). Es erscheint eine Ziffer.</li><li><b>Teil B:</b> Bestimmt aus dem Schirmbild die Wellenlänge des Lichts (d = 0,25 mm, e = 3,00 m).</li></ol>`,
+    hints:["Teil A – hell: Δs = 0, λ, 2λ, … (0 nm, 500 nm, 1000 nm …). Dunkel: Δs = λ/2, 3λ/2, 5λ/2 … (250 nm, 750 nm, 1250 nm …). Achtet auf die Einheiten µm und λ.","Teil B: Lest am Maßband die Lage des −3. und des +3. Maximums ab, bildet die Differenz und halbiert sie. Das ist a₃.","λ ≈ d · a₃ / (3 · e) – alles in Meter einsetzen. Kleine Winkel (unter 1°), darum gilt sin α ≈ tan α. Die Ziffer im Raster ist ungerade."],
+    fields:[
+      {id:"z",label:"Teil A: Ziffer im Raster",ph:"_",check:v=>{
+        const x=String(v).replace(/\D/g,"");
+        if(x==="5") return {ok:true};
+        if(x==="2") return {ok:false,msg:"Spiegelverkehrt? Prüft die Felder in Zeile 2 und 4 noch einmal."};
+        if(x==="6"||x==="8"||x==="9"||x==="3") return {ok:false,msg:"Zu viele Felder ausgemalt? Dunkel nur bei ungeraden Vielfachen von λ/2 – nicht bei 500 nm, 1 µm oder 2λ."};
+        return {ok:false,msg:"Prüft jedes Feld: Rechnet Δs in nm um und teilt durch λ/2 = 250 nm. Ungerade Zahl → dunkel."};}},
+      {id:"l",label:"Teil B: Wellenlänge λ",unit:"nm",ph:"___",check:v=>{
+        const x=num(v);
+        if(near(x,635,665)) return {ok:true};
+        if(near(x,1270,1330)) return {ok:false,msg:"Doppelt so groß: Habt ihr den Abstand zwischen −3. und +3. Maximum halbiert?"};
+        if(near(x,3800,4000)) return {ok:false,msg:"Ihr habt mit k = 1 gerechnet. Der Abstand gehört zum 3. Maximum."};
+        if(near(x,0.6,0.7)||near(x,6e-7,7e-7)) return {ok:false,msg:"Richtiger Wert, falsche Einheit: Gebt λ in Nanometer an."};
+        if(near(x,63,67)||near(x,6350,6650)) return {ok:false,msg:"Um eine Zehnerpotenz daneben. Rechnet d = 0,25 mm = 0,25 · 10⁻³ m und a₃ in m."};
+        return {ok:false,msg:"Noch nicht. λ ≈ d · a₃ / (k · e) mit k = 3."};}}
+    ],
+    solution:"Teil A: Ziffer 5. Teil B: −3. Max. bei 26,6 mm, +3. Max. bei 73,4 mm → 2a₃ = 46,8 mm, a₃ = 23,4 mm → λ = 0,25·10⁻³ m · 0,0234 m / (3 · 3,00 m) = 650 nm.",
+    model:{phen:"Interferenz: dunkle Streifen am Doppelspalt",q:"Welches Modell erklärt, dass an manchen Stellen hinter dem Doppelspalt Dunkelheit herrscht, obwohl Licht aus beiden Spalten dort ankommt?",correct:"B",
+      explain:"Nur das Wellenmodell: Bei Δs = (2k+1)·λ/2 trifft Wellenberg auf Wellental, die Wellen löschen sich aus. Zwei Teilchenströme könnten sich nur addieren."}
+  },
+  { year:"1817", who:"Augustin Fresnel", where:"Paris",
+    story:"Ein Rätsel quält die Anhänger des Wellenmodells: Licht lässt sich polarisieren, Schall nicht. Fresnel und Young folgern daraus, wie Licht schwingt. Auf Fresnels Tisch liegen acht Karten mit Wellen und zwei Polarisationsfilter.",
+    env:3,
+    task:`<ol><li>Sucht die Wellen heraus, die sich <b>polarisieren</b> lassen. Ihre Buchstaben ergeben – in der Reihenfolge der Kartennummern – das Lösungswort.</li><li><b>Experiment:</b> Haltet einen Filter vor das weiße Tablet-Display (leere Notiz, volle Helligkeit) und dreht ihn einmal ganz herum (360°). Wie oft wird es dunkel?</li></ol><p class="sub">Kein Filter oder das Display wird nicht dunkel? Nutzt die Simulation <a href="polarisation.html" target="_blank" rel="noopener">„Polarisation“</a>, Reiter 2, Lichtquelle Display.</p>`,
+    hints:["Polarisieren lassen sich nur Transversalwellen – sie schwingen quer zur Ausbreitungsrichtung.","Schall, Ultraschall und die P-Wellen eines Erdbebens sind Druckwellen, also longitudinal. Eine Schraubenfeder, die man längs anstößt, auch.","Das Wort beschreibt, wie Licht schwingt. Experiment: Dunkel wird es nur, wenn die Durchlassrichtung des Filters senkrecht zur Schwingungsrichtung des Display-Lichts steht."],
+    fields:[
+      {id:"w",label:"Lösungswort",ph:"_ _ _ _",check:v=>{
+        const w=word(v);
+        if(w==="QUER") return {ok:true};
+        if(/[AOSL]/.test(w)) return {ok:false,msg:"Ihr habt mindestens eine Longitudinalwelle gewählt. Longitudinalwellen schwingen längs – ein Filter kann sie nicht beeinflussen."};
+        if(w.length<4) return {ok:false,msg:"Euch fehlt mindestens eine Transversalwelle. Auch Radio- und Mikrowellen sind elektromagnetische Wellen wie Licht."};
+        return {ok:false,msg:"Noch nicht. Ordnet die Buchstaben nach den Kartennummern 1 bis 8."};}},
+      {id:"n",label:"Experiment: Wie oft wird es bei einer vollen Drehung dunkel?",ph:"_",check:v=>{
+        const x=num(v);
+        if(x===2) return {ok:true};
+        if(x===1) return {ok:false,msg:"Dreht weiter: Nach 180° wiederholt sich alles."};
+        if(x===4) return {ok:false,msg:"Ganz dunkel wird es nur bei gekreuzter Durchlassrichtung – bei 90° und 270°. Bei 45° ist es nur abgeschwächt."};
+        if(x===0) return {ok:false,msg:"Manche Displays haben eine Zusatzschicht und werden nicht ganz dunkel. Probiert ein anderes Tablet oder die Simulation (Reiter 2)."};
+        return {ok:false,msg:"Zählt beim langsamen Drehen genau mit."};}}
+    ],
+    solution:"Polarisierbar: 1 Licht (Q), 3 Radiowelle (U), 5 Seilwelle (E), 7 Mikrowelle (R) → QUER. Experiment: 2-mal dunkel (bei 90° und 270°).",
+    model:{phen:"Polarisation",q:"Welches Modell erklärt, dass ein Polfilter Licht je nach Stellung durchlässt oder sperrt?",correct:"B",
+      explain:"Das Wellenmodell – aber nur, wenn Licht eine Transversalwelle ist. Huygens selbst dachte noch an eine Längswelle wie Schall; erst Young und Fresnel (um 1817) erkannten: Licht schwingt quer."}
+  },
+  { year:"1821", who:"Joseph von Fraunhofer", where:"München",
+    story:"Der Glas- und Instrumentenbauer Fraunhofer spannt hunderte feine Drähte dicht nebeneinander – eines der ersten Beugungsgitter. Ein Gitter in seiner Werkstatt ist nicht beschriftet. Ihr schickt violettes Laserlicht (λ = 405 nm, wie im Blu-ray-Player) hindurch.",
+    env:4,
+    task:`<ol><li>Bestimmt aus der Messung die Zahl der <b>Linien pro Millimeter</b> des Gitters.</li><li>Bestimmt die <b>höchste Ordnung</b>, die mit diesem Laser überhaupt entstehen kann.</li></ol>`,
+    hints:["Erst a₁ = 2a₁ / 2, dann α₁ = arctan(a₁ / e).","Gittergleichung: g = λ / sin α₁. Keine Kleinwinkelnäherung – der Winkel ist dafür viel zu groß.","Linien pro mm = 1 mm / g. Höchste Ordnung: größtes k mit k · λ / g ≤ 1. Prüfen könnt ihr in der Simulation „Vom Doppelspalt zum Gitter“, Reiter 2: eure Linienzahl, λ = 405 nm, e = 0,50 m – liegt die 1. Ordnung bei etwa 22 cm?"],
+    fields:[
+      {id:"L",label:"Linien pro Millimeter",unit:"1/mm",ph:"____",check:v=>{
+        const x=num(v);
+        if(near(x,975,1025)) return {ok:true};
+        if(near(x,1075,1115)) return {ok:false,msg:"Kleinwinkelnäherung erwischt! Bei α ≈ 24° ist sin α deutlich kleiner als tan α. Rechnet α = arctan(a/e) und dann sin α."};
+        if(near(x,1580,1700)) return {ok:false,msg:"Ihr habt 2a₁ statt a₁ eingesetzt. Erst halbieren."};
+        if(near(x,0.9,1.1)) return {ok:false,msg:"Das ist g in µm. Gefragt ist die Zahl der Linien pro Millimeter: 1 mm / g."};
+        return {ok:false,msg:"Noch nicht. Weg: a₁ → α₁ → g = λ / sin α₁ → 1 mm / g."};}},
+      {id:"k",label:"Höchste Ordnung k",ph:"_",check:v=>{
+        const x=num(v);
+        if(x===2) return {ok:true};
+        if(x!==null && x>2) return {ok:false,msg:`Prüft sin α = k · λ / g: Für k = 3 wäre sin α = 3 · 0,405 µm / 1 µm = 1,2 > 1 – unmöglich.`};
+        if(x===1) return {ok:false,msg:"Prüft k = 2: sin α = 2 · 0,405 / 1 = 0,81 < 1. Diese Ordnung gibt es noch."};
+        return {ok:false,msg:"Bedingung: sin α = k · λ / g ≤ 1."};}}
+    ],
+    solution:"a₁ = 22,15 cm, α₁ = arctan(22,15/50,0) = 23,9°, sin α₁ = 0,405 → g = 405 nm / 0,405 = 1,00 µm → 1000 Linien/mm. k_max: g/λ = 2,47 → k = 2. (Mit Kleinwinkelnäherung käme ≈ 1094/mm heraus.)",
+    model:{phen:"Gitterspektren: Rot wird stärker abgelenkt als Violett",q:"Welches Modell erklärt, dass ein Gitter rotes Licht stärker ablenkt als violettes?",correct:"B",
+      explain:"Nur das Wellenmodell: Farbe entspricht der Wellenlänge, und nach g · sin α = k · λ gehört zum größeren λ (Rot) der größere Winkel."}
+  },
+  { year:"1850", who:"Léon Foucault", where:"Paris",
+    story:"Seit 150 Jahren streiten die Modelle über die Brechung: Ist Licht in Wasser schneller (Newton) oder langsamer (Huygens)? Foucault will es mit einem schnell rotierenden Spiegel messen. Vorher prüft ihr, was beide Modelle für Wasser vorhersagen.",
+    env:5,
+    task:`<ol><li>Messt in der Skizze den Einfallswinkel α und den Brechungswinkel β mit dem Geodreieck.</li><li>Berechnet die Lichtgeschwindigkeit in Wasser nach <b>Huygens</b> und nach <b>Newton</b> (c<sub>Luft</sub> = 300 000 km/s). Gebt beide in 1000 km/s an.</li></ol>`,
+    hints:["Beide Winkel werden zum Lot gemessen (gestrichelte Linie), nicht zur Wasseroberfläche.","n = sin α / sin β. Huygens: c_Wasser = c_Luft / n. Newton: c_Wasser = n · c_Luft.","α = 50°, β = 35°."],
+    fields:[
+      {id:"h",label:"Huygens: c in Wasser",unit:"· 1000 km/s",ph:"___",check:v=>{
+        const x=num(v);
+        if(near(x,214,236)) return {ok:true};
+        if(near(x,380,420)) return {ok:false,msg:"Das ist Newtons Vorhersage (schneller im Wasser). Nach Huygens werden die Elementarwellen im Wasser langsamer: c_Luft / n."};
+        if(near(x,1.25,1.42)) return {ok:false,msg:"Das ist die Brechzahl n. Jetzt noch c_Wasser = c_Luft / n."};
+        if(near(x,214000,236000)) return {ok:false,msg:"Richtig gerechnet – gebt das Ergebnis in 1000 km/s an (nur drei Ziffern)."};
+        return {ok:false,msg:"Noch nicht. Prüft die Winkel: beide zum Lot!"};}},
+      {id:"n",label:"Newton: c in Wasser",unit:"· 1000 km/s",ph:"___",check:v=>{
+        const x=num(v);
+        if(near(x,380,420)) return {ok:true};
+        if(near(x,214,236)) return {ok:false,msg:"Das ist Huygens' Vorhersage. Newton nahm an, dass das Wasser die Teilchen zum Lot hin anzieht und beschleunigt: c_Wasser = n · c_Luft."};
+        if(near(x,380000,420000)) return {ok:false,msg:"Richtig gerechnet – gebt das Ergebnis in 1000 km/s an (nur drei Ziffern)."};
+        return {ok:false,msg:"Noch nicht. Newton: c_Wasser = n · c_Luft."};}}
+    ],
+    solution:"α = 50°, β = 35° → n = sin 50° / sin 35° = 1,34. Huygens: 300 000 / 1,34 ≈ 224 000 km/s → 224. Newton: 1,34 · 300 000 ≈ 400 000 km/s → 400. Foucault misst 1850: Licht ist in Wasser langsamer → Huygens hat recht.",
+    model:{phen:"Brechung zum Lot hin (Luft → Wasser)",q:"Welches Modell kann die Brechung zum Lot hin erklären – zunächst ohne Geschwindigkeitsmessung?",correct:"C",
+      explain:"Beide! Newton mit der Anziehung der Teilchen, Huygens mit langsameren Elementarwellen. Erst Foucaults Messung entscheidet: Licht ist in Wasser langsamer – nur das Wellenmodell hat das richtig vorhergesagt."},
+    extraRow:{phen:"Lichtgeschwindigkeit in Wasser (Foucault 1850)",code:"B",note:"Messung: c_Wasser < c_Luft"}
+  },
+  { year:"1859", who:"Kirchhoff und Bunsen", where:"Heidelberg",
+    story:"Gustav Kirchhoff und Robert Bunsen entdecken: Jedes Element leuchtet in seinen eigenen Farben – ein Fingerabdruck aus Spektrallinien. In ihrem Labor brennt eine unbekannte Gasentladungslampe. Daneben liegt eine Notiz zu einem Problem mit Gitterspektren.",
+    env:6,
+    task:`<ol><li>Bestimmt mit dem Gitter-Spektroskop (300 Linien/mm, e = 1,00 m – wie Station B) die Wellenlängen und findet das <b>Element</b> in der Tabelle.</li><li>Löst das Überlappungsproblem auf der Notiz.</li></ol><p class="sub">Zur Kontrolle der Überlappung: Simulation <a href="weisslicht-am-gitter.html" target="_blank" rel="noopener">„Weißlicht am Gitter“</a>, Reiter 1, Sonde.</p>`,
+    hints:["Wie an Station B: tan α = a / e, λ = g · sin α mit g = 1 mm / 300 = 3,33 µm.","Ihr müsst nicht alle drei Linien rechnen. Die türkise Linie bei 14,7 cm passt nur zu einem Element.","Überlappung: Die 3. Ordnung beginnt mit Violett bei 3 · 400 nm. Gesucht ist das λ der 2. Ordnung mit 2 · λ = 3 · 400 nm."],
+    fields:[
+      {id:"e",label:"Element (Symbol oder Name)",ph:"__",check:v=>{
+        const w=word(v);
+        if(w==="H"||w==="WASSERSTOFF") return {ok:true};
+        if(w==="HG"||w.startsWith("QUECK")) return {ok:false,msg:"Quecksilber hätte eine helle grüne Linie bei 546 nm (16,6 cm) – die fehlt hier."};
+        if(w==="HE"||w.startsWith("HELIUM")) return {ok:false,msg:"Helium hätte eine gelbe Linie bei 588 nm (17,9 cm) – die fehlt hier."};
+        if(w==="NA"||w.startsWith("NATRIUM")) return {ok:false,msg:"Natrium leuchtet fast nur gelb (589 nm)."};
+        return {ok:false,msg:"Rechnet λ für zwei Linien und vergleicht mit der Tabelle."};}},
+      {id:"u",label:"Überlappung: Welche Wellenlänge der 2. Ordnung liegt dort, wo die 3. Ordnung beginnt?",unit:"nm",ph:"___",check:v=>{
+        const x=num(v);
+        if(near(x,595,605)) return {ok:true};
+        if(near(x,260,272)) return {ok:false,msg:"Andersherum: 2 · λ = 3 · 400 nm, also λ = 1200 nm / 2."};
+        if(near(x,1195,1205)) return {ok:false,msg:"1200 nm ist der Gangunterschied (3 · 400 nm). Gesucht ist λ der 2. Ordnung: 1200 nm / 2."};
+        if(near(x,795,805)) return {ok:false,msg:"Das wäre 2 · 400 nm – der Anfang der 2. Ordnung. Gesucht ist, wo die 3. Ordnung beginnt."};
+        return {ok:false,msg:"Am selben Ort gilt: k₁ · λ₁ = k₂ · λ₂."};}}
+    ],
+    solution:"a = 13,1 / 14,7 / 20,1 cm → λ ≈ 434 / 486 / 656 nm → Wasserstoff (H). Überlappung: 2 · λ = 3 · 400 nm → λ = 600 nm (ab Orange überlappt die 2. mit der 3. Ordnung, unabhängig von g).",
+    model:{phen:"Linienspektren: Warum nur einzelne Wellenlängen?",q:"Welches Modell erklärt, warum Wasserstoff nur ganz bestimmte Wellenlängen aussendet?",correct:"D",
+      explain:"Keines! Mit dem Wellenmodell und dem Gitter kann man die Wellenlängen sehr genau messen – aber warum ein Gas nur diese Linien aussendet, erklärt es nicht. Das klärt erst die Atomphysik (UV VII)."}
+  },
+  { year:"1905", who:"Albert Einstein", where:"Bern, Patentamt",
+    story:"Im Patentamt in Bern denkt Albert Einstein über einen seltsamen Versuch nach: Licht schlägt Elektronen aus Metall – aber anders, als es eine Welle sollte. Bevor das Chronoskop euch zurück ins Lichtlabor bringt, muss das Wellenmodell vollständig gesichert sein.",
+    env:7,
+    task:`<ol><li>Legt die Begriffskarten in die leeren Felder 1 bis 8 der Concept-Map. Drei Karten bleiben übrig.</li><li>Lest die Buchstaben der Karten in den Feldern 1 bis 8 der Reihe nach.</li></ol>`,
+    hints:["Fangt mit den sicheren Feldern an: Feld 8 (»deshalb ist Licht eine …«) und Feld 6 (»zerlegt weißes Licht in ein …«).","Übrig bleiben ein Begriff, der zu Schall passt, ein Rechenverfahren und ein Modell, das hier nicht hingehört.","Das Lösungswort hat acht Buchstaben – und es ist ein Begriff, den ihr aus Newtons Modell kennt."],
+    fields:[
+      {id:"w",label:"Lösungswort (Felder 1–8)",ph:"_ _ _ _ _ _ _ _",check:v=>{
+        const w=word(v), t="TEILCHEN";
+        if(w===t) return {ok:true};
+        if(w.length!==8) return {ok:false,msg:"Das Lösungswort hat genau acht Buchstaben – einen pro Feld."};
+        const wrong=[]; for(let i=0;i<8;i++) if(w[i]!==t[i]) wrong.push(i+1);
+        return {ok:false,msg:(wrong.length===1?"Feld ":"Felder ")+wrong.join(", ")+" "+(wrong.length===1?"stimmt":"stimmen")+" noch nicht."};}}
+    ],
+    solution:"1 Beugung (T) · 2 Huygens'sches Prinzip (E) · 3 Interferenz (I) · 4 Gangunterschied (L) · 5 Gitter (C) · 6 Spektrum (H) · 7 Polarisation (E) · 8 Transversalwelle (N) → TEILCHEN. Übrig: Longitudinalwelle (A), Kleinwinkelnäherung (R), Teilchenmodell (S).",
+    model:null
+  }
+];
+
+/* ---------------------------------------------------------------------
+   Zustand (pro Gerät gespeichert, damit ein Neuladen nichts zerstört)
+   --------------------------------------------------------------------- */
+const KEY="chronoskop-std9-v1";
+const fresh=()=>({team:null,door:0,started:null,pausedAt:null,pausedTotal:0,penalty:0,hints:{},opened:{},model:{},inputs:{},jokers:0,finished:null});
+let S=fresh();
+try{const raw=localStorage.getItem(KEY); if(raw) S=Object.assign(fresh(),JSON.parse(raw));}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------------------------------------------------------------------
+   Klänge (werden im Browser erzeugt, keine Sounddateien nötig).
+   fail(): Schloss klemmt – metallisches Rütteln und dumpfer Anschlag.
+   open(): Schloss springt auf – Klicken, Bügel schnappt, heller Glockenton.
+   Der Ton-Schalter oben rechts gilt nur für dieses Gerät.
+   --------------------------------------------------------------------- */
+const easeIO=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const reduceMotion=()=>!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+const Sound=(()=>{
+  let ctx=null, on=true;
+  try{ on = localStorage.getItem("chronoskop-sound")!=="aus"; }catch(e){}
+  function ac(){
+    if(!ctx){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null; ctx=new C(); }
+    if(ctx.state==="suspended") ctx.resume();
+    return ctx;
+  }
+  function bus(c,vol=1){ const g=c.createGain(); g.gain.value=vol; g.connect(c.destination); return g; }
+  function noise(c,t,dur,freq,q,gain,type="bandpass",dest){
+    const len=Math.max(1,Math.floor(c.sampleRate*dur)), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+    const src=c.createBufferSource(); src.buffer=buf;
+    const f=c.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q;
+    const g=c.createGain(); g.gain.value=gain;
+    src.connect(f).connect(g).connect(dest||c.destination); src.start(t);
+  }
+  function tone(c,t,type,f0,f1,dur,gain,dest){
+    const o=c.createOscillator(), g=c.createGain();
+    o.type=type; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(gain,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g).connect(dest||c.destination); o.start(t); o.stop(t+dur+0.02);
+  }
+  const NONE={stop(){}};
+  return {
+    get on(){return on;},
+    set(v){ on=v; try{localStorage.setItem("chronoskop-sound",v?"an":"aus");}catch(e){} },
+    fail(){
+      if(!on) return; const c=ac(); if(!c) return; const t=c.currentTime+0.02;
+      [0,0.08,0.16].forEach((d,k)=>noise(c,t+d,0.05,2600-k*300,6,0.9));   // Bügel rüttelt
+      tone(c,t+0.24,"sine",140,60,0.22,0.6);                               // dumpfer Anschlag
+      tone(c,t+0.24,"square",95,70,0.18,0.06);                            // Brummen: bleibt zu
+    },
+    open(){
+      if(!on) return; const c=ac(); if(!c) return; const t=c.currentTime+0.02;
+      noise(c,t,0.025,4200,8,0.8,"highpass");                              // Schlüssel klickt
+      noise(c,t+0.11,0.06,1500,4,1.0);                                     // Bügel schnappt auf
+      tone(c,t+0.2,"triangle",880,880,0.7,0.22);                           // Glockenton
+      tone(c,t+0.29,"triangle",1318.5,1318.5,0.8,0.18);
+      tone(c,t+0.38,"sine",1760,1760,0.9,0.1);
+    },
+    /* Zeitsprung: Ticken im Takt des Minutenzeigers (wird schneller und wieder langsamer) + anschwellendes Rauschen */
+    jump(T,R,dir){
+      if(!on) return NONE; const c=ac(); if(!c) return NONE;
+      const out=bus(c,1), t=c.currentTime+0.03, n=Math.round(12*R);
+      let last=-1;
+      for(let k=1;k<=n;k++){
+        let lo=0,hi=1; for(let it=0;it<22;it++){ const m=(lo+hi)/2; if(easeIO(m)<k/n) lo=m; else hi=m; }
+        const tk=hi*T; if(tk-last<0.022) continue; last=tk;
+        noise(c,t+tk,0.014,k%2?3600:2500,9,0.55,"bandpass",out);
+      }
+      const len=Math.floor(c.sampleRate*(T+0.2)), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+      for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+      const src=c.createBufferSource(); src.buffer=buf;
+      const f=c.createBiquadFilter(); f.type="bandpass"; f.Q.value=1.4;
+      const f0=dir>0?320:2600, f1=dir>0?2600:320;
+      f.frequency.setValueAtTime(f0,t); f.frequency.exponentialRampToValueAtTime(f1,t+T);
+      const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.16,t+T*0.55); g.gain.exponentialRampToValueAtTime(0.0001,t+T+0.15);
+      src.connect(f).connect(g).connect(out); src.start(t); src.stop(t+T+0.2);
+      return {stop(){ try{ out.gain.setTargetAtTime(0,c.currentTime,0.02); }catch(e){} }};
+    },
+    /* Ankunft in der Epoche: tiefer Glockenschlag */
+    arrive(){
+      if(!on) return; const c=ac(); if(!c) return; const t=c.currentTime+0.02;
+      tone(c,t,"sine",330,328,1.3,0.32); tone(c,t,"sine",495,492,1.0,0.14); tone(c,t,"triangle",660,660,0.6,0.05);
+    },
+    /* Finale: Tür springt auf + kleine Fanfare (C-E-G-C, dann Akkord) */
+    fanfare(){
+      if(!on) return; const c=ac(); if(!c) return; const t=c.currentTime+0.02;
+      noise(c,t,0.03,4200,8,0.8,"highpass"); noise(c,t+0.1,0.07,1300,4,1.0);
+      [523.25,659.25,783.99,1046.5].forEach((fq,k)=>tone(c,t+0.18+k*0.12,"triangle",fq,fq,0.35,0.22));
+      [523.25,659.25,783.99,1046.5].forEach(fq=>tone(c,t+0.7,"triangle",fq,fq,1.4,0.12));
+    }
+  };
+})();
+
+/* Konfetti in Spektralfarben – zwei „Kanonen“ unten links und rechts */
+const Confetti={burst(){
+  if(reduceMotion()) return;
+  const cv=document.createElement("canvas"); cv.className="confetti"; cv.setAttribute("aria-hidden","true"); document.body.appendChild(cv);
+  const g=cv.getContext("2d"); if(!g){cv.remove();return;}
+  const dpr=window.devicePixelRatio||1, W=window.innerWidth, H=window.innerHeight;
+  cv.width=W*dpr; cv.height=H*dpr; g.scale(dpr,dpr);
+  const cols=["#7a4dff","#3d6bff","#19b6e0","#3fd46b","#e9e23c","#ff9a2e","#ff4a3d"];
+  const P=[]; for(let k=0;k<190;k++){ const left=k%2===0; P.push({x:left?-10:W+10,y:H*0.85,vx:(left?1:-1)*(4+Math.random()*9),vy:-(9+Math.random()*12),w:6+Math.random()*7,h:3+Math.random()*4,r:Math.random()*6,vr:(Math.random()-.5)*.35,c:cols[k%7],d:Math.random()*400}); }
+  const t0=performance.now(); let prev=t0;
+  (function f(now){
+    const dt=Math.min(40,now-prev)/16.7; prev=now; g.clearRect(0,0,W,H);
+    for(const p of P){ if(now-t0<p.d) continue; p.vy+=0.32*dt; p.vx*=Math.pow(0.99,dt); p.x+=p.vx*dt; p.y+=p.vy*dt; p.r+=p.vr*dt;
+      g.save(); g.translate(p.x,p.y); g.rotate(p.r); g.fillStyle=p.c; g.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.r*1.7))+1); g.restore(); }
+    if(now-t0<5200) requestAnimationFrame(f); else cv.remove();
+  })(t0);
+}};
+
+/* Zeitsprung-Animation: Uhr dreht sich (rückwärts bei Reisen in die Vergangenheit), Jahreszahl rollt mit */
+const Warp=(()=>{
+  const el=document.getElementById("warp"), yearEl=document.getElementById("warp-year"), destEl=document.getElementById("warp-dest"),
+        eyeEl=document.getElementById("warp-eyebrow"), hH=document.getElementById("hand-h"), hM=document.getElementById("hand-m"),
+        hS=document.getElementById("hand-s"), skip=document.getElementById("warp-skip");
+  let cancel=null;
+  skip.onclick=()=>{ if(cancel) cancel(); };
+  function setHands(m){ hM.setAttribute("transform",`rotate(${m} 100 100)`); hH.setAttribute("transform",`rotate(${m/12} 100 100)`); hS.setAttribute("transform",`rotate(${m*4} 100 100)`); }
+  function jump({from,to,color,eyebrow,dest,final=false,onOpen}){
+    return new Promise(res=>{
+      const red=reduceMotion(), dir=to<from?-1:1, R=red?0:(final?7:6), T=red?0.5:(final?3.0:2.5);
+      el.style.setProperty("--wc",color);
+      el.classList.remove("fade","open","arrived"); el.classList.toggle("reverse",dir<0);
+      eyeEl.textContent=eyebrow; destEl.textContent=dest; destEl.classList.remove("show");
+      yearEl.textContent=String(from); setHands(0);
+      el.hidden=false; try{skip.focus({preventScroll:true});}catch(e){}
+      const snd=Sound.jump(T,R,dir);
+      let raf=0, timers=[], done=false;
+      const t0=performance.now();
+      function frame(now){
+        const p=Math.min(1,(now-t0)/(T*1000)), e=easeIO(p);
+        setHands(dir*e*R*360);
+        yearEl.textContent=String(Math.round(from+(to-from)*e));
+        if(p<1) raf=requestAnimationFrame(frame); else arrive();
+      }
+      function arrive(){
+        el.classList.add("arrived"); destEl.classList.add("show"); Sound.arrive();
+        timers.push(setTimeout(finish, final?1300:900));
+      }
+      function close(){ el.hidden=true; el.classList.remove("fade","open","arrived","reverse"); cancel=null; res(); }
+      function finish(){
+        if(done) return; done=true;
+        if(final){ el.classList.add("open"); Sound.fanfare(); Confetti.burst(); if(onOpen) onOpen(); timers.push(setTimeout(close,1000)); }
+        else { el.classList.add("fade"); timers.push(setTimeout(close,460)); }
+      }
+      cancel=()=>{
+        cancelAnimationFrame(raf); timers.forEach(clearTimeout); snd.stop();
+        const wasDone=done; done=true;
+        if(final && !wasDone){ Sound.fanfare(); Confetti.burst(); if(onOpen) onOpen(); }
+        close();
+      };
+      raf=requestAnimationFrame(frame);
+    });
+  }
+  return {jump};
+})();
+
+/* Gesamtzeit auf der Auswertungsseite hochzählen lassen */
+function countUp(el,totalMs){
+  if(!el) return;
+  if(reduceMotion()){ el.textContent=fmt(totalMs); return; }
+  const t0=performance.now(), D=1800;
+  (function f(now){ const p=Math.min(1,(now-t0)/D); el.textContent=fmt(totalMs*easeIO(p)); if(p<1) requestAnimationFrame(f); })(t0);
+}
+
+function elapsedMs(){
+  if(!S.started) return 0;
+  const end = S.finished || S.pausedAt || Date.now();
+  return Math.max(0,end - S.started - S.pausedTotal);
+}
+const fmt=ms=>{const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");};
+function tick(){
+  $("st-time").textContent=fmt(elapsedMs()+(S.finished?0:0));
+  $("st-pen").textContent="+"+S.penalty+" Min.";
+}
+setInterval(tick,1000);
+
+/* Zeitstrahl */
+function renderTimeline(){
+  const reached = S.finished ? 8 : S.door;
+  let h=`<div class="tl-bar"><div class="tl-fill" style="width:${Math.min(100,(reached/7)*100)}%;--p:${Math.min(1,Math.max(.0001,reached/7))}"></div></div>`;
+  DOORS.forEach((d,i)=>{
+    const done = S.opened[i] && (S.model[i]||!d.model);
+    const cls = done ? "done" : (i===S.door && S.team ? "now" : "");
+    h+=`<div class="tl-node ${cls}" style="--c:${EPOCH_COLORS[i]}"><div class="tl-dot">${i===0?"▶":i}</div><b>${d.year}</b><span>${esc(i===0?"Start":d.who.split(" ").slice(-1)[0])}</span></div>`;
+  });
+  $("tl").innerHTML=h;
+}
+
+/* Modelltabelle */
+function renderModel(){
+  let rows=[];
+  DOORS.forEach((d,i)=>{
+    if(!d.model) return;
+    const a=S.model[i];
+    if(a){ rows.push({phen:d.model.phen,code:d.model.correct}); if(d.extraRow) rows.push(d.extraRow); }
+    else rows.push({phen:null,code:null,epoch:d.year});
+  });
+  if(S.finished) rows.push({phen:"Photoeffekt (Einstein 1905)",code:"Q",note:"Ausblick: UV IV"});
+  $("mt-body").innerHTML=rows.map(r=>{
+    if(!r.phen) return `<tr class="empty"><td>Epoche ${r.epoch} – noch verschlossen</td><td class="m">·</td><td class="m">·</td></tr>`;
+    if(r.code==="Q") return `<tr><td>${esc(r.phen)}<small>${esc(r.note)}</small></td><td class="m q">?</td><td class="m q">✗ ?</td></tr>`;
+    const m=MARKS[r.code];
+    return `<tr><td>${esc(r.phen)}${r.note?`<small>${esc(r.note)}</small>`:""}</td><td class="m ${m[0]==="✓"?"y":"n"}">${m[0]}</td><td class="m ${m[1]==="✓"?"y":"n"}">${m[1]}</td></tr>`;
+  }).join("");
+}
+
+/* Teamauswahl */
+function renderTeamPick(){
+  $("main").innerHTML=`<section class="card">
+    <h2>Welches Team seid ihr?</h2>
+    <p class="sub">Ein Tablet pro Team. Wählt euer Team aus Stunde 8 – die Farbe ist auch eure Laserfarbe.</p>
+    <div class="teams">${Object.entries(TEAMS).map(([k,t])=>`<button class="teambtn" type="button" data-team="${k}" style="--tc:${t.col}"><b>Team ${t.name}</b><span>λ = ${t.lam}</span></button>`).join("")}</div>
+    <div class="task"><h3>Regeln</h3><ul>
+      <li>Öffnet einen Umschlag erst, wenn das Chronoskop es sagt.</li>
+      <li>Jedes Schloss prüft eure Eingabe und gibt einen Tipp, wenn etwas nicht stimmt. Raten kostet nichts – Nachdenken lohnt sich trotzdem.</li>
+      <li>Hinweise kosten Strafzeit: Hinweis 1 und 2 je +1 Min., Hinweis 3 +2 Min.</li>
+      <li>Nach jedem Schloss beantwortet ihr eine Modellfrage. Daraus entsteht eure Modelltabelle.</li>
+    </ul></div>
+  </section>`;
+  document.querySelectorAll(".teambtn").forEach(b=>b.onclick=()=>{S.team=b.dataset.team;save();render();});
+}
+
+/* Tür */
+function fieldHTML(d,i,f){
+  const key=i+"-"+f.id, val=S.inputs[key]??"";
+  if(f.type==="choice"){
+    return `<div class="field" id="f-${key}"><label id="lab-${key}">${esc(f.label)}</label><div class="choices" role="radiogroup" aria-labelledby="lab-${key}">${f.options.map(([v,t])=>`<label><input type="radio" name="r-${key}" id="r-${key}-${v}" value="${v}" ${val===v?"checked":""}><span>${esc(t)}</span></label>`).join("")}</div><div class="fmsg" id="m-${key}"></div></div>`;
+  }
+  return `<div class="field" id="f-${key}"><label for="in-${key}">${esc(f.label)}</label><div class="unitwrap"><input type="text" id="in-${key}" value="${esc(val)}" placeholder="${esc(f.ph||"")}" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="${(f.unit||["c","z","n","k"].includes(f.id))?"decimal":"text"}">${f.unit?`<span class="unit">${esc(f.unit)}</span>`:""}</div><div class="fmsg" id="m-${key}"></div></div>`;
+}
+const PADLOCK=`<svg class="padlock" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15.5" r="1.6" fill="currentColor"/></svg>`;
+
+function renderDoor(){
+  const i=S.door, d=DOORS[i];
+  document.documentElement.style.setProperty("--c",EPOCH_COLORS[i]);
+  const used=S.hints[i]||0;
+  let hintsH="";
+  for(let h=0;h<used;h++) hintsH+=`<div class="hint"><b>Hinweis ${h+1}</b><span>${esc(d.hints[h])}</span></div>`;
+  const nextHint = used<3 ? `<button class="btn hintbtn" type="button" id="hintbtn">Hinweis ${used+1} öffnen (+${HINT_PENALTY[used]} Min.)</button>` : "";
+  const opened=!!S.opened[i];
+  let right="";
+  if(!opened){
+    right=`<form class="lock" id="lockform" novalidate>
+      <div class="lock-head"><h2>${PADLOCK}${i===0?"Startschloss":"Schloss "+d.year}</h2></div>
+      ${d.fields.map(f=>fieldHTML(d,i,f)).join("")}
+      <div class="btnrow"><button class="btn primary" type="submit">Schloss prüfen</button></div>
+      <div id="lockmsg" aria-live="polite"></div>
+    </form>`;
+  }else{
+    right=`<div class="opened"><b>Schloss offen</b><span class="sub">${S.opened[i]==="joker"?"Geöffnet mit Joker der Lehrkraft.":"Alle Eingaben stimmen."}</span></div>`;
+    if(d.model){
+      const a=S.model[i];
+      right+=`<div class="lock"><h2>Modellfrage</h2><p>${esc(d.model.q)}</p>
+        <div class="choices" role="radiogroup" aria-label="Modellfrage">${Object.entries(MODEL_CHOICES).map(([k,t])=>`<label><input type="radio" name="mq" id="mq-${k}" value="${k}" ${a===k?"checked":""} ${a?"disabled":""}><span>${t}</span></label>`).join("")}</div>
+        ${a?`<div class="msg ok">${esc(d.model.explain)}</div>`:`<div class="btnrow"><button class="btn primary" type="button" id="mqbtn">Antwort eintragen</button></div><div id="mqmsg" aria-live="polite"></div>`}
+      </div>`;
+      if(a) right+=nextBtn(i);
+    }else{
+      right+=nextBtn(i);
+    }
+  }
+  $("main").innerHTML=`<div class="grid">
+    <div class="col">
+      <section class="card" style="--c:${EPOCH_COLORS[i]}">
+        <div class="epoch"><span class="year">${d.year}</span><div class="who"><b>${esc(d.who)}</b><span>${esc(d.where)}</span></div></div>
+        <p class="story">${esc(d.story)}</p>
+        <div class="task">${d.env?`<span class="envelope">Öffnet Umschlag <i>${d.env}</i></span>`:""}${d.task}</div>
+      </section>
+      <section class="card"><h3>Hinweise</h3><div class="hints">${hintsH||`<p class="sub">Noch keine Hinweise geöffnet.</p>`}${nextHint}</div></section>
+    </div>
+    <div class="col">${right}</div>
+  </div>`;
+  bindDoor(i,d);
+}
+function nextBtn(i){
+  return i<7 ? `<div class="btnrow"><button class="btn primary" type="button" id="nextbtn">Weiter: ${DOORS[i+1].year} – ${esc(DOORS[i+1].who)} →</button></div>`
+             : `<div class="btnrow"><button class="btn primary" type="button" id="nextbtn">Chronoskop starten: zurück ins Lichtlabor →</button></div>`;
+}
+function bindDoor(i,d){
+  const hb=$("hintbtn");
+  if(hb) hb.onclick=()=>{const u=S.hints[i]||0; if(u>=3) return; S.penalty+=HINT_PENALTY[u]; S.hints[i]=u+1; save(); renderDoor(); tick();};
+  const form=$("lockform");
+  if(form){
+    d.fields.forEach(f=>{
+      const key=i+"-"+f.id;
+      if(f.type==="choice") document.querySelectorAll(`input[name="r-${key}"]`).forEach(r=>r.onchange=()=>{S.inputs[key]=r.value;save();});
+      else { const inp=$("in-"+key); inp.oninput=()=>{S.inputs[key]=inp.value;save();}; }
+    });
+    form.onsubmit=e=>{
+      e.preventDefault();
+      let allOk=true;
+      d.fields.forEach(f=>{
+        const key=i+"-"+f.id;
+        let v = f.type==="choice" ? (document.querySelector(`input[name="r-${key}"]:checked`)||{}).value : $("in-"+key).value;
+        const r=f.check(v===undefined?"":v);
+        const fe=$("f-"+key); fe.classList.toggle("ok",r.ok); fe.classList.toggle("bad",!r.ok);
+        $("m-"+key).innerHTML = r.ok ? `<div class="msg ok">Stimmt.</div>` : `<div class="msg bad">${esc(r.msg)}</div>`;
+        if(!r.ok) allOk=false;
+      });
+      if(allOk){
+        Sound.open();
+        if(i===0 && !S.started) S.started=Date.now();
+        S.opened[i]=true; save();
+        setTimeout(()=>render(),650);
+        $("lockmsg").innerHTML=`<div class="msg ok">Klick – das Schloss springt auf.</div>`;
+      }else{
+        Sound.fail();
+        form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+      }
+    };
+  }
+  const mq=$("mqbtn");
+  if(mq) mq.onclick=()=>{
+    const sel=document.querySelector('input[name="mq"]:checked');
+    if(!sel){ $("mqmsg").innerHTML=`<div class="msg bad">Wählt eine Antwort.</div>`; return; }
+    if(sel.value===d.model.correct){ S.model[i]=sel.value; save(); render(); }
+    else $("mqmsg").innerHTML=`<div class="msg bad">${wrongModel(sel.value,d.model.correct)}</div>`;
+  };
+  const nb=$("nextbtn");
+  if(nb) nb.onclick=()=>{
+    if(i<7){
+      const d=DOORS[i+1], from=+DOORS[i].year, to=+d.year;
+      S.door=i+1; save(); render(); window.scrollTo({top:0});
+      Warp.jump({from,to,color:EPOCH_COLORS[i+1],eyebrow:to<from?"Zeitsprung zurück":"Zeitsprung vorwärts",dest:`Ankunft: ${d.who} · ${d.where}`});
+    }
+    else {
+      if(S.pausedAt){S.pausedTotal+=Date.now()-S.pausedAt;S.pausedAt=null;}
+      S.finished=Date.now(); save(); render(); window.scrollTo({top:0});
+      const fe=document.querySelector(".final-time"), total=elapsedMs()+S.penalty*60000;
+      if(fe) fe.textContent="00:00";
+      Warp.jump({from:1905,to:2026,color:"#f2a25c",eyebrow:"Rückkehr in die Gegenwart",dest:"Lichtlabor · Die Tür ist entriegelt",final:true,onOpen:()=>countUp(fe,total)});
+    }
+  };
+}
+function wrongModel(sel,correct){
+  const t={
+    A:"Das Teilchenmodell allein? Überlegt, ob Newtons Teilchen dieses Verhalten zeigen würden.",
+    B:"Nur das Wellenmodell? Prüft, ob nicht auch Newtons Teilchen das erklären könnten.",
+    C:"Beide? Überlegt, ob Teilchen das wirklich zeigen würden.",
+    D:"Keines? Eines der beiden Modelle schafft das sehr wohl."
+  };
+  if(correct==="D") return "Lest die Frage genau: Es geht nicht ums Messen der Wellenlänge, sondern darum, warum nur bestimmte Wellenlängen entstehen.";
+  return t[sel];
+}
+
+/* Finale */
+function renderFinal(){
+  const total=elapsedMs()+S.penalty*60000;
+  const hintsN=Object.values(S.hints).reduce((a,b)=>a+b,0);
+  const team=TEAMS[S.team]||{name:"–"};
+  $("main").innerHTML=`<section class="card" style="gap:16px">
+      <p class="eyebrow">Zurück im Lichtlabor · Team ${esc(team.name)}</p>
+      <h2 style="font-size:1.6rem">Das Wellenmodell ist repariert. Die Tür ist offen.</h2>
+      <div class="btnrow" style="gap:28px;align-items:flex-end">
+        <div><h3>Gesamtzeit</h3><div class="final-time">${fmt(total)}</div></div>
+        <p class="sub">Spielzeit ${fmt(elapsedMs())} + Strafzeit ${S.penalty} Min. · ${hintsN} ${hintsN===1?"Hinweis":"Hinweise"} · ${S.jokers} Joker</p>
+      </div>
+      <div class="msg info">Zeigt diesen Bildschirm der Lehrkraft. Danach: Vergleicht eure Modelltabelle unten mit dem Tafelbild.</div>
+    </section>
+    <div class="outlook" style="margin-top:18px">
+      <section class="card"><span class="year">1905 · Photoeffekt</span>
+        <p>Licht löst Elektronen aus einer Metallplatte. Mit rotem Licht klappt es nie – egal wie hell. Mit UV-Licht sofort, auch wenn es ganz schwach ist. Nach dem Wellenmodell müsste helles Licht immer genug Energie liefern.</p>
+        <p class="sub">Einstein deutet das so: Licht gibt seine Energie in Portionen ab. Das Lösungswort war kein Zufall.</p></section>
+      <section class="card"><span class="year">1961 · Elektronen am Doppelspalt</span>
+        <p>Claus Jönsson schickt Elektronen – eindeutig Teilchen – durch einen Doppelspalt. Auf dem Schirm entsteht ein Interferenzmuster wie beim Licht.</p>
+        <p class="sub">Teilchen verhalten sich wie Wellen, Wellen wie Teilchen. Wie passt das zusammen? Das klären wir in UV IV.</p></section>
+    </div>
+    ${KLAUSURTRAINING_URL?`<section class="card" style="margin-top:18px"><h3>Klausurtraining (freiwillig, für zuhause)</h3><p>Übungsaufgaben mit Zufallswerten, gestuften Hilfen und Selbsttest: <a href="${KLAUSURTRAINING_URL}" target="_blank" rel="noopener">Klausurtraining Wellenoptik öffnen</a></p></section>`:""}`;
+}
+
+/* Lehrkraft */
+const pinOk=()=>$("pin").value===LEHRKRAFT_PIN;
+const tmsg=t=>{$("t-msg").textContent=t;};
+$("t-joker").onclick=()=>{
+  if(!pinOk()) return tmsg("PIN falsch.");
+  if(!S.team) return tmsg("Zuerst ein Team wählen.");
+  if(S.finished) return tmsg("Spiel ist beendet.");
+  const i=S.door;
+  if(S.opened[i]) return tmsg("Diese Tür ist schon offen.");
+  if(i===0 && !S.started) S.started=Date.now();
+  Sound.open(); S.opened[i]="joker"; S.jokers++; S.penalty+=JOKER_PENALTY; save(); render(); tmsg(`Tür ${DOORS[i].year} geöffnet (+${JOKER_PENALTY} Min.).`);
+};
+$("t-sol").onclick=()=>{
+  if(!pinOk()) return tmsg("PIN falsch.");
+  const d=DOORS[Math.min(S.door,7)];
+  $("t-sol-box").innerHTML=`<div class="solution"><b>${d.year}:</b> ${esc(d.solution)}${d.model?`<br><b>Modellfrage:</b> ${d.model.correct} – ${esc(MODEL_CHOICES[d.model.correct])}`:""}</div>`;
+};
+$("t-pause").onclick=()=>{
+  if(!pinOk()) return tmsg("PIN falsch.");
+  if(!S.started||S.finished) return tmsg("Die Uhr läuft gerade nicht.");
+  if(S.pausedAt){ S.pausedTotal+=Date.now()-S.pausedAt; S.pausedAt=null; tmsg("Uhr läuft wieder."); $("t-pause").textContent="Uhr anhalten"; }
+  else { S.pausedAt=Date.now(); tmsg("Uhr angehalten."); $("t-pause").textContent="Uhr weiterlaufen lassen"; }
+  save(); tick();
+};
+let resetArmed=false;
+$("t-reset").onclick=()=>{
+  if(!pinOk()) return tmsg("PIN falsch.");
+  if(!resetArmed){ resetArmed=true; $("t-reset").textContent="Wirklich zurücksetzen? Nochmal klicken"; return; }
+  resetArmed=false; $("t-reset").textContent="Spiel zurücksetzen";
+  S=fresh(); save(); $("t-sol-box").innerHTML=""; tmsg("Spiel zurückgesetzt."); render();
+};
+
+function renderSoundBtn(){
+  $("st-sound").setAttribute("aria-pressed",Sound.on?"true":"false");
+  $("st-sound-l").textContent=Sound.on?"an":"aus";
+}
+$("st-sound").onclick=()=>{ Sound.set(!Sound.on); renderSoundBtn(); if(Sound.on) Sound.open(); };
+renderSoundBtn();
+
+function render(){
+  if(S.team){ document.documentElement.dataset.team=S.team; $("st-team").textContent=TEAMS[S.team].name; }
+  else { delete document.documentElement.dataset.team; $("st-team").textContent="–"; }
+  $("t-pause").textContent = S.pausedAt ? "Uhr weiterlaufen lassen" : "Uhr anhalten";
+  renderTimeline(); renderModel();
+  if(!S.team) renderTeamPick();
+  else if(S.finished) renderFinal();
+  else renderDoor();
+  tick();
+}
+render();
+</script>
+</body>
+</html>

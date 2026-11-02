@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Flächen-Werkstatt</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/lexend.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: eine Heftseite – Figur oben, darunter nummerierte Schritte; Kästchenpapier als Grund. Gleiche Familie wie Kommastellen-Trainer, Figuren & Umfang und Einheiten-Umrechner. */
+:root{
+  --paper:#F6F8FC; --grid:rgba(43,79,168,.085); --surface:#FFFFFF; --line:#D3DBEA;
+  --ink:#1B2540; --muted:#56627C; --accent:#2B4FA8; --accent-ink:#FFFFFF; --accent-soft:#E5EBFA;
+  --est:#6B3FA0; --est-soft:#EFE7F8; --fa:#0A7C91; --fb:#C25E0C; --gridline:rgba(43,79,168,.28); --comma:#D2233A;
+  --good:#22814F; --good-soft:#DDF3E7; --warn:#9A6600; --warn-soft:#FFF1CC; --help:#B4462E; --help-soft:#FBE3DC;
+  --scrim:rgba(12,18,34,.5);
+  --font-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+    --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+    --est:#C9A6F5; --est-soft:#33274A; --fa:#4FC7DC; --fb:#FFA45E; --gridline:rgba(150,175,255,.25); --comma:#FF6B7D;
+    --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+    --scrim:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+  --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+  --est:#C9A6F5; --est-soft:#33274A; --fa:#4FC7DC; --fb:#FFA45E; --gridline:rgba(150,175,255,.25); --comma:#FF6B7D;
+  --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+  --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink); font-family:var(--font-body); font-size:18px; line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{
+  max-width:780px; margin:0 auto; display:flex; flex-direction:column; gap:14px;
+  padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+button{font:inherit; color:inherit}
+
+.top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.top h1{font-family:var(--font-display); font-weight:700; font-size:clamp(1.5rem,4.5vw,2rem); margin:0; letter-spacing:-.01em; text-wrap:balance}
+.top h1 .ap{color:var(--est)}
+.top p{margin:0; color:var(--muted)}
+.tipbtn{border:2px solid var(--accent); background:var(--surface); color:var(--accent); border-radius:999px; padding:10px 18px; min-height:48px; font-family:var(--font-display); font-weight:600; cursor:pointer}
+.tipbtn:hover{background:var(--accent-soft)}
+
+.stufen{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.stufen button{text-align:left; padding:10px 12px; border:2px solid var(--line); background:var(--surface); border-radius:12px; cursor:pointer; display:flex; flex-direction:column; gap:1px; min-height:68px}
+.stufen button:hover{border-color:var(--accent)}
+.stufen button[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+.lvl{font-size:.8rem; letter-spacing:.2em; color:var(--accent)}
+.stufen b{font-family:var(--font-display); font-weight:600}
+.stufen small{color:var(--muted); font-size:.82rem; line-height:1.25}
+
+.progress{display:flex; gap:6px; align-items:center}
+.pd{flex:1; height:9px; border-radius:5px; background:var(--line)}
+.pd.cur{background:var(--accent)}
+.pd.good{background:var(--good)} .pd.ok{background:var(--warn)} .pd.help{background:var(--help)}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:20px}
+.eyebrow{font-family:var(--font-display); font-size:.82rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.story{margin:8px 0 0; font-size:1.12rem; max-width:60ch}
+.term{font-weight:700; font-size:clamp(2.1rem,8vw,3.2rem); line-height:1.15; margin:6px 0 0; font-variant-numeric:tabular-nums; display:flex; flex-wrap:wrap; align-items:baseline; gap:.28em}
+.term.small{font-size:clamp(1.6rem,6vw,2.3rem)}
+.op,.q{color:var(--muted); font-weight:400}
+.res{color:var(--accent)}
+.claim{color:var(--muted)}
+.claim.bad{text-decoration:line-through; text-decoration-color:var(--help); text-decoration-thickness:4px}
+.cm{color:var(--comma)}
+.ap{color:var(--est); font-weight:700}
+.estline{display:inline-block; font-size:1.12rem; padding:8px 12px; background:var(--est-soft); border-radius:10px; font-variant-numeric:tabular-nums}
+.estline b{color:var(--est)}
+
+.steps{margin-top:14px; border-top:2px dashed var(--line)}
+.step{display:grid; grid-template-columns:38px minmax(0,1fr); gap:12px; padding:16px 0; border-bottom:2px dashed var(--line)}
+.step:last-child{border-bottom:0; padding-bottom:0}
+.sn{width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-family:var(--font-display); font-weight:700; background:var(--accent-soft); color:var(--accent)}
+.step.is-done .sn{background:var(--good-soft); color:var(--good)}
+.step.is-todo{opacity:.5}
+.step h2{font-family:var(--font-display); font-size:1.08rem; font-weight:600; margin:5px 0 8px}
+.step p{margin:0}
+.hint{color:var(--muted); font-size:.95rem; margin-top:4px!important}
+
+.ask{display:flex; flex-direction:column; gap:8px; margin-bottom:14px}
+.ask:last-child{margin-bottom:0}
+.ask .num{font-weight:700; font-size:1.25rem}
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{min-width:64px; height:58px; padding:0 14px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; font-size:1.4rem; cursor:pointer; font-variant-numeric:tabular-nums}
+.chip.wide{font-size:1.2rem}
+.chip.word{font-family:var(--font-display); font-weight:600; font-size:1.05rem}
+.chip:hover:not(:disabled){border-color:var(--accent)}
+.chip:disabled{cursor:default}
+.chip:disabled:not(.right){opacity:.4}
+.chip.right{background:var(--good-soft); border-color:var(--good); color:var(--good)}
+.chip.wrong{background:var(--help-soft); border-color:var(--help); color:var(--help)}
+.sum{display:inline-block; font-size:1.12rem; padding:8px 12px; background:var(--accent-soft); border-radius:10px; font-variant-numeric:tabular-nums}
+
+.tiles{display:flex; align-items:stretch; margin:10px 0 6px; overflow-x:auto; padding:2px 2px 4px}
+.tile{flex:none; position:relative; width:clamp(34px,9vw,60px); height:clamp(60px,13vw,78px); display:grid; place-items:center; font-weight:700; font-size:clamp(2rem,6vw,2.8rem); line-height:1; background:var(--surface); border:2px solid var(--line); border-radius:10px; font-variant-numeric:tabular-nums}
+.gap{flex:none; position:relative; width:clamp(18px,5vw,38px); border:0; padding:0; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center}
+.gap::after{content:""; position:absolute; left:50%; top:20%; bottom:20%; border-left:3px dotted var(--line); transform:translateX(-1px)}
+.gap:hover::after,.gap:focus-visible::after{border-color:var(--accent)}
+.gap.on::after{display:none}
+.gap.static{width:5px; cursor:default}
+.gap.static.on{width:clamp(20px,4.5vw,28px)}
+.gap.static::after{display:none}
+.comma{font-weight:700; font-size:clamp(2.6rem,7.5vw,3.4rem); line-height:1; color:var(--comma); transform:translateY(.3em); animation:pop .18s ease-out}
+@keyframes pop{from{transform:translateY(.3em) scale(.4); opacity:0}to{transform:translateY(.3em) scale(1); opacity:1}}
+.live{font-size:1rem; color:var(--muted)} .live b{color:var(--ink)}
+
+.tools{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center}
+.btn{font-family:var(--font-display); font-weight:600; font-size:1rem; padding:12px 18px; min-height:50px; border-radius:12px; border:2px solid var(--line); background:var(--surface); cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.4; cursor:default}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); margin-left:auto}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08)}
+
+.fb{margin-top:12px; padding:10px 14px; border-radius:10px; font-size:1rem}
+.fb b{font-family:var(--font-display); font-weight:600}
+.fb.bad{background:var(--help-soft)} .fb.info{background:var(--warn-soft)} .fb.good{background:var(--good-soft)}
+
+.donebox{margin-top:16px; padding:16px; border-radius:12px; background:var(--good-soft); display:flex; flex-direction:column; gap:10px}
+.donebox.ok{background:var(--warn-soft)} .donebox.help{background:var(--help-soft)}
+.donebox .big{font-family:var(--font-display); font-weight:600; font-size:1.15rem; margin:0}
+.donebox p{margin:0}
+.path{font-size:1.1rem; font-variant-numeric:tabular-nums}
+.path .arr{color:var(--muted); padding:0 .15em}
+.donebox .btn.primary{align-self:flex-end}
+
+.inrow{display:flex; align-items:center; gap:10px; flex-wrap:nowrap; max-width:400px}
+.display{font-weight:700; font-size:2.3rem; min-height:76px; min-width:0; flex:1 1 auto; border:2px solid var(--line); border-radius:12px; padding:8px 18px; display:flex; align-items:center; background:var(--paper); font-variant-numeric:tabular-nums; overflow-x:auto}
+.display .ph{font-size:1.1rem; font-weight:400; color:var(--muted)}
+.unit{font-weight:700; font-size:1.6rem; color:var(--muted)}
+.pre{font-weight:700; font-size:2rem; color:var(--est)}
+.keys{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; max-width:340px; margin-top:10px}
+.key{height:62px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; font-size:1.6rem; cursor:pointer}
+.key:hover{border-color:var(--accent)}
+.key:active{background:var(--accent-soft)}
+.key.ck{color:var(--comma); font-size:2.2rem; line-height:.6}
+.key.del{font-size:1.05rem; font-family:var(--font-display); font-weight:600}
+
+.summary h2{font-family:var(--font-display); font-size:clamp(1.5rem,5vw,2rem); margin:4px 0 6px; text-wrap:balance}
+.stats{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:14px 0}
+.stat{border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:2px}
+.stat b{font-family:var(--font-display); font-size:1.9rem; line-height:1.1}
+.stat span{font-size:.92rem}
+.stat.good{background:var(--good-soft)} .stat.good b{color:var(--good)}
+.stat.ok{background:var(--warn-soft)} .stat.ok b{color:var(--warn)}
+.stat.help{background:var(--help-soft)} .stat.help b{color:var(--help)}
+.summary .tools .btn.primary{margin-left:0}
+
+.sheet[hidden]{display:none!important}
+.sheet{position:fixed; inset:0; z-index:30; background:var(--scrim); display:flex; align-items:flex-end; justify-content:center}
+.sheet-in{background:var(--surface); width:100%; max-width:780px; max-height:86vh; overflow:auto; border-radius:18px 18px 0 0; padding:20px;
+  padding-left:max(20px,env(safe-area-inset-left,0px)); padding-right:max(20px,env(safe-area-inset-right,0px)); padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
+.sheet-head h2{font-family:var(--font-display); margin:0; font-size:1.3rem}
+.tipgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px}
+.tipcard{border:2px solid var(--line); border-radius:12px; padding:12px 14px}
+.tipcard.focus{border-color:var(--accent); background:var(--accent-soft)}
+.tipcard h3{font-family:var(--font-display); font-size:1rem; font-weight:600; margin:0 0 4px}
+.tipcard p{margin:0; font-size:.98rem}
+.tipcard .ex{margin-top:6px; font-weight:700; font-variant-numeric:tabular-nums}
+
+
+.figbox{display:flex; justify-content:center; margin:10px 0 4px}
+.figbox .fig{width:100%; max-width:440px; height:auto; overflow:visible}
+.figbox.small .fig{max-width:300px}
+.fig .gl{stroke:var(--gridline); stroke-width:1}
+.fig .shape{fill:var(--accent-soft); stroke:var(--accent); stroke-width:4; stroke-linejoin:round}
+.fig .shape.walk{stroke:var(--good); stroke-dasharray:100; animation:walk 1.4s ease-out both}
+@keyframes walk{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+.fig .edge{stroke-width:6; stroke-linecap:round}
+.fig .edge.ea{stroke:var(--fa)} .fig .edge.eb{stroke:var(--fb)}
+.fig .ram{fill:none; stroke:var(--comma); stroke-width:2.5}
+.fig .lab{font-family:var(--font-body); font-weight:700; font-size:19px; fill:var(--ink)}
+.fig .lab.la{fill:var(--fa)} .fig .lab.lb{fill:var(--fb)} .fig .cmt{fill:var(--comma)}
+.c-a{color:var(--fa); font-weight:700} .c-b{color:var(--fb); font-weight:700}
+.story.big{font-size:clamp(1.3rem,4vw,1.7rem); font-weight:700; line-height:1.3}
+
+.credit{margin-top:18px; text-align:center; font-size:.85rem; color:var(--muted)}
+
+@media (max-width:520px){
+  .stufen small{display:none}
+  .stats{grid-template-columns:1fr}
+  .card{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important}
+}
+/* ---- Flächen-Werkstatt ---- */
+.fig .cell{fill:transparent; stroke:none}
+.fig .cell.hr{fill:var(--fa); fill-opacity:.28}
+.fig .cell.hc{fill:var(--fb); fill-opacity:.30}
+.fig .cell.full{fill:var(--accent); fill-opacity:.22; animation:fillin .5s ease-out both}
+@keyframes fillin{from{fill-opacity:0}to{fill-opacity:.22}}
+.fig .outline.walk{stroke:var(--good); stroke-dasharray:100; animation:walk 1.4s ease-out both}
+.fig .gl2{stroke:var(--gridline); stroke-width:1.6}
+.fig .outline{fill:none; stroke:var(--accent); stroke-width:4; stroke-linejoin:round}
+.fig .shape.plain{fill:var(--accent-soft)}
+.fig .pa{fill:var(--fa); fill-opacity:.26; stroke:none}
+.fig .pb{fill:var(--fb); fill-opacity:.28; stroke:none}
+.fig .pbig{fill:none; stroke:var(--muted); stroke-width:2.5; stroke-dasharray:7 6}
+.fig .cut{stroke:var(--ink); stroke-width:4; stroke-dasharray:10 7; stroke-linecap:round}
+.fig .cand{cursor:pointer; outline:none}
+.fig .cand .vis{stroke:var(--est); stroke-width:4; stroke-dasharray:10 7; stroke-linecap:round; transition:stroke .15s}
+.fig .cand .hit{stroke:transparent; stroke-width:30; stroke-linecap:round}
+.fig .cand:hover .vis,.fig .cand:focus-visible .vis{stroke:var(--accent); stroke-width:6}
+.fig .cand.bad .vis{stroke:var(--help); stroke-dasharray:4 6}
+.fig .cand.bad{cursor:default}
+.fig .lab.lq{fill:var(--comma)}
+.fig .ptxt{font-family:var(--font-display); font-weight:600; font-size:17px}
+.fig .ptxt.a{fill:var(--fa)} .fig .ptxt.b{fill:var(--fb)}
+.figbox.mid .fig{max-width:380px}
+.tag{display:inline-block; font-family:var(--font-display); font-weight:600; font-size:.95rem; padding:2px 10px; border-radius:999px}
+.tag.a{background:color-mix(in srgb,var(--fa) 22%,transparent); color:var(--fa)}
+.tag.b{background:color-mix(in srgb,var(--fb) 24%,transparent); color:var(--fb)}
+.chip.word.long{height:auto; min-height:58px; padding:8px 16px; text-align:left}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Flächen-<span class="ap">Werkstatt</span></h1>
+      <p>Flächeninhalt berechnen – Rechtecke, zusammengesetzte Flächen, Rand oder Innen</p>
+    </div>
+    <button class="tipbtn" type="button" data-action="tips" id="tipbtn">Tippkarten</button>
+  </header>
+
+  <nav class="stufen" aria-label="Stufe wählen">
+    <button type="button" id="st1" data-action="stufe" data-s="1" aria-pressed="true"><span class="lvl">●○○</span><b>Stufe 1</b><small>Rechteck und Quadrat</small></button>
+    <button type="button" id="st2" data-action="stufe" data-s="2" aria-pressed="false"><span class="lvl">●●○</span><b>Stufe 2</b><small>Zusammengesetzte Flächen</small></button>
+    <button type="button" id="st3" data-action="stufe" data-s="3" aria-pressed="false"><span class="lvl">●●●</span><b>Stufe 3</b><small>Umfang oder Flächeninhalt?</small></button>
+  </nav>
+
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <main id="app"></main>
+  <footer class="credit">Erstellt mit KI von Christoph Kansy</footer>
+</div>
+
+<div class="sheet" id="tips" hidden>
+  <div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="tipsTitle">
+    <div class="sheet-head">
+      <h2 id="tipsTitle">Tippkarten</h2>
+      <button class="btn" type="button" data-action="tipsclose" id="tipsclose">Schließen</button>
+    </div>
+    <div class="tipgrid">
+      <div class="tipcard" data-tip="1"><h3>1 · Rechteck und Quadrat</h3><p>Flächeninhalt = Reihen · Kästchen in einer Reihe. Die Einheit ist cm² oder m².</p><p class="ex">Rechteck: A = a · b<br>Quadrat: A = a · a<br>6 cm · 4 cm = 24 cm²</p></div>
+      <div class="tipcard" data-tip="2"><h3>2 · Zerlegen</h3><p>Teile die Fläche mit einer Linie in zwei Rechtecke. Rechne jeden Teil aus. Dann addiere.</p><p class="ex">Blau: 6 m · 3 m = 18 m²<br>Orange: 3 m · 2 m = 6 m²<br>zusammen: 24 m²</p></div>
+      <div class="tipcard" data-tip="3"><h3>3 · Fehlende Seiten finden</h3><p>Gegenüberliegende Seiten sind zusammen gleich lang. Rechne: ganze Seite minus das Stück, das du kennst.</p><p class="ex">unten 6 m, oben 2,5 m<br>6 m − 2,5 m = 3,5 m</p></div>
+      <div class="tipcard" data-tip="4"><h3>4 · Umfang oder Flächeninhalt?</h3><p><b>Rand → Umfang</b> (m, cm): Zaun, Fußleiste, Rahmen, Band, Lichterkette.<br><b>Innen → Flächeninhalt</b> (m², cm²): Teppich, Rasen, Fliesen, Farbe.</p><p class="ex">Gehe ich am Rand entlang – oder bedecke ich die ganze Fläche?</p></div>
+      <div class="tipcard" data-tip="5"><h3>5 · Kosten berechnen</h3><p>Rechne zuerst aus, wie groß oder wie lang es ist. Dann multipliziere mit dem Preis.</p><p class="ex">18 m², 1 m² kostet 12 €<br>18 · 12 € = 216 €</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const N = 8;
+const S = { stufe:1, tasks:[], idx:0, results:[], finished:false, justDone:false };
+const $app = document.getElementById('app');
+const $prog = document.getElementById('progress');
+const $tips = document.getElementById('tips');
+
+/* ---------- Zahlen als {i,p}: Wert = i / 10^p ---------- */
+function rnd(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(a){ for(let k=a.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [a[k],a[j]]=[a[j],a[k]]; } return a; }
+function simplify(n){ let i=n.i,p=n.p; while(p>0 && i%10===0){ i=i/10; p--; } return {i:i,p:p}; }
+function fmt(n){ const neg=n.i<0; const s=String(Math.abs(n.i)).padStart(n.p+1,'0'); const r = n.p ? s.slice(0,s.length-n.p)+','+s.slice(s.length-n.p) : s; return (neg?'−':'')+r; }
+function fs(n){ return fmt(simplify(n)); }
+function val(n){ return n.i/Math.pow(10,n.p); }
+function I(k){ return {i:k,p:0}; }
+function H2(k){ return simplify({i:k*5,p:1}); }            // k halbe Einheiten: H2(9) = 4,5
+function add(a,b){ const p=Math.max(a.p,b.p); return simplify({i:a.i*Math.pow(10,p-a.p)+b.i*Math.pow(10,p-b.p), p:p}); }
+function sub(a,b){ const p=Math.max(a.p,b.p); return simplify({i:a.i*Math.pow(10,p-a.p)-b.i*Math.pow(10,p-b.p), p:p}); }
+function times(a,k){ return simplify({i:a.i*k, p:a.p}); }
+function mul(a,b){ return simplify({i:a.i*b.i, p:a.p+b.p}); }
+function eq(a,b){ return fs(a)===fs(b); }
+function cm(s){ return String(s).replace(/(\d),(\d)/g,'$1<span class="cm">,</span>$2'); }
+function L(n,u){ return cm(fs(n))+(u?' '+u:''); }
+function sq(u){ return u+'²'; }
+function euroTxt(n){ const c=Math.round(val(n)*100), e=Math.floor(c/100), r=c%100; return r ? e+','+String(r).padStart(2,'0') : String(e); }
+function E(n){ return cm(euroTxt(n))+' €'; }
+function svgTxt(s){ return String(s).replace(/(\d),(\d)/g,'$1<tspan class="cmt">,</tspan>$2'); }
+function lbl(n,u){ return fs(n)+' '+u; }
+function okP(n){ return simplify(n).p<=1; }   // höchstens eine Stelle nach dem Komma
+
+/* ---------- Zeichnen ---------- */
+function area2(pts){ let s=0; for(let k=0;k<pts.length;k++){ const p=pts[k], q=pts[(k+1)%pts.length]; s+=p[0]*q[1]-q[0]*p[1]; } return s/2; }
+function edgeLabel(pts,k,text,cls){
+  const p=pts[k], q=pts[(k+1)%pts.length], A=area2(pts);
+  const dx=q[0]-p[0], dy=q[1]-p[1], l=Math.hypot(dx,dy);
+  let nx=dy/l, ny=-dx/l; if(A<0){ nx=-nx; ny=-ny; }
+  const mx=(p[0]+q[0])/2, my=(p[1]+q[1])/2, off=12;
+  const side=Math.abs(nx)>0.6;
+  const x=mx+nx*off, y= side ? my+7 : (ny>0 ? my+off+16 : my-off);
+  const anchor= side ? (nx>0?'start':'end') : 'middle';
+  return '<text class="lab '+(cls||'')+'" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'">'+svgTxt(text)+'</text>';
+}
+function shapeSvg(pts,o){
+  o=o||{};
+  const xs=pts.map(p=>p[0]), ys=pts.map(p=>p[1]);
+  const minx=Math.min.apply(null,xs), maxx=Math.max.apply(null,xs), miny=Math.min.apply(null,ys), maxy=Math.max.apply(null,ys);
+  const mx=82, my=36;
+  const vbw=maxx-minx+2*mx;
+  let h='<svg class="fig" style="max-width:'+Math.round(Math.min(vbw*1.05,460))+'px" viewBox="'+(minx-mx)+' '+(miny-my)+' '+vbw+' '+(maxy-miny+2*my)+'" role="img" aria-label="'+(o.aria||'Figur')+'">';
+  const d='M'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L')+' Z';
+  if(o.parts){
+    o.parts.forEach(pt=>{ h+='<rect class="'+pt.cls+'" x="'+pt.r.x.toFixed(1)+'" y="'+pt.r.y.toFixed(1)+'" width="'+pt.r.w.toFixed(1)+'" height="'+pt.r.h.toFixed(1)+'"/>'; });
+    h+='<path class="outline'+(o.walk?' walk':'')+'" d="'+d+'" pathLength="100"/>';
+  } else h+='<path class="shape plain'+(o.walk?' walk':'')+'" d="'+d+'" pathLength="100"/>';
+  if(o.cut) h+='<line class="cut" x1="'+o.cut.a[0]+'" y1="'+o.cut.a[1]+'" x2="'+o.cut.b[0]+'" y2="'+o.cut.b[1]+'"/>';
+  (o.cands||[]).forEach((c,k)=>{
+    const ln='x1="'+c.a[0]+'" y1="'+c.a[1]+'" x2="'+c.b[0]+'" y2="'+c.b[1]+'"';
+    h+='<g class="cand'+(c.bad?' bad':'')+'" '+(c.bad?'':'data-action="cut" data-v="'+c.id+'" tabindex="0" role="button" ')+'aria-label="Linie '+(k+1)+'"><line class="hit" '+ln+'/><line class="vis" '+ln+'/></g>';
+  });
+  (o.parts||[]).forEach(pt=>{ if(pt.txt && pt.r.w>70 && pt.r.h>34) h+='<text class="ptxt '+pt.tc+'" x="'+(pt.r.x+pt.r.w/2).toFixed(1)+'" y="'+(pt.r.y+pt.r.h/2+6).toFixed(1)+'" text-anchor="middle">'+svgTxt(pt.txt)+'</text>'; });
+  (o.labels||[]).forEach(l=>{ h+=edgeLabel(pts,l.k,l.t,l.cls); });
+  return h+'</svg>';
+}
+/* Rechteck: Quadrat als Quadrat, Rechteck immer deutlich länglich (Seitenverhältnis 1,3 bis 2,6) */
+function rectPts(a,b){
+  let w,h;
+  if(eq(a,b)){ w=h=170; }
+  else {
+    const r=val(a)/val(b), R=Math.max(1.3, Math.min(Math.max(r,1/r), 2.6));
+    if(r>=1){ w=240; h=w/R; if(h>170){ h=170; w=h*R; } }
+    else { h=180; w=h/R; }
+  }
+  return [[0,h],[w,h],[w,0],[0,0]];
+}
+function rectLabels(a,b,u,named){
+  const s=eq(a,b);
+  if(named) return s ? [{k:0,t:'a = '+lbl(a,u),cls:'la'}] : [{k:0,t:'a = '+lbl(a,u),cls:'la'},{k:1,t:'b = '+lbl(b,u),cls:'lb'}];
+  return s ? [{k:0,t:lbl(a,u)}] : [{k:0,t:lbl(a,u)},{k:1,t:lbl(b,u)}];
+}
+
+/* ---------- L-Form und T-Form (in echten Maßen gezeichnet) ---------- */
+// L: unten W, links H, oben w1, rechts unten h2; Ecke fehlt oben rechts (gespiegelt mit fx/fy)
+function geoL(t){
+  const W=val(t.W),H=val(t.H),w1=val(t.w1),h2=val(t.h2);
+  const s=Math.min(300/W,210/H);
+  const P=(x,y)=>[ +(((t.fx?W-x:x))*s).toFixed(1), +(((t.fy?H-y:y))*s).toFixed(1) ];
+  const R=(x0,y0,x1,y1)=>{ const a=P(x0,y0), b=P(x1,y1); return {x:Math.min(a[0],b[0]), y:Math.min(a[1],b[1]), w:Math.abs(a[0]-b[0]), h:Math.abs(a[1]-b[1])}; };
+  const xm=w1+(W-w1)/2, ym=(H-h2)/2;
+  return { poly:[P(0,H),P(W,H),P(W,H-h2),P(w1,H-h2),P(w1,0),P(0,0)],
+    lines:{ V:{a:P(w1,H-h2), b:P(w1,H), ok:true, blue:R(0,0,w1,H), orange:R(w1,H-h2,W,H)},
+            Hz:{a:P(0,H-h2), b:P(w1,H-h2), ok:true, blue:R(0,H-h2,W,H), orange:R(0,0,w1,H-h2)},
+            BV:{a:P(xm,H-h2), b:P(xm,H), ok:false},
+            BH:{a:P(0,ym), b:P(w1,ym), ok:false} } };
+}
+// T: oben W, Balken hb, Stiel ws breit und hs hoch
+function geoT(t){
+  const W=val(t.W),hb=val(t.hb),ws=val(t.ws),hs=val(t.hs), H=hb+hs, ox=(W-ws)/2;
+  const s=Math.min(300/W,210/H);
+  const P=(x,y)=>[ +(x*s).toFixed(1), +(((t.fy?H-y:y))*s).toFixed(1) ];
+  const R=(x0,y0,x1,y1)=>{ const a=P(x0,y0), b=P(x1,y1); return {x:Math.min(a[0],b[0]), y:Math.min(a[1],b[1]), w:Math.abs(a[0]-b[0]), h:Math.abs(a[1]-b[1])}; };
+  return { poly:[P(0,0),P(W,0),P(W,hb),P(ox+ws,hb),P(ox+ws,H),P(ox,H),P(ox,hb),P(0,hb)],
+    lines:{ Hz:{a:P(ox,hb), b:P(ox+ws,hb), ok:true, blue:R(0,0,W,hb), orange:R(ox,hb,ox+ws,H)},
+            BL:{a:P(ox,0), b:P(ox,hb), ok:false},
+            BR:{a:P(ox+ws,0), b:P(ox+ws,hb), ok:false} } };
+}
+function baseLabels(t){
+  const u=t.unit;
+  if(t.shape==='L') return [{k:0,t:lbl(t.W,u)},{k:1,t:lbl(t.h2,u)},{k:4,t:lbl(t.w1,u)},{k:5,t:lbl(t.H,u)}];
+  return [{k:0,t:lbl(t.W,u)},{k:7,t:lbl(t.hb,u)},{k:4,t:lbl(t.ws,u)},{k:3,t:lbl(t.hs,u)}];
+}
+// Rechnungen zu einer Trennlinie
+function splitInfo(t,id){
+  if(t.shape==='T') return {blue:[t.W,t.hb], orange:[t.ws,t.hs], missEdge:null, fullErr:mul(t.ws,add(t.hb,t.hs))};
+  if(id==='V') return {blue:[t.w1,t.H], orange:[sub(t.W,t.w1),t.h2], missEdge:2, miss:sub(t.W,t.w1), full:t.W, known:t.w1, fullErr:mul(t.W,t.h2), where:'unten'};
+  return {blue:[t.W,t.h2], orange:[t.w1,sub(t.H,t.h2)], missEdge:3, miss:sub(t.H,t.h2), full:t.H, known:t.h2, fullErr:mul(t.w1,t.H), where:'links'};
+}
+function genL(dec){
+  for(let n=0;n<500;n++){
+    let W,H,w1,h2;
+    if(dec){ W=rnd(10,18); H=rnd(8,14); w1=rnd(4,W-3); h2=rnd(4,H-3); }
+    else { W=2*rnd(5,9); H=2*rnd(4,7); w1=2*rnd(2,W/2-2); h2=2*rnd(2,H/2-2); }
+    if(w1/W<0.3||w1/W>0.7||h2/H<0.3||h2/H>0.72) continue;
+    const v=[W,H,w1,h2].map(H2);
+    const odd=[W,H,w1,h2,W-w1,H-h2].filter(k=>k%2).length;
+    if(dec && (odd<1 || [W,H,w1,h2].filter(k=>k%2).length>2)) continue;
+    const t={shape:'L', W:v[0], H:v[1], w1:v[2], h2:v[3]};
+    const pr=[mul(t.w1,t.H), mul(sub(t.W,t.w1),t.h2), mul(t.w1,sub(t.H,t.h2)), mul(t.W,t.h2)];
+    if(!pr.every(okP)) continue;
+    return t;
+  }
+  return {shape:'L', W:I(6), H:I(5), w1:H2(5), h2:I(3)};
+}
+function genT(){
+  for(let n=0;n<500;n++){
+    const W=rnd(12,20), hb=rnd(3,6), ws=rnd(4,8), hs=rnd(5,12);
+    if(ws>W-4 || [W,hb,ws,hs].filter(k=>k%2).length<1) continue;
+    const t={shape:'T', W:H2(W), hb:H2(hb), ws:H2(ws), hs:H2(hs)};
+    if(!okP(mul(t.W,t.hb)) || !okP(mul(t.ws,t.hs))) continue;
+    if((hb+hs)/W>1.1) continue;
+    return t;
+  }
+  return {shape:'T', W:I(8), hb:I(2), ws:I(3), hs:H2(9)};
+}
+function areaL(t){ return add(mul(t.w1,t.H), mul(sub(t.W,t.w1),t.h2)); }
+function areaT(t){ return add(mul(t.W,t.hb), mul(t.ws,t.hs)); }
+
+/* ---------- Aufgaben ---------- */
+function base(kind,extra){ return Object.assign({kind:kind, errors:0, stepErr:0, revealed:false, wrong:null, msg:null, input:'', ans:{}, vals:{}}, extra||{}); }
+
+// Stufe 1
+function gridTask(isSq){
+  let a,b;
+  if(isSq){ a=rnd(3,6); b=a; }
+  else { do{ a=rnd(3,8); b=rnd(2,6); }while(a===b || Math.max(a,b)/Math.min(a,b)<1.3); }
+  return base('grid',{a:a, b:b, sq:isSq, A:a*b, step:'row'});
+}
+function areaMTask(isSq){
+  const unit=pick(['cm','m']); let a,b;
+  if(isSq){ a=rnd(2,9); b=a; } else { do{ a=rnd(3,9); b=rnd(2,8); }while(a<=b || a/b<1.3); }
+  return base('areaM',{sq:isSq, a:I(a), b:I(b), unit:unit, A:I(a*b), step:'formula'});
+}
+function unitTask(){ let a,b; do{ a=rnd(4,9); b=rnd(2,6); }while(a<=b || a/b<1.3); return base('unit',{a:I(a), b:I(b), step:'uA'}); }
+const STIMMT=[
+  ['Ein Rechteck mit a = 5 cm und b = 3 cm hat den Flächeninhalt 15 cm².', true, 'A = 5 cm · 3 cm = 15 cm².'],
+  ['Ein Rechteck mit a = 5 cm und b = 3 cm hat den Flächeninhalt 16 cm².', false, '16 cm ist der Umfang (Rand). Der Flächeninhalt ist A = 5 cm · 3 cm = 15 cm².'],
+  ['Ein Quadrat mit a = 4 m hat den Flächeninhalt 16 m².', true, 'A = 4 m · 4 m = 16 m².'],
+  ['Ein Quadrat mit a = 3 cm hat den Flächeninhalt 6 cm².', false, 'Beim Quadrat rechnet man a · a: 3 cm · 3 cm = 9 cm².'],
+  ['Den Flächeninhalt misst man in cm.', false, 'cm ist eine Länge. Flächen misst man in cm² oder m².'],
+  ['Ein Rechteck mit 2 cm und 6 cm ist genauso groß wie ein Rechteck mit 3 cm und 4 cm.', true, '2 · 6 = 12 und 3 · 4 = 12. Beide haben 12 cm².'],
+  ['Ein Rechteck mit 2 cm und 8 cm ist genauso groß wie ein Quadrat mit 4 cm.', true, '2 · 8 = 16 und 4 · 4 = 16. Beide haben 16 cm².'],
+  ['Ein Rechteck mit 6 m und 4 m hat den Flächeninhalt 10 m².', false, '6 + 4 = 10 ist addiert. Richtig: A = 6 m · 4 m = 24 m².']
+];
+function stimmtTask(k){ const s=STIMMT[k]; return base('stimmt',{text:s[0], truth:s[1], why:s[2], step:'judge'}); }
+
+// Stufe 2
+function zerTask(dec,shape){
+  const g = shape==='T' ? genT() : genL(dec);
+  const t=base('zer', Object.assign(g,{unit: pick(['m','m','cm']), fx:Math.random()<.5, fy:Math.random()<.5, step:'split', badTried:{}}));
+  t.cands = shape==='T' ? shuffle(['Hz', pick(['BL','BR'])]) : shuffle(['V','Hz', pick(['BV','BH'])]);
+  t.total = shape==='T' ? areaT(t) : areaL(t);
+  return t;
+}
+function missTask(){
+  const g=genL(true);
+  const t=base('miss', Object.assign(g,{unit:pick(['m','cm']), fx:Math.random()<.5, fy:Math.random()<.5, step:'pick'}));
+  t.which = Math.random()<.5 ? 'V' : 'Hz';
+  const si=splitInfo(t,t.which); t.miss=si.miss; t.full=si.full; t.known=si.known; t.missEdge=si.missEdge;
+  return t;
+}
+
+// Stufe 3
+function priceFor(v){
+  if(simplify(v).p===0) return Math.random()<.25 ? {i:950,p:2} : I(pick([5,6,8,9,12,15]));
+  return I(pick([2,4,6,8,12]));
+}
+function rectDims(lo,hi,bmin){ for(let n=0;n<200;n++){ const a=H2(rnd(lo,hi)), b=I(rnd(bmin||2,6)); if(val(a)>val(b) && val(a)/val(b)>=1.3) return [a,b]; } return [H2(9),I(3)]; }
+const SACH={
+  rasen(){ const d=rectDims(10,20); const withP=Math.random()<.5;
+    return {isA:true, d:d, unit:'m', item:'Rasen', text:'Familie Yilmaz legt im Garten neuen Rasen. Der Garten ist '+L(d[0],'m')+' lang und '+L(d[1],'m')+' breit.'+(withP?' 1 m² Rollrasen kostet {P}. Wie viel kostet der Rasen?':' Wie groß ist die Fläche für den Rasen?'), price:withP, why:'Der Rasen bedeckt den ganzen Garten.'}; },
+  wand(){ const d=rectDims(8,12); return {isA:true, d:d, unit:'m', item:'Farbe', text:'Eine Wand ist '+L(d[0],'m')+' breit und '+L(d[1],'m')+' hoch. Tom streicht die ganze Wand mit Farbe. Wie groß ist die Fläche?', price:false, why:'Die Farbe bedeckt die ganze Wand.'}; },
+  teppich(){ const d=rectDims(8,13,3); return {isA:true, d:d, unit:'m', item:'Teppich', text:'Das Zimmer von Ben ist '+L(d[0],'m')+' lang und '+L(d[1],'m')+' breit. Er bekommt neuen Teppichboden. 1 m² kostet {P}. Wie viel kostet der Teppich?', price:true, why:'Der Teppich bedeckt den ganzen Boden.'}; },
+  fliesen(){ const d=rectDims(8,14); return {isA:true, d:d, unit:'m', item:'Fliesen', text:'Eine Terrasse ist '+L(d[0],'m')+' lang und '+L(d[1],'m')+' breit. Sie wird mit Fliesen belegt. 1 m² Fliesen kostet {P}. Wie viel kosten die Fliesen?', price:true, why:'Die Fliesen bedecken die ganze Terrasse.'}; },
+  zaun(){ const d=rectDims(10,20); return {isA:false, d:d, unit:'m', item:'Zaun', text:'Ein Garten ist '+L(d[0],'m')+' lang und '+L(d[1],'m')+' breit. Um den Garten kommt ein Zaun. 1 m Zaun kostet {P}. Wie viel kostet der Zaun?', price:true, why:'Der Zaun geht am Rand entlang.'}; },
+  leiste(){ const d=rectDims(8,13,3); const withP=Math.random()<.5;
+    return {isA:false, d:d, unit:'m', item:'Fußleiste', text:'Ein Zimmer ist '+L(d[0],'m')+' lang und '+L(d[1],'m')+' breit. Unten an den Wänden kommt rundherum eine Fußleiste.'+(withP?' 1 m kostet {P}. Wie viel kostet die Fußleiste?':' Wie lang ist die Fußleiste?'), price:withP, why:'Die Fußleiste geht am Rand entlang.'}; },
+  licht(){ const d=rectDims(4,8); return {isA:false, d:d, unit:'m', item:'Lichterkette', text:'Ein Schaufenster ist '+L(d[0],'m')+' breit und '+L(d[1],'m')+' hoch. Um das Schaufenster kommt eine Lichterkette. Wie lang muss sie sein?', price:false, why:'Die Lichterkette geht am Rand entlang.'}; },
+  band(){ const d=[I(pick([30,40,50,60])), I(pick([20,25,35]))]; return {isA:false, d:d, unit:'cm', item:'Band', text:'Ein Bild ist '+L(d[0],'cm')+' breit und '+L(d[1],'cm')+' hoch. Mia klebt ein Band einmal um das Bild herum. Wie lang ist das Band?', price:false, why:'Das Band geht am Rand entlang.'}; },
+  lteppich(){ const g=genL(Math.random()<.6); const withP=Math.random()<.5;
+    return {isA:true, L:g, unit:'m', item:'Teppich', text:'Lenas Zimmer hat diese Form. Sie bekommt neuen Teppichboden.'+(withP?' 1 m² kostet {P}. Wie viel kostet der Teppich?':' Wie groß ist der Boden?'), price:withP, why:'Der Teppich bedeckt den ganzen Boden.'}; },
+  lleiste(){ const g=genL(Math.random()<.6); return {isA:false, L:g, unit:'m', item:'Fußleiste', text:'Um Tims Zimmer kommt unten an den Wänden eine Fußleiste. Das Zimmer hat diese Form. Wie lang ist die Fußleiste?', price:false, why:'Die Fußleiste geht am Rand entlang.'}; }
+};
+function sachTask(key){
+  const s=SACH[key](); const u=s.unit;
+  const t=base('sach',{key:key, isA:s.isA, unit:u, item:s.item, why:s.why, step:'type'});
+  if(s.L){ Object.assign(t,s.L,{fx:Math.random()<.5, fy:Math.random()<.5}); t.isL=true;
+    t.A=areaL(t); t.u=add(times(t.W,2),times(t.H,2)); t.wrongBig=mul(t.W,t.H); t.labeledSum=add(add(t.W,t.H),add(t.w1,t.h2));
+  } else { t.d=s.d; t.A=mul(s.d[0],s.d[1]); t.u=add(times(s.d[0],2),times(s.d[1],2)); }
+  t.value = t.isA ? t.A : t.u;
+  if(s.price){ t.price=priceFor(t.value); t.cost=mul(t.value,t.price); t.text=s.text.replace('{P}',E(t.price)); }
+  else { t.price=null; t.text=s.text; }
+  return t;
+}
+function rechValue(t){
+  const u=t.unit;
+  if(!t.isL){
+    const a=t.d[0], b=t.d[1];
+    return t.isA ? 'A = '+L(a,u)+' · '+L(b,u)+' = <b>'+L(t.A,sq(u))+'</b>' : 'u = 2 · '+L(a,u)+' + 2 · '+L(b,u)+' = '+L(times(a,2),u)+' + '+L(times(b,2),u)+' = <b>'+L(t.u,u)+'</b>';
+  }
+  if(t.isA){ const p1=mul(t.w1,t.H), p2=mul(sub(t.W,t.w1),t.h2);
+    return 'Zerlegen: '+L(t.w1,u)+' · '+L(t.H,u)+' = '+L(p1,sq(u))+' und '+L(sub(t.W,t.w1),u)+' · '+L(t.h2,u)+' = '+L(p2,sq(u))+' → A = <b>'+L(t.A,sq(u))+'</b>'; }
+  const m1=sub(t.W,t.w1), m2=sub(t.H,t.h2);
+  return 'Fehlende Seiten: '+L(t.W)+' − '+L(t.w1)+' = '+L(m1,u)+' und '+L(t.H)+' − '+L(t.h2)+' = '+L(m2,u)+'<br>u = '+[t.W,t.h2,m1,m2,t.w1,t.H].map(x=>L(x)).join(' + ')+' = <b>'+L(t.u,u)+'</b>';
+}
+function rechCost(t){
+  const pu = t.isA ? sq(t.unit) : t.unit;
+  return fs(t.value)+' '+pu+' · '+E(t.price)+' = <b>'+E(t.cost)+'</b>';
+}
+
+function generate(stufe){
+  if(stufe===1){
+    const rest=shuffle([gridTask(true), gridTask(false), areaMTask(false), areaMTask(true), areaMTask(false), unitTask(), stimmtTask(rnd(0,STIMMT.length-1))]);
+    return [gridTask(false)].concat(rest);
+  }
+  if(stufe===2){
+    const first=zerTask(false,'L');
+    const rest=shuffle([zerTask(true,'L'), zerTask(true,'L'), zerTask(true,'T'), zerTask(true,'T'), zerTask(true,'L'), missTask(), missTask()]);
+    return [first].concat(rest);
+  }
+  const keys=[pick(['rasen','wand']),'teppich','fliesen','lteppich','zaun',pick(['leiste','licht']),'band','lleiste'];
+  return shuffle(keys.map(sachTask));
+}
+function newRound(){ S.tasks=generate(S.stufe); S.idx=0; S.results=[]; S.finished=false; S.justDone=false; render(); }
+
+/* ---------- Bausteine ---------- */
+function chip(action,v,label,answer,active,t,cls){
+  let c='chip'+(cls?' '+cls:'');
+  if(answer===v) c+=' right';
+  else if(active && t.wrong && t.wrong.step===action && t.wrong.v===v) c+=' wrong';
+  return '<button type="button" class="'+c+'" data-action="'+action+'" data-v="'+v+'"'+(active?'':' disabled')+'>'+label+'</button>';
+}
+function msgHtml(t){ return t.msg ? '<div class="fb '+t.msg.kind+'" role="status">'+t.msg.text+'</div>' : ''; }
+function stepCls(s){ return 'step is-'+s; }
+function sn(s,n){ return '<div class="sn" aria-hidden="true">'+(s==='done'?'✓':n)+'</div>'; }
+function keypad(){
+  return '<div class="keys">'+
+    ['7','8','9','4','5','6','1','2','3'].map(k=>'<button type="button" class="key" data-action="key" data-k="'+k+'">'+k+'</button>').join('')+
+    '<button type="button" class="key ck" data-action="key" data-k="," aria-label="Komma">,</button>'+
+    '<button type="button" class="key" data-action="key" data-k="0">0</button>'+
+    '<button type="button" class="key del" data-action="key" data-k="del" aria-label="Löschen">⌫ Löschen</button></div>';
+}
+function inputBlock(t,pre,unit){
+  return '<div class="inrow">'+(pre?'<span class="pre">'+pre+'</span>':'')+'<div class="display" aria-live="polite" aria-label="Deine Antwort">'+(t.input?cm(t.input):'<span class="ph">Antwort</span>')+'</div>'+(unit?'<span class="unit">'+unit+'</span>':'')+'</div>'+
+    keypad()+'<div class="tools" style="max-width:340px"><button type="button" class="btn primary" data-action="check" id="checkbtn">Prüfen</button></div>'+msgHtml(t);
+}
+function uniq(list){ const seen={}; return list.filter(x=>{ const k=String(x); if(seen[k]) return false; seen[k]=1; return true; }); }
+function opts(list){ return shuffle(uniq(list)); }
+function sec(state,n,title,body){ return '<section class="'+stepCls(state)+'">'+sn(state,n)+'<div><h2>'+title+'</h2>'+body+'</div></section>'; }
+function stateOf(t,order,step){ const i=order.indexOf(step), c=order.indexOf(t.step); if(t.step==='done' || c>i) return 'done'; return c===i ? 'active' : 'todo'; }
+
+/* ---------- Anzeige ---------- */
+function render(){
+  for(let s=1;s<=3;s++) document.getElementById('st'+s).setAttribute('aria-pressed', String(S.stufe===s));
+  let p='';
+  for(let k=0;k<N;k++){ const r=S.results[k]; p+='<span class="pd'+(r?' '+r:(k===S.idx && !S.finished?' cur':''))+'"></span>'; }
+  $prog.innerHTML=p;
+  if(S.finished){ renderSummary(); return; }
+  const t=S.tasks[S.idx];
+  let h='<div class="card"><span class="eyebrow">Aufgabe '+(S.idx+1)+' von '+N+' · '+eyebrow(t)+'</span>';
+  h+=({grid:viewGrid, areaM:viewAreaM, unit:viewUnit, stimmt:viewStimmt, zer:viewZer, miss:viewMiss, sach:viewSach})[t.kind](t);
+  if(t.step==='done') h+=doneBox(t);
+  h+='</div>';
+  $app.innerHTML=h;
+  if(S.justDone){ S.justDone=false; const box=document.querySelector('.donebox'); if(box && box.scrollIntoView) box.scrollIntoView({block:'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); }
+}
+function eyebrow(t){ return ({grid:'Kästchen zählen', areaM:'Flächeninhalt berechnen', unit:'Welche Einheit?', stimmt:'Stimmt das?', zer:'Zerlegen', miss:'Fehlende Seite', sach:'Umfang oder Flächeninhalt?'})[t.kind]; }
+
+// Stufe 1: Kästchen
+function gridSvg(t){
+  const g=30, a=t.a, b=t.b, W=(a+2)*g, H=(b+2)*g, st=t.step;
+  let h='<svg class="fig" style="max-width:'+Math.round((W+112)*1.05)+'px" viewBox="-96 -34 '+(W+112)+' '+(H+44)+'" role="img" aria-label="Rechteck auf Kästchenpapier">';
+  for(let x=0;x<=W;x+=g) h+='<line class="gl2" x1="'+x+'" y1="0" x2="'+x+'" y2="'+H+'"/>';
+  for(let y=0;y<=H;y+=g) h+='<line class="gl2" x1="0" y1="'+y+'" x2="'+W+'" y2="'+y+'"/>';
+  for(let r=0;r<b;r++) for(let c=0;c<a;c++){
+    let cls='cell';
+    if(st==='done') cls+=' full';
+    else { if(r===0) cls+=' hr'; else if(c===0 && st!=='row') cls+=' hc'; }
+    h+='<rect class="'+cls+'" x="'+(g+c*g)+'" y="'+(g+r*g)+'" width="'+g+'" height="'+g+'" style="animation-delay:'+(r*0.12)+'s"/>';
+  }
+  h+='<rect class="outline" x="'+g+'" y="'+g+'" width="'+(a*g)+'" height="'+(b*g)+'"/>';
+  if(st!=='row') h+='<text class="lab la" x="'+(g+a*g/2)+'" y="'+(g-8)+'" text-anchor="middle">'+a+' Kästchen</text>';
+  if(st!=='row' && st!=='rows') h+='<text class="lab lb" x="'+(g-8)+'" y="'+(g+b*g/2+7)+'" text-anchor="end">'+b+' Reihen</text>';
+  return h+'</svg>';
+}
+function viewGrid(t){
+  const order=['row','rows','area'];
+  let h='<p class="story">1 Kästchen ist 1 cm². Wie groß ist der Flächeninhalt?</p><div class="figbox">'+gridSvg(t)+'</div><div class="steps">';
+  let s=stateOf(t,order,'row');
+  h+=sec(s,1,'Wie viele Kästchen liegen in <span class="c-a">einer Reihe</span>?', '<div class="chips">'+[t.a-1,t.a,t.a+1].map(String).map(v=>chip('row',v,v,t.ans.row,s==='active',t)).join('')+'</div>'+(s==='active'?msgHtml(t):''));
+  s=stateOf(t,order,'rows');
+  h+=sec(s,2,'Wie viele <span class="c-b">Reihen</span> sind es?', s==='todo' ? '<p class="hint">Zuerst Schritt 1.</p>' : '<div class="chips">'+[t.b-1,t.b,t.b+1].filter(x=>x>0).map(String).map(v=>chip('rows',v,v,t.ans.rows,s==='active',t)).join('')+'</div>'+(s==='active'?msgHtml(t):''));
+  s=stateOf(t,order,'area');
+  let body;
+  if(s==='todo') body='<p class="hint">Zuerst die Reihen zählen.</p>';
+  else { const o=[t.A, 2*t.a+2*t.b, t.a+t.b, t.a*(t.b+1)];
+    body='<div class="ask"><p class="num">Reihen · Kästchen = '+t.b+' · '+t.a+' = ?</p><div class="chips">'+opts(o.map(String)).map(v=>chip('area',v,v+' cm²',t.ans.area,s==='active',t,'wide')).join('')+'</div></div>'+(s==='active'?msgHtml(t):''); }
+  h+=sec(s,3,'Flächeninhalt',body);
+  return h+'</div>';
+}
+const FORM_R=[['ok','A = a · b'],['u','u = 2 · a + 2 · b'],['x','A = a + b']];
+const FORM_Q=[['ok','A = a · a'],['u','u = 4 · a'],['x','A = 4 · a']];
+function viewAreaM(t){
+  const u=t.unit, order=['formula','input'];
+  let h='<p class="story">'+(t.sq?'Ein Quadrat':'Ein Rechteck')+' hat diese Seiten. Berechne den Flächeninhalt.</p>';
+  h+='<div class="figbox mid">'+shapeSvg(rectPts(t.a,t.b),{labels:rectLabels(t.a,t.b,u,true),aria:t.sq?'Quadrat':'Rechteck'})+'</div><div class="steps">';
+  let s=stateOf(t,order,'formula');
+  h+=sec(s,1,'Welche Formel passt?','<div class="chips">'+(t.sq?FORM_Q:FORM_R).map(f=>chip('formula',f[0],f[1],t.ans.formula,s==='active',t,'wide')).join('')+'</div>'+(s==='active'?msgHtml(t):''));
+  s=stateOf(t,order,'input');
+  const term = t.sq ? 'A = '+L(t.a,u)+' · '+L(t.a,u) : 'A = '+L(t.a,u)+' · '+L(t.b,u);
+  let body = s==='todo' ? '<p class="hint">Zuerst die Formel.</p>' : (s==='active' ? '<p class="sum">'+term+'</p><p class="hint">Rechne im Kopf oder im Heft.</p>'+inputBlock(t,'A =',sq(u)) : '<p class="sum">'+term+' = <b>'+L(t.A,sq(u))+'</b></p>');
+  h+=sec(s,2,'Flächeninhalt berechnen',body);
+  return h+'</div>';
+}
+function viewUnit(t){
+  const order=['uA','uU'], A=mul(t.a,t.b), U=add(times(t.a,2),times(t.b,2));
+  let h='<p class="story">Ein Rechteck ist '+L(t.a,'cm')+' lang und '+L(t.b,'cm')+' breit. Welche Einheit passt?</p>';
+  h+='<div class="figbox mid">'+shapeSvg(rectPts(t.a,t.b),{labels:rectLabels(t.a,t.b,'cm',true),walk:t.step==='done',aria:'Rechteck'})+'</div><div class="steps">';
+  let s=stateOf(t,order,'uA');
+  h+=sec(s,1,'Flächeninhalt (innen)','<p class="num" style="font-weight:700;font-size:1.2rem;margin:0 0 8px">A = '+L(t.a,'cm')+' · '+L(t.b,'cm')+' = '+L(A)+' ___</p><div class="chips">'+['cm','cm²','m²'].map(v=>chip('uA',v,v,t.ans.uA,s==='active',t,'word')).join('')+'</div>'+(s==='active'?msgHtml(t):''));
+  s=stateOf(t,order,'uU');
+  h+=sec(s,2,'Umfang (Rand)', s==='todo' ? '<p class="hint">Zuerst Schritt 1.</p>' : '<p class="num" style="font-weight:700;font-size:1.2rem;margin:0 0 8px">u = 2 · '+L(t.a,'cm')+' + 2 · '+L(t.b,'cm')+' = '+L(U)+' ___</p><div class="chips">'+['cm','cm²','m'].map(v=>chip('uU',v,v,t.ans.uU,s==='active',t,'word')).join('')+'</div>'+(s==='active'?msgHtml(t):''));
+  return h+'</div>';
+}
+function viewStimmt(t){
+  const done=t.step==='done';
+  return '<p class="story big">'+cm(t.text)+'</p><div class="steps">'+sec(done?'done':'active',1,'Stimmt das?','<div class="chips">'+
+     chip('judge','ja','✓ Das stimmt',t.ans.judge,!done,t,'word')+chip('judge','nein','✗ Das stimmt nicht',t.ans.judge,!done,t,'word')+'</div>'+(!done?msgHtml(t):''))+'</div>';
+}
+
+// Stufe 2: Zerlegen
+function zerOrder(t){ return t.shape==='L' ? ['split','miss','blue','orange','total'] : ['split','blue','orange','total']; }
+function viewZer(t){
+  const G = t.shape==='L' ? geoL(t) : geoT(t), u=t.unit, U2=sq(u), order=zerOrder(t);
+  const labels=baseLabels(t);
+  let o={labels:labels, aria:'Zusammengesetzte Fläche', walk:false};
+  let si=null;
+  if(t.step==='split') o.cands=t.cands.map(id=>({id:id, a:G.lines[id].a, b:G.lines[id].b, bad:!!t.badTried[id]}));
+  else {
+    const ln=G.lines[t.split]; si=splitInfo(t,t.split);
+    o.cut={a:ln.a,b:ln.b};
+    o.parts=[{r:ln.blue,cls:'pa',tc:'a',txt:t.vals.blue?lbl(t.vals.blue,U2):''},{r:ln.orange,cls:'pb',tc:'b',txt:t.vals.orange?lbl(t.vals.orange,U2):''}];
+    if(si.missEdge!==null) labels.push({k:si.missEdge, t: t.ans.miss ? lbl(si.miss,u) : '?', cls: t.ans.miss ? 'lb' : 'lq'});
+  }
+  let h='<p class="story">Berechne den Flächeninhalt. Zerlege die Fläche in zwei Rechtecke.</p><div class="figbox">'+shapeSvg(G.poly,o)+'</div><div class="steps">';
+  let n=1, s;
+  s=stateOf(t,order,'split');
+  h+=sec(s,n++,'Wo zerlegst du?', s==='active' ? '<p>Tippe auf eine gestrichelte Linie. Sie soll die Fläche in <b>zwei Rechtecke</b> teilen.</p>'+msgHtml(t) : '<p>Zwei Rechtecke: <span class="tag a">blau</span> und <span class="tag b">orange</span>.</p>');
+  if(t.shape==='L'){
+    s=stateOf(t,order,'miss');
+    let body='<p class="hint">Zuerst zerlegen.</p>';
+    if(s!=='todo'){
+      if(s==='active'){ const o2=[si.miss, si.full, add(si.full,si.known), si.known].map(fs);
+        body='<p>Am <span class="tag b">orangen</span> Rechteck fehlt eine Seite. Wie lang ist die Seite mit dem <b style="color:var(--comma)">?</b></p><div class="chips">'+opts(o2).map(v=>chip('miss',v,cm(v)+' '+u,t.ans.miss,true,t,'wide')).join('')+'</div>'+msgHtml(t); }
+      else body='<p class="sum">'+L(si.full)+' − '+L(si.known)+' = <b>'+L(si.miss,u)+'</b></p>';
+    }
+    h+=sec(s,n++,'Fehlende Seite finden',body);
+  }
+  ['blue','orange'].forEach(part=>{
+    s=stateOf(t,order,part);
+    const tag = part==='blue' ? '<span class="tag a">Blau</span>' : '<span class="tag b">Orange</span>';
+    let body='<p class="hint">Kommt gleich.</p>';
+    if(s!=='todo'){
+      const dims=si[part==='blue'?'blue':'orange'], term='A = '+L(dims[0],u)+' · '+L(dims[1],u);
+      body = s==='active' ? '<p class="sum">'+term+'</p><p class="hint">Rechne im Kopf oder im Heft.</p>'+inputBlock(t,'A =',U2) : '<p class="sum">'+term+' = <b>'+L(mul(dims[0],dims[1]),U2)+'</b></p>';
+    }
+    h+=sec(s,n++,tag+' Rechteck',body);
+  });
+  s=stateOf(t,order,'total');
+  let body='<p class="hint">Zum Schluss addieren.</p>';
+  if(s!=='todo'){
+    const b1=mul(si.blue[0],si.blue[1]), o1=mul(si.orange[0],si.orange[1]);
+    const big = t.shape==='L' ? mul(t.W,t.H) : mul(t.W,add(t.hb,t.hs));
+    const lst=[t.total, big, add(b1,si.fullErr), add(t.total,I(1))].map(fs);
+    body='<div class="ask"><p class="num">'+L(b1,U2)+' + '+L(o1,U2)+' = ?</p>'+(s==='active'?'<div class="chips">'+opts(lst).map(v=>chip('total',v,cm(v)+' '+U2,t.ans.total,true,t,'wide')).join('')+'</div>'+msgHtml(t):'<p class="sum">A = <b>'+L(t.total,U2)+'</b></p>')+'</div>';
+  }
+  h+=sec(s,n++,'Zusammen',body);
+  return h+'</div>';
+}
+function viewMiss(t){
+  const G=geoL(t), u=t.unit, labels=baseLabels(t);
+  labels.push({k:t.missEdge, t: t.step==='done' ? lbl(t.miss,u) : '?', cls: t.step==='done' ? 'lb' : 'lq'});
+  let h='<p class="story">Eine Seite fehlt. Wie lang ist die Seite mit dem <b style="color:var(--comma)">?</b></p><div class="figbox">'+shapeSvg(G.poly,{labels:labels,aria:'L-Form mit fehlender Seite'})+'</div><div class="steps">';
+  const s=t.step==='done'?'done':'active';
+  const o=[t.miss, t.full, add(t.full,t.known), t.known].map(fs);
+  h+=sec(s,1,'Fehlende Seite finden', s==='active' ? '<p class="hint">Gegenüberliegende Seiten sind zusammen gleich lang.</p><div class="chips">'+opts(o).map(v=>chip('mpick',v,cm(v)+' '+u,t.ans.mpick,true,t,'wide')).join('')+'</div>'+msgHtml(t) : '<p class="sum">'+L(t.full)+' − '+L(t.known)+' = <b>'+L(t.miss,u)+'</b></p>');
+  return h+'</div>';
+}
+
+// Stufe 3
+function sachSvg(t){
+  const walk = t.step==='done' && !t.isA;
+  if(t.isL) return shapeSvg(geoL(t).poly,{labels:baseLabels(t),walk:walk,aria:'Grundriss'});
+  return shapeSvg(rectPts(t.d[0],t.d[1]),{labels:rectLabels(t.d[0],t.d[1],t.unit,false),walk:walk,aria:'Skizze'});
+}
+function sachOrder(t){ return t.price ? ['type','value','cost'] : ['type','value']; }
+function viewSach(t){
+  const order=sachOrder(t), u=t.unit;
+  let h='<p class="story">'+t.text+'</p><div class="figbox mid">'+sachSvg(t)+'</div><div class="steps">';
+  let s=stateOf(t,order,'type');
+  h+=sec(s,1,'Rand oder Innen?', '<p class="hint">'+t.item+': Gehst du am Rand entlang – oder bedeckst du die ganze Fläche?</p><div class="chips">'+
+     chip('type','u','Rand → Umfang',t.ans.type,s==='active',t,'word long')+chip('type','A','Innen → Flächeninhalt',t.ans.type,s==='active',t,'word long')+'</div>'+(s==='active'?msgHtml(t):''));
+  s=stateOf(t,order,'value');
+  let body='<p class="hint">Zuerst Schritt 1.</p>';
+  if(s==='active') body='<p>Rechne im Heft. Tippe '+(t.isA?'den Flächeninhalt':'den Umfang')+' ein.</p>'+inputBlock(t, t.isA?'A =':'u =', t.isA?sq(u):u);
+  else if(s==='done') body='<p class="sum">'+rechValue(t)+'</p>';
+  h+=sec(s,2,t.isA?'Wie groß ist die Fläche?':'Wie lang ist der Rand?',body);
+  if(t.price){
+    s=stateOf(t,order,'cost');
+    body='<p class="hint">Zum Schluss der Preis.</p>';
+    if(s==='active') body='<p>1 '+(t.isA?sq(u):u)+' kostet '+E(t.price)+'. Was kostet alles zusammen?</p>'+inputBlock(t,'',' €');
+    else if(s==='done') body='<p class="sum">'+rechCost(t)+'</p>';
+    h+=sec(s,3,'Was kostet es?',body);
+  }
+  return h+'</div>';
+}
+
+function doneBox(t){
+  const cat=S.results[S.idx];
+  const praise = cat==='good' ? 'Super! Alles sofort richtig.' : (cat==='ok' ? 'Richtig! Du hast deinen Fehler selbst verbessert.' : 'Schau dir die Lösung genau an. Die nächste schaffst du!');
+  const last=S.idx===N-1;
+  let path='';
+  if(t.kind==='grid') path=t.b+' Reihen mit je '+t.a+' Kästchen: '+t.b+' · '+t.a+' = '+t.A+' → A = <b>'+t.A+' cm²</b>';
+  else if(t.kind==='areaM') path=(t.sq?'A = a · a = '+L(t.a,t.unit)+' · '+L(t.a,t.unit):'A = a · b = '+L(t.a,t.unit)+' · '+L(t.b,t.unit))+' = <b>'+L(t.A,sq(t.unit))+'</b>';
+  else if(t.kind==='unit') path='Flächeninhalt (innen) in <b>cm²</b>, Umfang (Rand) in <b>cm</b>.';
+  else if(t.kind==='stimmt') path=(t.truth?'Das stimmt. ':'Das stimmt nicht. ')+cm(t.why);
+  else if(t.kind==='zer'){ const si=splitInfo(t,t.split); path='A = '+L(mul(si.blue[0],si.blue[1]),sq(t.unit))+' + '+L(mul(si.orange[0],si.orange[1]),sq(t.unit))+' = <b>'+L(t.total,sq(t.unit))+'</b>'; }
+  else if(t.kind==='miss') path='Gegenüberliegende Seiten sind zusammen gleich lang: '+L(t.full)+' − '+L(t.known)+' = <b>'+L(t.miss,t.unit)+'</b>';
+  else if(t.kind==='sach') path=t.why+' → '+(t.isA?'Flächeninhalt':'Umfang')+'.<br>'+rechValue(t)+(t.price?'<br>'+rechCost(t):'');
+  return '<div class="donebox '+cat+'"><p class="big">'+praise+'</p>'+(t.msg?'<p>'+t.msg.text+'</p>':'')+'<p class="path">'+path+'</p>'+
+    '<button type="button" class="btn primary" data-action="next" id="nextbtn">'+(last?'Zur Auswertung':'Nächste Aufgabe')+' →</button></div>';
+}
+function renderSummary(){
+  const c={good:0,ok:0,help:0}; S.results.forEach(r=>{ c[r]++; });
+  const strong=c.good>=6;
+  let advice;
+  if(S.stufe<3) advice = strong ? 'Stark! Mach weiter mit Stufe '+(S.stufe+1)+'.' : 'Übe Stufe '+S.stufe+' noch einmal. Die Tippkarten helfen dir.';
+  else advice = strong ? 'Du bist Flächen-Profi! Schaffst du in einer neuen Runde alle 8 sofort richtig?' : 'Übe Stufe 3 noch einmal. Frag dich immer zuerst: Rand oder Innen?';
+  let h='<div class="card summary"><span class="eyebrow">Auswertung</span><h2>Stufe '+S.stufe+' geschafft!</h2><p>'+advice+'</p>'+
+    '<div class="stats"><div class="stat good"><b>'+c.good+'</b><span>sofort richtig</span></div>'+
+    '<div class="stat ok"><b>'+c.ok+'</b><span>nach Verbessern richtig</span></div>'+
+    '<div class="stat help"><b>'+c.help+'</b><span>mit Lösung</span></div></div>'+
+    '<p class="hint">Zeige dieses Ergebnis deiner Lehrkraft.</p><div class="tools">';
+  if(S.stufe<3) h+='<button type="button" class="btn primary" data-action="stufe" data-s="'+(S.stufe+1)+'" id="nextstufe">Weiter mit Stufe '+(S.stufe+1)+'</button>';
+  h+='<button type="button" class="btn'+(S.stufe===3?' primary':'')+'" data-action="again" id="againbtn">Noch einmal Stufe '+S.stufe+'</button></div></div>';
+  $app.innerHTML=h;
+}
+
+/* ---------- Logik ---------- */
+function finish(t){ t.step='done'; t.input=''; S.results[S.idx] = t.revealed ? 'help' : (t.errors===0 ? 'good' : 'ok'); S.justDone=true; }
+function wrongStep(t,action,v){ t.errors++; t.stepErr++; t.wrong={step:action,v:v}; }
+function nextStep(t,step){ t.step=step; t.stepErr=0; t.wrong=null; t.input=''; }
+function reveal(t,text){ t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> '+text}; }
+
+// Kästchen
+function onRow(t,which,v){
+  const right = which==='row' ? t.a : t.b;
+  const go=()=>{ t.ans[which]=String(right); nextStep(t, which==='row' ? 'rows' : 'area'); };
+  if(Number(v)===right){ t.msg=null; go(); return; }
+  wrongStep(t,which,v);
+  if(t.stepErr>=2){ reveal(t, which==='row' ? 'In einer Reihe liegen '+right+' Kästchen.' : 'Es sind '+right+' Reihen.'); go(); return; }
+  t.msg={kind:'bad', text: which==='row' ? '<b>Noch nicht.</b> Zähle die farbigen Kästchen in der oberen Reihe.' : '<b>Noch nicht.</b> Zähle die Reihen von oben nach unten – auch die obere Reihe.'};
+}
+function onArea(t,v){
+  const right=String(t.A);
+  if(v===right){ t.ans.area=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'area',v);
+  if(t.stepErr>=2){ t.ans.area=right; reveal(t,t.b+' · '+t.a+' = '+t.A+'. Also A = '+t.A+' cm².'); finish(t); return; }
+  let txt='<b>Noch nicht.</b> Rechne Reihen · Kästchen in einer Reihe.';
+  if(Number(v)===2*t.a+2*t.b) txt='<b>Achtung:</b> Das ist der Umfang (Rand). Gesucht ist die Fläche innen: Reihen · Kästchen.';
+  else if(Number(v)===t.a+t.b) txt='<b>Achtung:</b> Du hast addiert. Multipliziere: Reihen · Kästchen.';
+  else if(Number(v)===t.a*(t.b+1)) txt='<b>Fast.</b> Zähle die Reihen noch einmal genau.';
+  t.msg={kind:'bad', text:txt};
+}
+function onFormula(t,v){
+  if(v==='ok'){ t.ans.formula=v; t.msg=null; nextStep(t,'input'); return; }
+  wrongStep(t,'formula',v);
+  if(t.stepErr>=2){ t.ans.formula='ok'; reveal(t,'Für den Flächeninhalt gilt '+(t.sq?'A = a · a':'A = a · b')+'.'); nextStep(t,'input'); return; }
+  t.msg={kind:'bad', text: v==='u' ? '<b>Noch nicht.</b> Das ist die Formel für den Umfang (Rand). Gesucht ist die Fläche innen.' : '<b>Noch nicht.</b> Für den Flächeninhalt wird multipliziert: Reihen · Kästchen.'};
+}
+function onUnit(t,which,v){
+  const right = which==='uA' ? 'cm²' : 'cm';
+  const go=()=>{ t.ans[which]=right; if(which==='uA') nextStep(t,'uU'); else finish(t); };
+  if(v===right){ t.msg=null; go(); return; }
+  wrongStep(t,which,v);
+  if(t.stepErr>=2){ reveal(t, which==='uA' ? 'Flächen misst man in cm².' : 'Der Umfang ist eine Länge: cm.'); go(); return; }
+  let txt;
+  if(which==='uA') txt = v==='cm' ? '<b>Noch nicht.</b> cm ist eine Länge. Der Flächeninhalt zählt Kästchen: cm².' : '<b>Noch nicht.</b> Die Seiten sind in cm angegeben, nicht in m.';
+  else txt = v==='cm²' ? '<b>Noch nicht.</b> Der Umfang ist der Rand – eine Länge. Längen haben keine ².' : '<b>Noch nicht.</b> Die Seiten sind in cm angegeben, nicht in m.';
+  t.msg={kind:'bad', text:txt};
+}
+function onJudge(t,v){
+  const right = t.truth ? 'ja' : 'nein';
+  if(v===right){ t.ans.judge=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'judge',v);
+  t.ans.judge=right; t.revealed=true; finish(t);
+  t.msg={kind:'info', text:'<b>Schau genau.</b>'};
+}
+// Zerlegen
+function onCut(t,id){
+  const G = t.shape==='L' ? geoL(t) : geoT(t);
+  const ln=G.lines[id]; if(!ln || t.badTried[id]) return;
+  const go=(k)=>{ t.split=k; nextStep(t, t.shape==='L' ? 'miss' : 'blue'); };
+  if(ln.ok){ t.msg=null; go(id); return; }
+  t.badTried[id]=true; t.errors++; t.stepErr++;
+  if(t.stepErr>=2){ const k=t.cands.find(c=>G.lines[c].ok); reveal(t,'Diese Linie teilt die Fläche in zwei Rechtecke.'); go(k); return; }
+  t.msg={kind:'bad', text:'<b>Noch nicht.</b> Mit dieser Linie ist ein Teil noch kein Rechteck. Probiere eine andere Linie.'};
+}
+function onMiss(t,v,isTask){
+  const si = isTask ? {miss:t.miss, full:t.full, known:t.known} : splitInfo(t,t.split);
+  const action = isTask ? 'mpick' : 'miss';
+  const go=()=>{ t.ans[action]=fs(si.miss); if(isTask) finish(t); else nextStep(t,'blue'); };
+  if(v===fs(si.miss)){ t.msg=null; go(); return; }
+  wrongStep(t,action,v);
+  if(t.stepErr>=2){ reveal(t, L(si.full)+' − '+L(si.known)+' = '+L(si.miss,t.unit)+'.'); go(); return; }
+  let txt='<b>Noch nicht.</b> Gegenüberliegende Seiten sind zusammen gleich lang. Die Tippkarte 3 hilft.';
+  if(v===fs(si.full)) txt='<b>Noch nicht.</b> '+L(si.full,t.unit)+' ist die ganze Seite. Die gesuchte Seite ist nur ein Teil davon. Ziehe '+L(si.known,t.unit)+' ab.';
+  else if(v===fs(add(si.full,si.known))) txt='<b>Achtung:</b> Du hast addiert. Die gesuchte Seite ist kürzer: Subtrahiere.';
+  else if(v===fs(si.known)) txt='<b>Noch nicht.</b> Das ist die gegenüberliegende Seite. Rechne: ganze Seite minus diese Seite.';
+  t.msg={kind:'bad', text:txt};
+}
+function onTotal(t,v){
+  const right=fs(t.total);
+  if(v===right){ t.ans.total=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'total',v);
+  if(t.stepErr>=2){ t.ans.total=right; reveal(t,'Addiere blau und orange.'); finish(t); return; }
+  const big = t.shape==='L' ? mul(t.W,t.H) : mul(t.W,add(t.hb,t.hs));
+  t.msg={kind:'bad', text: v===fs(big) ? '<b>Achtung:</b> Das ist das große Rechteck um die ganze Figur. Ein Stück gehört nicht zur Fläche. Addiere nur blau und orange.' : '<b>Noch nicht.</b> Addiere die beiden Ergebnisse von blau und orange. Rechne im Heft.'};
+}
+function parseIn(s){ const parts=s.split(','); const l=parts[0]||'0', r=parts[1]||''; return simplify({i:Number((l+r).replace(/^0+(?=\d)/,'')||'0'), p:r.length}); }
+// Rückmeldung zu typischen Fehlern beim Flächeninhalt eines Rechtecks a × b
+function areaHint(x,a,b){
+  if(eq(x,add(times(a,2),times(b,2)))) return '<b>Achtung:</b> Das ist der Umfang (Rand). Gesucht ist die Fläche innen: A = a · b.';
+  if(eq(x,add(a,b))) return '<b>Achtung:</b> Du hast addiert. Für den Flächeninhalt wird multipliziert: A = a · b.';
+  return null;
+}
+function commaHint(x,T){ const xv=val(x), tv=val(T); return (Math.abs(xv*10-tv)<1e-9 || Math.abs(xv/10-tv)<1e-9 || Math.abs(xv*100-tv)<1e-9 || Math.abs(xv/100-tv)<1e-9) ? '<b>Die Ziffern stimmen!</b> Prüfe das Komma.' : null; }
+function inputTarget(t){
+  if(t.kind==='areaM') return t.A;
+  if(t.kind==='zer'){ const si=splitInfo(t,t.split), d=si[t.step]; return mul(d[0],d[1]); }
+  if(t.kind==='sach') return t.step==='value' ? t.value : t.cost;
+}
+function afterInput(t){
+  if(t.kind==='areaM'){ finish(t); return; }
+  if(t.kind==='zer'){ t.vals[t.step]=inputTarget(t); nextStep(t, t.step==='blue' ? 'orange' : 'total'); return; }
+  if(t.kind==='sach'){ if(t.step==='value' && t.price){ nextStep(t,'cost'); return; } finish(t); }
+}
+function onCheck(t){
+  const s=t.input;
+  if(!s){ t.msg={kind:'info', text:'Tippe zuerst deine Antwort ein.'}; return; }
+  if(s.endsWith(',')||s.startsWith(',')){ t.msg={kind:'info', text:'Prüfe das Komma in deiner Antwort.'}; return; }
+  const x=parseIn(s), T=inputTarget(t);
+  if(eq(x,T)){
+    t.msg = (t.kind==='sach' && t.step==='cost' && fs(T).includes(',') && fs(T).split(',')[1].length===1) ? {kind:'good', text:'Bei Euro schreibt man zwei Stellen: '+E(T)+'.'} : null;
+    afterInput(t); return;
+  }
+  t.errors++; t.stepErr++;
+  if(t.stepErr>=2){
+    let w='Schau dir die Rechnung unten an.';
+    if(t.kind==='zer'){ const d=splitInfo(t,t.split)[t.step]; w=L(d[0],t.unit)+' · '+L(d[1],t.unit)+' = '+L(T,sq(t.unit))+'.'; }
+    else if(t.kind==='sach') w = t.step==='value' ? rechValue(t)+'.' : rechCost(t)+'.';
+    else if(t.kind==='areaM') w=L(t.a,t.unit)+' · '+L(t.b,t.unit)+' = '+L(T,sq(t.unit))+'.';
+    reveal(t,w); afterInput(t); return;
+  }
+  let txt='<b>Noch nicht.</b> Rechne im Heft noch einmal nach. Die Tippkarten helfen dir.';
+  const c=commaHint(x,T);
+  if(t.kind==='areaM'){ txt = areaHint(x,t.a,t.b) || c || txt; }
+  else if(t.kind==='zer'){
+    const si=splitInfo(t,t.split), d=si[t.step];
+    if(t.step==='orange' && si.missEdge!==null && eq(x,si.fullErr)) txt='<b>Achtung:</b> Du hast mit der ganzen Seite '+L(si.full,t.unit)+' gerechnet. Nimm die Seite aus Schritt 2: '+L(si.miss,t.unit)+'.';
+    else txt = areaHint(x,d[0],d[1]) || c || '<b>Noch nicht.</b> Multipliziere die beiden Seiten. Rechne im Heft.';
+  } else if(t.kind==='sach'){
+    if(t.step==='value'){
+      if(t.isA && eq(x,t.u)) txt='<b>Achtung:</b> Das ist der Umfang (Rand). '+t.why+' Rechne den Flächeninhalt aus.';
+      else if(!t.isA && eq(x,t.A)) txt='<b>Achtung:</b> Das ist der Flächeninhalt (innen). '+t.why+' Rechne den Umfang aus.';
+      else if(t.isL && t.isA && eq(x,t.wrongBig)) txt='<b>Achtung:</b> Das ist das große Rechteck um das ganze Zimmer. Ein Stück gehört nicht dazu. Zerlege das Zimmer in zwei Rechtecke.';
+      else if(t.isL && !t.isA && eq(x,t.labeledSum)) txt='<b>Fast.</b> Du hast nur die beschrifteten Seiten addiert. Das Zimmer hat 6 Seiten. Rechne zuerst die fehlenden Seiten aus.';
+      else if(!t.isL && !t.isA && eq(x,add(t.d[0],t.d[1]))) txt='<b>Fast.</b> Du hast nur 2 Seiten addiert. Der Rand hat 4 Seiten: u = 2 · a + 2 · b.';
+      else if(!t.isL && t.isA && eq(x,add(t.d[0],t.d[1]))) txt='<b>Achtung:</b> Du hast addiert. Für den Flächeninhalt wird multipliziert: A = a · b.';
+      else if(c) txt=c;
+    } else {
+      const other = t.isA ? t.u : t.A;
+      if(eq(x,mul(other,t.price))) txt='<b>Achtung:</b> Du hast mit dem '+(t.isA?'Umfang':'Flächeninhalt')+' gerechnet. Nimm dein Ergebnis aus Schritt 2.';
+      else if(c) txt=c;
+      else txt='<b>Noch nicht.</b> Rechne: '+L(t.value)+' · '+E(t.price)+'. Rechne im Heft schriftlich.';
+    }
+  }
+  t.msg={kind:'bad', text:txt};
+}
+function onType(t,v){
+  const right = t.isA ? 'A' : 'u';
+  if(v===right){ t.ans.type=v; t.msg=null; nextStep(t,'value'); return; }
+  wrongStep(t,'type',v);
+  if(t.stepErr>=2){ t.ans.type=right; reveal(t,t.why); nextStep(t,'value'); return; }
+  const ART={Rasen:'der Rasen',Farbe:'die Farbe',Teppich:'der Teppich',Fliesen:'die Fliesen',Zaun:'der Zaun','Fußleiste':'die Fußleiste',Lichterkette:'die Lichterkette',Band:'das Band'};
+  t.msg={kind:'bad', text:'<b>Noch nicht.</b> Stell es dir vor: Wo '+(t.item==='Fliesen'?'sind ':'ist ')+ART[t.item]+'? Nur am Rand entlang – oder auf der ganzen Fläche?'};
+}
+function press(t,k){
+  let s=t.input;
+  if(k==='del') s=s.slice(0,-1);
+  else if(k===','){ if(!s.includes(',') && s.length<8) s+=','; }
+  else if(s.length<8) s+=k;
+  t.input=s; t.msg=null;
+}
+function isInput(t){ return ['input','blue','orange','value','cost'].indexOf(t.step)>=0; }
+function next(){ if(S.idx>=N-1) S.finished=true; else S.idx++; render(); window.scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); }
+
+/* ---------- Tippkarten ---------- */
+function tipFocus(){
+  if(S.finished) return 0;
+  const t=S.tasks[S.idx];
+  if(t.kind==='zer') return t.step==='miss' ? 3 : 2;
+  if(t.kind==='miss') return 3;
+  if(t.kind==='sach'){ if(t.step==='cost') return 5; if(t.step==='type') return 4; return t.isL ? (t.isA?2:3) : (t.isA?1:4); }
+  return 1;
+}
+function toggleTips(open){
+  $tips.hidden=!open;
+  if(open){ const f=tipFocus(); $tips.querySelectorAll('.tipcard').forEach(c=>c.classList.toggle('focus', Number(c.dataset.tip)===f)); document.getElementById('tipsclose').focus(); }
+  else document.getElementById('tipbtn').focus();
+}
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click', function(e){
+  if(e.target===$tips){ toggleTips(false); return; }
+  const el=e.target.closest('[data-action]'); if(!el || el.disabled) return;
+  const a=el.dataset.action;
+  if(a==='tips'){ toggleTips(true); return; }
+  if(a==='tipsclose'){ toggleTips(false); return; }
+  if(a==='stufe'){ S.stufe=Number(el.dataset.s); newRound(); window.scrollTo({top:0}); return; }
+  if(a==='again'){ newRound(); window.scrollTo({top:0}); return; }
+  if(S.finished) return;
+  const t=S.tasks[S.idx], v=el.dataset.v;
+  if(a==='row'||a==='rows'){ if(t.step===a) onRow(t,a,v); }
+  else if(a==='area'){ if(t.step==='area') onArea(t,v); }
+  else if(a==='formula'){ if(t.step==='formula') onFormula(t,v); }
+  else if(a==='uA'||a==='uU'){ if(t.step===a) onUnit(t,a,v); }
+  else if(a==='judge'){ if(t.step==='judge') onJudge(t,v); }
+  else if(a==='cut'){ if(t.step==='split') onCut(t,v); }
+  else if(a==='miss'){ if(t.step==='miss') onMiss(t,v,false); }
+  else if(a==='mpick'){ if(t.step==='pick') onMiss(t,v,true); }
+  else if(a==='total'){ if(t.step==='total') onTotal(t,v); }
+  else if(a==='type'){ if(t.step==='type') onType(t,v); }
+  else if(a==='key'){ if(isInput(t)) press(t,el.dataset.k); }
+  else if(a==='check'){ if(isInput(t)) onCheck(t); }
+  else if(a==='next'){ next(); return; }
+  render();
+});
+document.addEventListener('keydown', function(e){
+  if(!$tips.hidden){ if(e.key==='Escape') toggleTips(false); return; }
+  if((e.key==='Enter'||e.key===' ') && e.target && e.target.getAttribute && e.target.getAttribute('data-action')==='cut'){ e.target.dispatchEvent(new MouseEvent('click',{bubbles:true})); e.preventDefault(); return; }
+  if(S.finished) return;
+  const t=S.tasks[S.idx];
+  if(isInput(t)){
+    if(/^[0-9]$/.test(e.key)){ press(t,e.key); render(); e.preventDefault(); }
+    else if(e.key===','||e.key==='.'){ press(t,','); render(); e.preventDefault(); }
+    else if(e.key==='Backspace'){ press(t,'del'); render(); e.preventDefault(); }
+    else if(e.key==='Enter'){ onCheck(t); render(); e.preventDefault(); }
+  } else if(t.step==='done' && e.key==='Enter' && !(e.target instanceof HTMLButtonElement)){ next(); e.preventDefault(); }
+});
+
+window.__FW = { S:S, generate:generate, fs:fs, val:val, render:render, splitInfo:splitInfo, inputTarget:inputTarget, newRound:newRound };
+newRound();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Figuren & Umfang</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/lexend.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: eine Heftseite – Figur oben, darunter nummerierte Schritte; Kästchenpapier als Grund. Gleiche Familie wie Kommastellen-Trainer und Überschlag-Detektiv. */
+:root{
+  --paper:#F6F8FC; --grid:rgba(43,79,168,.085); --surface:#FFFFFF; --line:#D3DBEA;
+  --ink:#1B2540; --muted:#56627C; --accent:#2B4FA8; --accent-ink:#FFFFFF; --accent-soft:#E5EBFA;
+  --est:#6B3FA0; --est-soft:#EFE7F8; --fa:#0A7C91; --fb:#C25E0C; --gridline:rgba(43,79,168,.28); --comma:#D2233A;
+  --good:#22814F; --good-soft:#DDF3E7; --warn:#9A6600; --warn-soft:#FFF1CC; --help:#B4462E; --help-soft:#FBE3DC;
+  --scrim:rgba(12,18,34,.5);
+  --font-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+    --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+    --est:#C9A6F5; --est-soft:#33274A; --fa:#4FC7DC; --fb:#FFA45E; --gridline:rgba(150,175,255,.25); --comma:#FF6B7D;
+    --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+    --scrim:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+  --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+  --est:#C9A6F5; --est-soft:#33274A; --fa:#4FC7DC; --fb:#FFA45E; --gridline:rgba(150,175,255,.25); --comma:#FF6B7D;
+  --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+  --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink); font-family:var(--font-body); font-size:18px; line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{
+  max-width:780px; margin:0 auto; display:flex; flex-direction:column; gap:14px;
+  padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+button{font:inherit; color:inherit}
+
+.top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.top h1{font-family:var(--font-display); font-weight:700; font-size:clamp(1.5rem,4.5vw,2rem); margin:0; letter-spacing:-.01em; text-wrap:balance}
+.top h1 .ap{color:var(--est)}
+.top p{margin:0; color:var(--muted)}
+.tipbtn{border:2px solid var(--accent); background:var(--surface); color:var(--accent); border-radius:999px; padding:10px 18px; min-height:48px; font-family:var(--font-display); font-weight:600; cursor:pointer}
+.tipbtn:hover{background:var(--accent-soft)}
+
+.stufen{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.stufen button{text-align:left; padding:10px 12px; border:2px solid var(--line); background:var(--surface); border-radius:12px; cursor:pointer; display:flex; flex-direction:column; gap:1px; min-height:68px}
+.stufen button:hover{border-color:var(--accent)}
+.stufen button[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+.lvl{font-size:.8rem; letter-spacing:.2em; color:var(--accent)}
+.stufen b{font-family:var(--font-display); font-weight:600}
+.stufen small{color:var(--muted); font-size:.82rem; line-height:1.25}
+
+.progress{display:flex; gap:6px; align-items:center}
+.pd{flex:1; height:9px; border-radius:5px; background:var(--line)}
+.pd.cur{background:var(--accent)}
+.pd.good{background:var(--good)} .pd.ok{background:var(--warn)} .pd.help{background:var(--help)}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:20px}
+.eyebrow{font-family:var(--font-display); font-size:.82rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.story{margin:8px 0 0; font-size:1.12rem; max-width:60ch}
+.term{font-weight:700; font-size:clamp(2.1rem,8vw,3.2rem); line-height:1.15; margin:6px 0 0; font-variant-numeric:tabular-nums; display:flex; flex-wrap:wrap; align-items:baseline; gap:.28em}
+.term.small{font-size:clamp(1.6rem,6vw,2.3rem)}
+.op,.q{color:var(--muted); font-weight:400}
+.res{color:var(--accent)}
+.claim{color:var(--muted)}
+.claim.bad{text-decoration:line-through; text-decoration-color:var(--help); text-decoration-thickness:4px}
+.cm{color:var(--comma)}
+.ap{color:var(--est); font-weight:700}
+.estline{display:inline-block; font-size:1.12rem; padding:8px 12px; background:var(--est-soft); border-radius:10px; font-variant-numeric:tabular-nums}
+.estline b{color:var(--est)}
+
+.steps{margin-top:14px; border-top:2px dashed var(--line)}
+.step{display:grid; grid-template-columns:38px minmax(0,1fr); gap:12px; padding:16px 0; border-bottom:2px dashed var(--line)}
+.step:last-child{border-bottom:0; padding-bottom:0}
+.sn{width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-family:var(--font-display); font-weight:700; background:var(--accent-soft); color:var(--accent)}
+.step.is-done .sn{background:var(--good-soft); color:var(--good)}
+.step.is-todo{opacity:.5}
+.step h2{font-family:var(--font-display); font-size:1.08rem; font-weight:600; margin:5px 0 8px}
+.step p{margin:0}
+.hint{color:var(--muted); font-size:.95rem; margin-top:4px!important}
+
+.ask{display:flex; flex-direction:column; gap:8px; margin-bottom:14px}
+.ask:last-child{margin-bottom:0}
+.ask .num{font-weight:700; font-size:1.25rem}
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{min-width:64px; height:58px; padding:0 14px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; font-size:1.4rem; cursor:pointer; font-variant-numeric:tabular-nums}
+.chip.wide{font-size:1.2rem}
+.chip.word{font-family:var(--font-display); font-weight:600; font-size:1.05rem}
+.chip:hover:not(:disabled){border-color:var(--accent)}
+.chip:disabled{cursor:default}
+.chip:disabled:not(.right){opacity:.4}
+.chip.right{background:var(--good-soft); border-color:var(--good); color:var(--good)}
+.chip.wrong{background:var(--help-soft); border-color:var(--help); color:var(--help)}
+.sum{display:inline-block; font-size:1.12rem; padding:8px 12px; background:var(--accent-soft); border-radius:10px; font-variant-numeric:tabular-nums}
+
+.tiles{display:flex; align-items:stretch; margin:10px 0 6px; overflow-x:auto; padding:2px 2px 4px}
+.tile{flex:none; position:relative; width:clamp(34px,9vw,60px); height:clamp(60px,13vw,78px); display:grid; place-items:center; font-weight:700; font-size:clamp(2rem,6vw,2.8rem); line-height:1; background:var(--surface); border:2px solid var(--line); border-radius:10px; font-variant-numeric:tabular-nums}
+.gap{flex:none; position:relative; width:clamp(18px,5vw,38px); border:0; padding:0; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center}
+.gap::after{content:""; position:absolute; left:50%; top:20%; bottom:20%; border-left:3px dotted var(--line); transform:translateX(-1px)}
+.gap:hover::after,.gap:focus-visible::after{border-color:var(--accent)}
+.gap.on::after{display:none}
+.gap.static{width:5px; cursor:default}
+.gap.static.on{width:clamp(20px,4.5vw,28px)}
+.gap.static::after{display:none}
+.comma{font-weight:700; font-size:clamp(2.6rem,7.5vw,3.4rem); line-height:1; color:var(--comma); transform:translateY(.3em); animation:pop .18s ease-out}
+@keyframes pop{from{transform:translateY(.3em) scale(.4); opacity:0}to{transform:translateY(.3em) scale(1); opacity:1}}
+.live{font-size:1rem; color:var(--muted)} .live b{color:var(--ink)}
+
+.tools{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center}
+.btn{font-family:var(--font-display); font-weight:600; font-size:1rem; padding:12px 18px; min-height:50px; border-radius:12px; border:2px solid var(--line); background:var(--surface); cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.4; cursor:default}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); margin-left:auto}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08)}
+
+.fb{margin-top:12px; padding:10px 14px; border-radius:10px; font-size:1rem}
+.fb b{font-family:var(--font-display); font-weight:600}
+.fb.bad{background:var(--help-soft)} .fb.info{background:var(--warn-soft)} .fb.good{background:var(--good-soft)}
+
+.donebox{margin-top:16px; padding:16px; border-radius:12px; background:var(--good-soft); display:flex; flex-direction:column; gap:10px}
+.donebox.ok{background:var(--warn-soft)} .donebox.help{background:var(--help-soft)}
+.donebox .big{font-family:var(--font-display); font-weight:600; font-size:1.15rem; margin:0}
+.donebox p{margin:0}
+.path{font-size:1.1rem; font-variant-numeric:tabular-nums}
+.path .arr{color:var(--muted); padding:0 .15em}
+.donebox .btn.primary{align-self:flex-end}
+
+.inrow{display:flex; align-items:center; gap:10px; flex-wrap:nowrap; max-width:400px}
+.display{font-weight:700; font-size:2.3rem; min-height:76px; min-width:0; flex:1 1 auto; border:2px solid var(--line); border-radius:12px; padding:8px 18px; display:flex; align-items:center; background:var(--paper); font-variant-numeric:tabular-nums; overflow-x:auto}
+.display .ph{font-size:1.1rem; font-weight:400; color:var(--muted)}
+.unit{font-weight:700; font-size:1.6rem; color:var(--muted)}
+.pre{font-weight:700; font-size:2rem; color:var(--est)}
+.keys{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; max-width:340px; margin-top:10px}
+.key{height:62px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; font-size:1.6rem; cursor:pointer}
+.key:hover{border-color:var(--accent)}
+.key:active{background:var(--accent-soft)}
+.key.ck{color:var(--comma); font-size:2.2rem; line-height:.6}
+.key.del{font-size:1.05rem; font-family:var(--font-display); font-weight:600}
+
+.summary h2{font-family:var(--font-display); font-size:clamp(1.5rem,5vw,2rem); margin:4px 0 6px; text-wrap:balance}
+.stats{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:14px 0}
+.stat{border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:2px}
+.stat b{font-family:var(--font-display); font-size:1.9rem; line-height:1.1}
+.stat span{font-size:.92rem}
+.stat.good{background:var(--good-soft)} .stat.good b{color:var(--good)}
+.stat.ok{background:var(--warn-soft)} .stat.ok b{color:var(--warn)}
+.stat.help{background:var(--help-soft)} .stat.help b{color:var(--help)}
+.summary .tools .btn.primary{margin-left:0}
+
+.sheet[hidden]{display:none!important}
+.sheet{position:fixed; inset:0; z-index:30; background:var(--scrim); display:flex; align-items:flex-end; justify-content:center}
+.sheet-in{background:var(--surface); width:100%; max-width:780px; max-height:86vh; overflow:auto; border-radius:18px 18px 0 0; padding:20px;
+  padding-left:max(20px,env(safe-area-inset-left,0px)); padding-right:max(20px,env(safe-area-inset-right,0px)); padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
+.sheet-head h2{font-family:var(--font-display); margin:0; font-size:1.3rem}
+.tipgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px}
+.tipcard{border:2px solid var(--line); border-radius:12px; padding:12px 14px}
+.tipcard.focus{border-color:var(--accent); background:var(--accent-soft)}
+.tipcard h3{font-family:var(--font-display); font-size:1rem; font-weight:600; margin:0 0 4px}
+.tipcard p{margin:0; font-size:.98rem}
+.tipcard .ex{margin-top:6px; font-weight:700; font-variant-numeric:tabular-nums}
+
+
+.figbox{display:flex; justify-content:center; margin:10px 0 4px}
+.figbox .fig{width:100%; max-width:440px; height:auto; overflow:visible}
+.figbox.small .fig{max-width:300px}
+.fig .gl{stroke:var(--gridline); stroke-width:1}
+.fig .shape{fill:var(--accent-soft); stroke:var(--accent); stroke-width:4; stroke-linejoin:round}
+.fig .shape.walk{stroke:var(--good); stroke-dasharray:100; animation:walk 1.4s ease-out both}
+@keyframes walk{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+.fig .edge{stroke-width:6; stroke-linecap:round}
+.fig .edge.ea{stroke:var(--fa)} .fig .edge.eb{stroke:var(--fb)}
+.fig .ram{fill:none; stroke:var(--comma); stroke-width:2.5}
+.fig .lab{font-family:var(--font-body); font-weight:700; font-size:19px; fill:var(--ink)}
+.fig .lab.la{fill:var(--fa)} .fig .lab.lb{fill:var(--fb)} .fig .cmt{fill:var(--comma)}
+.c-a{color:var(--fa); font-weight:700} .c-b{color:var(--fb); font-weight:700}
+.story.big{font-size:clamp(1.3rem,4vw,1.7rem); font-weight:700; line-height:1.3}
+
+.credit{margin-top:18px; text-align:center; font-size:.85rem; color:var(--muted)}
+
+@media (max-width:520px){
+  .stufen small{display:none}
+  .stats{grid-template-columns:1fr}
+  .card{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Figuren <span class="ap">&amp;</span> Umfang</h1>
+      <p>Rechteck, Quadrat, Dreieck – einmal um die Figur herum</p>
+    </div>
+    <button class="tipbtn" type="button" data-action="tips" id="tipbtn">Tippkarten</button>
+  </header>
+
+  <nav class="stufen" aria-label="Stufe wählen">
+    <button type="button" id="st1" data-action="stufe" data-s="1" aria-pressed="true"><span class="lvl">●○○</span><b>Stufe 1</b><small>Figuren erkennen, Umfang zählen</small></button>
+    <button type="button" id="st2" data-action="stufe" data-s="2" aria-pressed="false"><span class="lvl">●●○</span><b>Stufe 2</b><small>Umfang mit Dezimalzahlen</small></button>
+    <button type="button" id="st3" data-action="stufe" data-s="3" aria-pressed="false"><span class="lvl">●●●</span><b>Stufe 3</b><small>Rückwärts und Sachaufgaben</small></button>
+  </nav>
+
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <main id="app"></main>
+  <footer class="credit">Erstellt mit KI von Christoph Kansy</footer>
+</div>
+
+<div class="sheet" id="tips" hidden>
+  <div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="tipsTitle">
+    <div class="sheet-head">
+      <h2 id="tipsTitle">Tippkarten</h2>
+      <button class="btn" type="button" data-action="tipsclose" id="tipsclose">Schließen</button>
+    </div>
+    <div class="tipgrid">
+      <div class="tipcard" data-tip="1"><h3>1 · Rechteck oder Quadrat?</h3><p><b>Rechteck:</b> 4 rechte Winkel. Gegenüberliegende Seiten sind gleich lang. <b>Quadrat:</b> 4 rechte Winkel. Alle 4 Seiten sind gleich lang. <b>Dreieck:</b> 3 Ecken, 3 Seiten.</p><p class="ex">Jedes Quadrat ist auch ein Rechteck.</p></div>
+      <div class="tipcard" data-tip="2"><h3>2 · Umfang berechnen</h3><p>Der Umfang ist der Weg einmal um die Figur herum. Addiere alle Seiten!</p><p class="ex">Rechteck: u = 2 · a + 2 · b<br>Quadrat: u = 4 · a<br>Dreieck: u = a + b + c</p></div>
+      <div class="tipcard" data-tip="3"><h3>3 · Umfang mit Dezimalzahlen</h3><p>Rechne wie gelernt. Schreibe die Einheit dazu.</p><p class="ex">a = 4,5 cm, b = 2 cm<br>2 · 4,5 cm = 9 cm · 2 · 2 cm = 4 cm<br>u = 9 cm + 4 cm = 13 cm</p></div>
+      <div class="tipcard" data-tip="4"><h3>4 · Rückwärts rechnen</h3><p>Der Umfang ist bekannt. Eine Seite fehlt.</p><p class="ex">Quadrat: u = 12 cm → a = 12 : 4 = 3 cm<br>Rechteck: u = 20 cm, a = 6 cm<br>20 − 2 · 6 = 8 → b = 8 : 2 = 4 cm</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const N = 8;
+const S = { stufe:1, tasks:[], idx:0, results:[], finished:false, justDone:false };
+const $app = document.getElementById('app');
+const $prog = document.getElementById('progress');
+const $tips = document.getElementById('tips');
+
+/* ---------- Zahlen als {i,p}: Wert = i / 10^p ---------- */
+function rnd(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(a){ for(let k=a.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [a[k],a[j]]=[a[j],a[k]]; } return a; }
+function simplify(n){ let i=n.i,p=n.p; while(p>0 && i%10===0){ i=i/10; p--; } return {i:i,p:p}; }
+function fmt(n){ const s=String(n.i).padStart(n.p+1,'0'); return n.p ? s.slice(0,s.length-n.p)+','+s.slice(s.length-n.p) : s; }
+function fs(n){ return fmt(simplify(n)); }
+function val(n){ return n.i/Math.pow(10,n.p); }
+function I(k){ return {i:k,p:0}; }
+function D(x){ return simplify({i:Math.round(x*10),p:1}); }          // eine Nachkommastelle
+function add(a,b){ const p=Math.max(a.p,b.p); return simplify({i:a.i*Math.pow(10,p-a.p)+b.i*Math.pow(10,p-b.p), p:p}); }
+function sub(a,b){ const p=Math.max(a.p,b.p); return simplify({i:a.i*Math.pow(10,p-a.p)-b.i*Math.pow(10,p-b.p), p:p}); }
+function times(a,k){ return simplify({i:a.i*k, p:a.p}); }
+function mul(a,b){ return simplify({i:a.i*b.i, p:a.p+b.p}); }
+function eq(a,b){ return fs(a)===fs(b); }
+function cm(s){ return String(s).replace(/(\d),(\d)/g,'$1<span class="cm">,</span>$2'); }
+function L(n,u){ return cm(fs(n))+(u?' '+u:''); }
+function euro(n){ const v=Math.round(val(n)*100); return {i:v,p:2}; }
+
+/* ---------- Figuren zeichnen (SVG) ---------- */
+const NAMES={rect:'Rechteck', square:'Quadrat', tri:'Dreieck', none:'keins davon'};
+const SHAPES={
+  rect:      {name:'rect',   ra:4, pts:[[40,170],[260,170],[260,60],[40,60]], ra_at:[0,1,2,3]},
+  rectHoch:  {name:'rect',   ra:4, pts:[[100,185],[200,185],[200,25],[100,25]], ra_at:[0,1,2,3]},
+  square:    {name:'square', ra:4, pts:[[85,175],[215,175],[215,45],[85,45]], ra_at:[0,1,2,3]},
+  squareRot: {name:'square', ra:4, pts:[[150,20],[235,105],[150,190],[65,105]], ra_at:[0,1,2,3]},
+  triRight:  {name:'tri',    ra:1, pts:[[60,180],[250,180],[60,40]], ra_at:[0]},
+  triIso:    {name:'tri',    ra:0, pts:[[50,180],[250,180],[150,30]], ra_at:[]},
+  triScal:   {name:'tri',    ra:0, pts:[[30,180],[270,180],[95,55]], ra_at:[]},
+  para:      {name:'none',   ra:0, pts:[[30,170],[200,170],[270,60],[100,60]], ra_at:[]},
+  trapez:    {name:'none',   ra:0, pts:[[25,170],[275,170],[205,60],[95,60]], ra_at:[]}
+};
+function flipX(pts){ return pts.map(p=>[300-p[0],p[1]]); }
+function centroid(pts){ let x=0,y=0; pts.forEach(p=>{x+=p[0];y+=p[1];}); return [x/pts.length,y/pts.length]; }
+function raMark(pts,k){
+  const n=pts.length, v=pts[k], a=pts[(k+n-1)%n], b=pts[(k+1)%n], s=16;
+  const u1=norm([a[0]-v[0],a[1]-v[1]]), u2=norm([b[0]-v[0],b[1]-v[1]]);
+  const p1=[v[0]+u1[0]*s,v[1]+u1[1]*s], p2=[p1[0]+u2[0]*s,p1[1]+u2[1]*s], p3=[v[0]+u2[0]*s,v[1]+u2[1]*s];
+  return '<polyline class="ram" points="'+[p1,p2,p3].map(p=>p.join(',')).join(' ')+'"/>';
+}
+function norm(v){ const l=Math.hypot(v[0],v[1]); return [v[0]/l,v[1]/l]; }
+function labelAt(pts,e,text,cls){
+  const n=pts.length, p=pts[e], q=pts[(e+1)%n], c=centroid(pts);
+  const m=[(p[0]+q[0])/2,(p[1]+q[1])/2];
+  let nv=norm([q[1]-p[1], -(q[0]-p[0])]);
+  if((m[0]-c[0])*nv[0]+(m[1]-c[1])*nv[1] < 0) nv=[-nv[0],-nv[1]];
+  const off=20, x=m[0]+nv[0]*off, y=m[1]+nv[1]*off+6;
+  const anchor = Math.abs(nv[0])>0.6 ? (nv[0]>0?'start':'end') : 'middle';
+  const tx=String(text).replace(/<span class="cm">/g,'<tspan class="cmt">').replace(/<\/span>/g,'</tspan>');
+  return '<text class="lab '+(cls||'')+'" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" text-anchor="'+anchor+'">'+tx+'</text>';
+}
+function polySvg(pts,o){
+  o=o||{};
+  const W=o.w||300, H=o.h||210;
+  const vb = o.grid ? '0 0 '+W+' '+H : '-55 -5 410 222';
+  let h='<svg class="fig" viewBox="'+vb+'" role="img" aria-label="'+(o.aria||'Figur')+'">';
+  if(o.grid){
+    for(let x=0;x<=W;x+=o.grid) h+='<line class="gl" x1="'+x+'" y1="0" x2="'+x+'" y2="'+H+'"/>';
+    for(let y=0;y<=H;y+=o.grid) h+='<line class="gl" x1="0" y1="'+y+'" x2="'+W+'" y2="'+y+'"/>';
+  }
+  const d='M'+pts.map(p=>p.join(',')).join(' L')+' Z';
+  h+='<path class="shape'+(o.walk?' walk':'')+'" d="'+d+'" pathLength="100"/>';
+  (o.edges||[]).forEach(e=>{ const p=pts[e.k], q=pts[(e.k+1)%pts.length]; h+='<line class="edge '+e.cls+'" x1="'+p[0]+'" y1="'+p[1]+'" x2="'+q[0]+'" y2="'+q[1]+'"/>'; });
+  (o.ra||[]).forEach(k=>{ h+=raMark(pts,k); });
+  (o.labels||[]).forEach(l=>{ h+=labelAt(pts,l.k,l.t,l.cls); });
+  return h+'</svg>';
+}
+/* Rechteck/Quadrat: Quadrat als Quadrat, Rechteck immer deutlich länglich (Seitenverhältnis 1,3 bis 2,6) */
+function rectPts(a,b){
+  let w,h;
+  if(eq(a,b)){ w=h=170; }
+  else {
+    const r=val(a)/val(b), R=Math.max(1.3, Math.min(Math.max(r,1/r), 2.6));
+    if(r>=1){ w=230; h=w/R; if(h>170){ h=170; w=h*R; } }
+    else { h=170; w=h/R; }
+  }
+  const x0=(300-w)/2, y0=(210-h)/2;
+  return [[x0,y0+h],[x0+w,y0+h],[x0+w,y0],[x0,y0]];
+}
+/* Dreieck-Skizze aus drei Seiten (maßstäblich) */
+function triPts(x,y,z){
+  const s=[val(x),val(y),val(z)];
+  const c=Math.max.apply(null,s); const rest=s.slice(); rest.splice(s.indexOf(c),1);
+  const a=rest[0], b=rest[1];
+  const px=(b*b - a*a + c*c)/(2*c), py=Math.sqrt(Math.max(0,b*b-px*px));
+  const sc=Math.min(230/c, 150/Math.max(py,0.1));
+  const ox=(300-c*sc)/2, oy=185;
+  return [[ox,oy],[ox+c*sc,oy],[ox+px*sc,oy-py*sc]];
+}
+
+/* ---------- Aufgaben ---------- */
+function base(kind,extra){ return Object.assign({kind:kind, errors:0, stepErr:0, revealed:false, wrong:null, msg:null, input:'', ans:{}}, extra||{}); }
+
+function recogTask(key){
+  let sh=SHAPES[key]; let pts=sh.pts; if(Math.random()<.5 && key!=='squareRot') pts=flipX(pts);
+  return base('recog',{shape:key, name:sh.name, ra:sh.ra, ra_at:sh.ra_at, pts:pts, step:'name'});
+}
+function gridTask(isSquare){
+  let a,b; if(isSquare){ a=rnd(2,6); b=a; } else { do{ a=rnd(3,8); b=rnd(2,6); }while(a===b); }
+  if(Math.random()<.35 && !isSquare){ const t=a; a=b; b=t; if(a===b) a++; }
+  return base('grid',{a:a,b:b, sq:isSquare, step:'countA', u:2*a+2*b});
+}
+function triLabTask(){
+  const set=pick([[3,4,5],[4,4,3],[5,6,7],[6,6,6],[5,5,8],[4,6,7]]);
+  return base('trisum',{s:set.map(I), step:'sum', u:I(set[0]+set[1]+set[2])});
+}
+function umfTask(type,unit,vals,mode){
+  // type rect/square/tri; vals: Array von {i,p}
+  let u, pts;
+  if(type==='rect'){ u=add(times(vals[0],2),times(vals[1],2)); pts=rectPts(vals[0],vals[1]); }
+  else if(type==='square'){ u=times(vals[0],4); pts=rectPts(vals[0],vals[0]); }
+  else { u=add(add(vals[0],vals[1]),vals[2]); pts=triPts(vals[0],vals[1],vals[2]); }
+  return base('umf',{type:type, unit:unit, v:vals, u:u, pts:pts, step: mode==='direct' ? 'input' : 'formula', mode:mode||'formula'});
+}
+function dec1(lo,hi,half){ // Zahl mit einer Nachkommastelle, half: nur ,5
+  if(half) return D(rnd(lo,hi)+0.5);
+  let k; do{ k=rnd(lo*10,hi*10); }while(k%10===0); return {i:k,p:1};
+}
+function randUmf(type,dir){
+  const unit=pick(['cm','cm','m']);
+  for(let t=0;t<200;t++){
+    if(type==='rect'){
+      const a= Math.random()<.7 ? dec1(2,9, Math.random()<.5) : I(rnd(3,12));
+      const b= Math.random()<.5 ? I(rnd(2,8)) : dec1(1,6, Math.random()<.5);
+      if(eq(a,b) || val(a)<val(b)) continue;
+      if(a.p===0 && b.p===0) continue;
+      return umfTask('rect',unit,[a,b],dir);
+    }
+    if(type==='square'){ return umfTask('square',unit,[dec1(1,9, Math.random()<.6)],dir); }
+    const x=dec1(2,8,Math.random()<.5), y=Math.random()<.5?I(rnd(3,8)):dec1(2,8,true), z=dec1(3,9,Math.random()<.5);
+    const s=[val(x),val(y),val(z)].sort((p,q)=>p-q);
+    if(s[0]+s[1] <= s[2]+0.8) continue;
+    return umfTask('tri',unit,[x,y,z],dir);
+  }
+  return umfTask('rect','cm',[D(4.5),I(2)],dir);
+}
+const STIMMT=[
+  ['Jedes Quadrat ist ein Rechteck.', true, 'Ein Quadrat hat 4 rechte Winkel, und gegenüberliegende Seiten sind gleich lang. Also ist es auch ein Rechteck.'],
+  ['Jedes Rechteck ist ein Quadrat.', false, 'Bei einem Rechteck müssen nicht alle 4 Seiten gleich lang sein.'],
+  ['Ein Quadrat mit a = 3 cm hat den Umfang 9 cm.', false, 'Ein Quadrat hat 4 Seiten: u = 4 · 3 cm = 12 cm.'],
+  ['Ein Rechteck mit a = 5 cm und b = 3 cm hat den Umfang 16 cm.', true, 'u = 2 · 5 cm + 2 · 3 cm = 10 cm + 6 cm = 16 cm.'],
+  ['Ein Dreieck kann 3 rechte Winkel haben.', false, 'Ein Dreieck hat höchstens 1 rechten Winkel.'],
+  ['Ein Rechteck mit a = 4 cm und b = 2 cm hat den Umfang 8 cm.', false, '4 · 2 = 8 ist nicht der Umfang. Richtig: u = 2 · 4 cm + 2 · 2 cm = 12 cm.'],
+  ['Ein Dreieck mit den Seiten 2,5 cm, 3 cm und 4 cm hat den Umfang 9,5 cm.', true, 'u = 2,5 cm + 3 cm + 4 cm = 9,5 cm.'],
+  ['Ein Quadrat mit a = 1,5 m hat den Umfang 6 m.', true, 'u = 4 · 1,5 m = 6 m.'],
+  ['Ein Rechteck mit a = 3,5 cm und b = 2 cm hat den Umfang 5,5 cm.', false, '5,5 cm sind nur zwei Seiten. Richtig: u = 2 · 3,5 cm + 2 · 2 cm = 11 cm.']
+];
+function stimmtTask(k){ const s=STIMMT[k]; return base('stimmt',{text:s[0], truth:s[1], why:s[2], step:'judge'}); }
+
+function revSquare(){ const a=rnd(2,9); const unit=pick(['cm','m']); return base('rev',{type:'square', unit:unit, u:I(4*a), known:null, target:I(a), pts:rectPts(I(1),I(1)), step:'input'}); }
+function revRect(){
+  const unit=pick(['cm','m']);
+  let a,b; do{ a= Math.random()<.6 ? D(rnd(3,9)+0.5) : I(rnd(4,12)); b=I(rnd(2,7)); }while(val(a)<=val(b));
+  const u=add(times(a,2),times(b,2));
+  return base('rev',{type:'rect', unit:unit, u:u, known:a, target:b, pts:rectPts(a,b), step:'input'});
+}
+const SACH=[
+  function(){ const a=D(rnd(3,8)+0.5), b=I(rnd(2,4)); const u=add(times(a,2),times(b,2));
+    return {text:'Ein Beet ist '+L(a,'m')+' lang und '+L(b,'m')+' breit. Herr Klein baut einen Zaun um das Beet. Wie lang muss der Zaun sein?', ans:u, unit:'m', rect:[a,b], rech:'u = 2 · '+L(a,'m')+' + 2 · '+L(b,'m')+' = '+L(u,'m')}; },
+  function(){ const a=I(rnd(4,7)*10), b=I(rnd(2,3)*10), n=rnd(2,4); const u=add(times(a,2),times(b,2)), t=times(u,n);
+    return {text:'Ein Spielplatz ist '+L(a,'m')+' lang und '+L(b,'m')+' breit. Lina läuft '+n+' Runden um den Spielplatz. Wie viele Meter läuft sie?', ans:t, unit:'m', rect:[a,b], rech:'u = 2 · '+L(a,'m')+' + 2 · '+L(b,'m')+' = '+L(u,'m')+' → '+n+' · '+L(u,'m')+' = '+L(t,'m')}; },
+  function(){ const a=D(rnd(3,6)+0.5), b=D(rnd(1,3)+0.5), p=pick([2,3,4,5]); const u=add(times(a,2),times(b,2)), k=times(u,p);
+    return {text:'Ein Beet ist '+L(a,'m')+' lang und '+L(b,'m')+' breit. 1 m Zaun kostet '+p+' €. Wie viel kostet der Zaun um das ganze Beet?', ans:k, unit:'€', rect:[a,b], rech:'u = 2 · '+L(a,'m')+' + 2 · '+L(b,'m')+' = '+L(u,'m')+' → '+L(u)+' · '+p+' € = '+L(euro(k),'€')}; },
+  function(){ const a=I(pick([30,40,50,60])), b=I(pick([20,25,35,45])); const u=add(times(a,2),times(b,2));
+    return {text:'Ein Bild ist '+L(a,'cm')+' breit und '+L(b,'cm')+' hoch. Mia klebt ein Band einmal um das Bild herum. Wie lang ist das Band?', ans:u, unit:'cm', rect:[a,b], rech:'u = 2 · '+L(a,'cm')+' + 2 · '+L(b,'cm')+' = '+L(u,'cm')}; },
+  function(){ const x=D(rnd(3,6)+0.5), y=I(rnd(4,7)), z=D(rnd(5,7)+0.5); const u=add(add(x,y),z);
+    return {text:'Ein Beet hat die Form eines Dreiecks. Die Seiten sind '+L(x,'m')+', '+L(y,'m')+' und '+L(z,'m')+' lang. Wie lang ist der Zaun um das Beet?', ans:u, unit:'m', tri:[x,y,z], rech:'u = '+L(x,'m')+' + '+L(y,'m')+' + '+L(z,'m')+' = '+L(u,'m')}; },
+  function(){ const a=D(pick([0.8,0.9,1.2,1.5])); const u=times(a,4);
+    return {text:'Ein quadratischer Tisch hat eine Seitenlänge von '+L(a,'m')+'. Um den Rand kommt eine Lichterkette. Wie lang muss sie sein?', ans:u, unit:'m', rect:[a,a], rech:'u = 4 · '+L(a,'m')+' = '+L(u,'m')}; }
+];
+function sachTask(k){ const s=SACH[k](); let pts=null; if(s.rect) pts=rectPts(s.rect[0],s.rect[1]); if(s.tri) pts=triPts(s.tri[0],s.tri[1],s.tri[2]);
+  return base('sach',{text:s.text, target:s.ans, unit:s.unit, rech:s.rech, pts:pts, step:'input'}); }
+
+function generate(stufe){
+  if(stufe===1){
+    const rec=[recogTask(pick(['rect','rectHoch'])), recogTask(pick(['square','squareRot'])), recogTask(pick(['triRight','triIso','triScal'])), recogTask(pick(['para','trapez']))];
+    if(Math.random()<.5) rec[1]=recogTask('squareRot');
+    const gr=[gridTask(false), gridTask(true), gridTask(false)];
+    const rest=shuffle(rec.slice(1).concat(gr.slice(1)).concat([triLabTask()]));
+    return [rec[0], gr[0]].concat(rest);
+  }
+  if(stufe===2){
+    const first=umfTask('rect','cm',[D(4.5),I(2)],'formula');
+    const list=[randUmf('rect'), randUmf('square'), randUmf('tri'), randUmf('rect'), randUmf('tri')];
+    const st=shuffle([0,1,2,3,4,5,6,7,8]).slice(0,2).map(stimmtTask);
+    return [first].concat(shuffle(list.concat(st)));
+  }
+  const sk=shuffle([0,1,2,3,4,5]).slice(0,4).map(sachTask);
+  const out=[randUmf(pick(['rect','tri']),'direct'), randUmf('square','direct'), revSquare(), revRect()].concat(sk);
+  return shuffle(out);
+}
+function newRound(){ S.tasks=generate(S.stufe); S.idx=0; S.results=[]; S.finished=false; S.justDone=false; render(); }
+
+/* ---------- Bausteine ---------- */
+function chip(action,v,label,answer,active,t,cls){
+  let c='chip'+(cls?' '+cls:'');
+  if(answer===v) c+=' right';
+  else if(active && t.wrong && t.wrong.step===action && t.wrong.v===v) c+=' wrong';
+  return '<button type="button" class="'+c+'" data-action="'+action+'" data-v="'+v+'"'+(active?'':' disabled')+'>'+label+'</button>';
+}
+function msgHtml(t){ return t.msg ? '<div class="fb '+t.msg.kind+'" role="status">'+t.msg.text+'</div>' : ''; }
+function stepCls(s){ return 'step is-'+s; }
+function sn(s,n){ return '<div class="sn" aria-hidden="true">'+(s==='done'?'✓':n)+'</div>'; }
+function keypad(){
+  return '<div class="keys">'+
+    ['7','8','9','4','5','6','1','2','3'].map(k=>'<button type="button" class="key" data-action="key" data-k="'+k+'">'+k+'</button>').join('')+
+    '<button type="button" class="key ck" data-action="key" data-k="," aria-label="Komma">,</button>'+
+    '<button type="button" class="key" data-action="key" data-k="0">0</button>'+
+    '<button type="button" class="key del" data-action="key" data-k="del" aria-label="Löschen">⌫ Löschen</button></div>';
+}
+function inputBlock(t,pre,unit){
+  return '<div class="inrow">'+(pre?'<span class="pre">'+pre+'</span>':'')+'<div class="display" aria-live="polite" aria-label="Deine Antwort">'+(t.input?cm(t.input):'<span class="ph">Antwort</span>')+'</div>'+(unit?'<span class="unit">'+unit+'</span>':'')+'</div>'+
+    keypad()+'<div class="tools" style="max-width:340px"><button type="button" class="btn primary" data-action="check" id="checkbtn">Prüfen</button></div>'+msgHtml(t);
+}
+function opts(list){ return shuffle(list.filter((x,i)=>list.indexOf(x)===i)); }
+
+/* ---------- Anzeige ---------- */
+function render(){
+  for(let s=1;s<=3;s++) document.getElementById('st'+s).setAttribute('aria-pressed', String(S.stufe===s));
+  let p='';
+  for(let k=0;k<N;k++){ const r=S.results[k]; p+='<span class="pd'+(r?' '+r:(k===S.idx && !S.finished?' cur':''))+'"></span>'; }
+  $prog.innerHTML=p;
+  if(S.finished){ renderSummary(); return; }
+  const t=S.tasks[S.idx];
+  let h='<div class="card"><span class="eyebrow">Aufgabe '+(S.idx+1)+' von '+N+' · '+eyebrow(t)+'</span>';
+  h+=({recog:viewRecog, grid:viewGrid, trisum:viewTriSum, umf:viewUmf, stimmt:viewStimmt, rev:viewRev, sach:viewSach})[t.kind](t);
+  if(t.step==='done') h+=doneBox(t);
+  h+='</div>';
+  $app.innerHTML=h;
+  if(S.justDone){ S.justDone=false; const box=document.querySelector('.donebox'); if(box && box.scrollIntoView) box.scrollIntoView({block:'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); }
+}
+function eyebrow(t){ return ({recog:'Figur erkennen', grid:'Umfang auf Kästchenpapier', trisum:'Umfang Dreieck', umf:'Umfang berechnen', stimmt:'Stimmt das?', rev:'Rückwärts rechnen', sach:'Sachaufgabe'})[t.kind]; }
+
+function viewRecog(t){
+  const done1 = t.step!=='name';
+  let h='<div class="figbox">'+polySvg(t.pts,{ra: t.step==='done' ? t.ra_at : [], aria:'Eine Figur'})+'</div><div class="steps">';
+  const s1 = done1 ? 'done' : 'active';
+  h+='<section class="'+stepCls(s1)+'">'+sn(s1,1)+'<div><h2>Wie heißt die Figur?</h2><div class="chips">'+
+     ['rect','square','tri','none'].map(v=>chip('name',v,NAMES[v],t.ans.name,!done1,t,'word')).join('')+'</div>'+(!done1?msgHtml(t):'')+'</div></section>';
+  const s2 = !done1 ? 'todo' : (t.step==='ra' ? 'active' : 'done');
+  h+='<section class="'+stepCls(s2)+'">'+sn(s2,2)+'<div><h2>Wie viele rechte Winkel hat die Figur?</h2>';
+  if(s2==='todo') h+='<p class="hint">Zuerst Schritt 1.</p>';
+  else h+='<p class="hint">Stell dir das Geodreieck in jeder Ecke vor.</p><div class="chips">'+[0,1,2,3,4].map(v=>chip('ra',String(v),String(v),t.ans.ra,s2==='active',t)).join('')+'</div>'+(s2==='active'?msgHtml(t):'');
+  h+='</div></section></div>';
+  return h;
+}
+function gridSvg(t,showA,showB,walk){
+  const g=28, W=(Math.max(t.a,t.b)+3)*g, H=(t.b+2)*g;
+  const x0=g*2, y0=g, pts=[[x0,y0+t.b*g],[x0+t.a*g,y0+t.b*g],[x0+t.a*g,y0],[x0,y0]];
+  const labels=[], edges=[];
+  if(showA){ labels.push({k:0,t:t.a+' cm',cls:'la'}); labels.push({k:2,t:t.a+' cm',cls:'la'}); edges.push({k:0,cls:'ea'},{k:2,cls:'ea'}); }
+  if(showB){ labels.push({k:1,t:t.b+' cm',cls:'lb'}); labels.push({k:3,t:t.b+' cm',cls:'lb'}); edges.push({k:1,cls:'eb'},{k:3,cls:'eb'}); }
+  return polySvg(pts,{w:W+g,h:H,grid:g,labels:labels,edges:edges,walk:walk,aria:'Figur auf Kästchenpapier'});
+}
+function viewGrid(t){
+  const st=t.step;
+  let h='<p class="story">Ein Kästchen ist 1 cm lang. Bestimme den Umfang.</p>';
+  h+='<div class="figbox">'+gridSvg(t, st!=='countA', t.sq ? st!=='countA' : (st==='sum'||st==='done'), st==='done')+'</div><div class="steps">';
+  const s1 = st==='countA' ? 'active' : 'done';
+  h+='<section class="'+stepCls(s1)+'">'+sn(s1,1)+'<div><h2>Kästchen zählen</h2>';
+  h+='<div class="ask"><p>'+(t.sq?'Wie lang ist eine Seite?':'Wie lang ist die Seite <span class="c-a">unten</span>?')+'</p><div class="chips">'+opts([t.a-1,t.a,t.a+1].map(String)).sort((x,y)=>x-y).map(v=>chip('countA',v,v+' cm',t.ans.countA,st==='countA',t,'wide')).join('')+'</div></div>';
+  if(!t.sq){
+    const act=st==='countB';
+    h+='<div class="ask"'+(st==='countA'?' style="opacity:.45"':'')+'><p>Wie lang ist die Seite <span class="c-b">rechts</span>?</p><div class="chips">'+[t.b-1,t.b,t.b+1].map(String).map(v=>chip('countB',v,v+' cm',t.ans.countB,act,t,'wide')).join('')+'</div></div>';
+  } else if(st!=='countA') h+='<p class="hint">Beim Quadrat sind alle 4 Seiten gleich lang.</p>';
+  if(st==='countA'||st==='countB') h+=msgHtml(t);
+  h+='</div></section>';
+  const s2 = (st==='countA'||st==='countB') ? 'todo' : (st==='sum' ? 'active' : 'done');
+  h+='<section class="'+stepCls(s2)+'">'+sn(s2,2)+'<div><h2>Einmal um die Figur herum</h2>';
+  if(s2==='todo') h+='<p class="hint">Zuerst die Seiten zählen.</p>';
+  else {
+    const term = t.sq ? 'u = '+t.a+' + '+t.a+' + '+t.a+' + '+t.a : 'u = '+t.a+' + '+t.b+' + '+t.a+' + '+t.b;
+    const o = t.sq ? [4*t.a, 2*t.a, t.a*t.a, 3*t.a] : [t.u, t.a+t.b, t.a*t.b, 2*t.a+t.b];
+    h+='<div class="ask"><p class="num">'+term+' = ?</p><div class="chips">'+opts(o.map(String)).map(v=>chip('sum',v,v+' cm',t.ans.sum,s2==='active',t,'wide')).join('')+'</div></div>';
+    if(s2==='active') h+=msgHtml(t);
+  }
+  h+='</div></section></div>';
+  return h;
+}
+function viewTriSum(t){
+  const pts=triPts(t.s[0],t.s[1],t.s[2]);
+  let h='<p class="story">Ein Dreieck hat diese Seiten. Wie groß ist der Umfang?</p><div class="figbox">'+polySvg(pts,{labels:[0,1,2].map(k=>({k:k,t:fs(sortedTri(t.s)[k])+' cm'})),walk:t.step==='done',aria:'Dreieck'})+'</div><div class="steps">';
+  const s1 = t.step==='done' ? 'done' : 'active';
+  const sum=val(t.u), a=val(t.s[0]), b=val(t.s[1]);
+  h+='<section class="'+stepCls(s1)+'">'+sn(s1,1)+'<div><h2>Alle Seiten addieren</h2><div class="ask"><p class="num">u = '+t.s.map(x=>fs(x)).join(' + ')+' = ?</p><div class="chips">'+
+     opts([sum, a+b, sum+1, sum-1].map(String)).map(v=>chip('sum',v,v+' cm',t.ans.sum,s1==='active',t,'wide')).join('')+'</div></div>'+(s1==='active'?msgHtml(t):'')+'</div></section></div>';
+  return h;
+}
+function sortedTri(s){ // Reihenfolge wie in triPts: längste unten, dann die anderen
+  const v=s.map(val); const c=Math.max.apply(null,v); const i=v.indexOf(c); const rest=s.slice(); rest.splice(i,1);
+  return [s[i], rest[0], rest[1]];          // Kante 0 = unten (längste), Kante 1 = rechts (a), Kante 2 = links (b)
+}
+function umfLabels(t){
+  if(t.type==='rect') return [{k:0,t:'a = '+L(t.v[0],t.unit),cls:'la'},{k:1,t:'b = '+L(t.v[1],t.unit),cls:'lb'}];
+  if(t.type==='square') return [{k:0,t:'a = '+L(t.v[0],t.unit),cls:'la'}];
+  const s=sortedTri(t.v); return [0,1,2].map(k=>({k:k,t:L(s[k],t.unit)}));
+}
+function termOf(t){
+  if(t.type==='rect') return 'u = 2 · '+L(t.v[0],t.unit)+' + 2 · '+L(t.v[1],t.unit);
+  if(t.type==='square') return 'u = 4 · '+L(t.v[0],t.unit);
+  return 'u = '+t.v.map(x=>L(x,t.unit)).join(' + ');
+}
+const FORMS={rect:'u = 2 · a + 2 · b', square:'u = 4 · a', tri:'u = a + b + c'};
+function viewUmf(t){
+  let h='<div class="figbox">'+polySvg(t.pts,{labels:umfLabels(t),walk:t.step==='done',aria:NAMES[t.type]})+'</div>';
+  h+='<div class="steps">';
+  let n=1;
+  if(t.mode==='formula'){
+    const s1 = t.step==='formula' ? 'active' : 'done';
+    h+='<section class="'+stepCls(s1)+'">'+sn(s1,n++)+'<div><h2>Welche Formel passt?</h2><div class="chips">'+
+       ['rect','square','tri'].map(v=>chip('formula',v,FORMS[v],t.ans.formula,s1==='active',t,'wide')).join('')+'</div>'+(s1==='active'?msgHtml(t):'')+'</div></section>';
+  }
+  const s2 = t.step==='formula' ? 'todo' : (t.step==='input' ? 'active' : 'done');
+  h+='<section class="'+stepCls(s2)+'">'+sn(s2,n)+'<div><h2>Umfang berechnen</h2>';
+  if(s2==='todo') h+='<p class="hint">Zuerst die Formel.</p>';
+  else if(s2==='active'){ h+= t.mode==='formula' ? '<p class="sum">'+termOf(t)+'</p><p class="hint">Rechne im Kopf oder im Heft.</p>' : '<p>Rechne im Heft. Tippe den Umfang ein.</p>'; h+=inputBlock(t,'u =',t.unit); }
+  else h+='<p class="sum">'+termOf(t)+' = <b>'+L(t.u,t.unit)+'</b></p>';
+  h+='</div></section></div>';
+  return h;
+}
+function viewStimmt(t){
+  const done=t.step==='done';
+  let h='<p class="story big">'+cm(t.text)+'</p><div class="steps">';
+  h+='<section class="'+stepCls(done?'done':'active')+'">'+sn(done?'done':'active',1)+'<div><h2>Stimmt das?</h2><div class="chips">'+
+     chip('judge','ja','✓ Das stimmt',t.ans.judge,!done,t,'word')+chip('judge','nein','✗ Das stimmt nicht',t.ans.judge,!done,t,'word')+'</div>'+(!done?msgHtml(t):'')+'</div></section></div>';
+  return h;
+}
+function viewRev(t){
+  const labels = t.type==='square' ? [{k:0,t:'a = ?',cls:'la'}] : [{k:0,t:'a = '+L(t.known,t.unit),cls:'la'},{k:1,t:'b = ?',cls:'lb'}];
+  let h='<p class="story">'+(t.type==='square' ? 'Ein Quadrat hat den Umfang <b>u = '+L(t.u,t.unit)+'</b>. Wie lang ist eine Seite?' : 'Ein Rechteck hat den Umfang <b>u = '+L(t.u,t.unit)+'</b>. Die Seite a ist '+L(t.known,t.unit)+' lang. Wie lang ist die Seite b?')+'</p>';
+  h+='<div class="figbox">'+polySvg(t.pts,{labels:labels,walk:t.step==='done',aria:NAMES[t.type]})+'</div><div class="steps">';
+  const s=t.step==='done'?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>Rückwärts rechnen</h2>';
+  if(s==='active') h+=inputBlock(t, t.type==='square'?'a =':'b =', t.unit);
+  else h+='<p class="sum">'+revPath(t)+'</p>';
+  h+='</div></section></div>';
+  return h;
+}
+function revPath(t){
+  if(t.type==='square') return L(t.u,t.unit)+' : 4 = <b>'+L(t.target,t.unit)+'</b> · Probe: 4 · '+L(t.target,t.unit)+' = '+L(t.u,t.unit)+' ✓';
+  const rest=sub(t.u,times(t.known,2));
+  return L(t.u,t.unit)+' − 2 · '+L(t.known,t.unit)+' = '+L(rest,t.unit)+' → '+L(rest,t.unit)+' : 2 = <b>'+L(t.target,t.unit)+'</b>';
+}
+function viewSach(t){
+  let h='<p class="story">'+t.text+'</p>';
+  if(t.pts) h+='<div class="figbox small">'+polySvg(t.pts,{walk:t.step==='done',aria:'Skizze'})+'</div>';
+  h+='<div class="steps">';
+  const s=t.step==='done'?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>Rechne im Heft</h2>';
+  if(s==='active') h+='<p class="hint">Frage – Rechnung – Antwortsatz. Erst den Umfang, dann weiter.</p>'+inputBlock(t,'',t.unit);
+  else h+='<p class="sum">'+t.rech+'</p>';
+  h+='</div></section></div>';
+  return h;
+}
+
+function doneBox(t){
+  const cat=S.results[S.idx];
+  const praise = cat==='good' ? 'Super! Alles sofort richtig.' : (cat==='ok' ? 'Richtig! Du hast deinen Fehler selbst verbessert.' : 'Schau dir die Lösung genau an. Die nächste schaffst du!');
+  const last=S.idx===N-1;
+  let path='';
+  if(t.kind==='recog') path='Das ist '+(t.name==='none'?'kein Rechteck, kein Quadrat und kein Dreieck':(t.name==='tri'?'ein Dreieck':'ein '+NAMES[t.name]))+'. Rechte Winkel: '+t.ra+'.';
+  else if(t.kind==='grid') path=(t.sq?'u = 4 · '+t.a+' cm':'u = 2 · '+t.a+' cm + 2 · '+t.b+' cm')+' = <b>'+t.u+' cm</b>';
+  else if(t.kind==='trisum') path='u = '+t.s.map(x=>fs(x)+' cm').join(' + ')+' = <b>'+fs(t.u)+' cm</b>';
+  else if(t.kind==='stimmt') path=(t.truth?'Das stimmt. ':'Das stimmt nicht. ')+cm(t.why);
+  else if(t.kind==='umf') path=termOf(t)+' = <b>'+L(t.u,t.unit)+'</b>';
+  else if(t.kind==='rev') path=revPath(t);
+  else path=t.rech;
+  return '<div class="donebox '+cat+'"><p class="big">'+praise+'</p>'+(t.msg?'<p>'+t.msg.text+'</p>':'')+'<p class="path">'+path+'</p>'+
+    '<button type="button" class="btn primary" data-action="next" id="nextbtn">'+(last?'Zur Auswertung':'Nächste Aufgabe')+' →</button></div>';
+}
+function renderSummary(){
+  const c={good:0,ok:0,help:0}; S.results.forEach(r=>{ c[r]++; });
+  const strong=c.good>=6;
+  let advice;
+  if(S.stufe<3) advice = strong ? 'Stark! Mach weiter mit Stufe '+(S.stufe+1)+'.' : 'Übe Stufe '+S.stufe+' noch einmal. Die Tippkarten helfen dir.';
+  else advice = strong ? 'Du bist Umfang-Profi! Schaffst du in einer neuen Runde alle 8 sofort richtig?' : 'Übe Stufe 3 noch einmal. Rechne im Heft ganz sorgfältig.';
+  let h='<div class="card summary"><span class="eyebrow">Auswertung</span><h2>Stufe '+S.stufe+' geschafft!</h2><p>'+advice+'</p>'+
+    '<div class="stats"><div class="stat good"><b>'+c.good+'</b><span>sofort richtig</span></div>'+
+    '<div class="stat ok"><b>'+c.ok+'</b><span>nach Verbessern richtig</span></div>'+
+    '<div class="stat help"><b>'+c.help+'</b><span>mit Lösung</span></div></div>'+
+    '<p class="hint">Zeige dieses Ergebnis deiner Lehrkraft.</p><div class="tools">';
+  if(S.stufe<3) h+='<button type="button" class="btn primary" data-action="stufe" data-s="'+(S.stufe+1)+'" id="nextstufe">Weiter mit Stufe '+(S.stufe+1)+'</button>';
+  h+='<button type="button" class="btn'+(S.stufe===3?' primary':'')+'" data-action="again" id="againbtn">Noch einmal Stufe '+S.stufe+'</button></div></div>';
+  $app.innerHTML=h;
+}
+
+/* ---------- Logik ---------- */
+function finish(t){ t.step='done'; S.results[S.idx] = t.revealed ? 'help' : (t.errors===0 ? 'good' : 'ok'); S.justDone=true; }
+function wrongStep(t,action,v){ t.errors++; t.stepErr++; t.wrong={step:action,v:v}; }
+function nextStep(t,step){ t.step=step; t.stepErr=0; t.wrong=null; }
+
+function onName(t,v){
+  if(v===t.name){ t.ans.name=v; t.msg=null; nextStep(t,'ra'); return; }
+  if(v==='rect' && t.name==='square'){ t.msg={kind:'info', text:'<b>Das stimmt auch!</b> Jedes Quadrat ist ein Rechteck. Aber hier sind alle 4 Seiten gleich lang. Wie heißt die Figur genauer?'}; t.wrong={step:'name',v:v}; return; }
+  wrongStep(t,'name',v);
+  if(t.stepErr>=2){ t.ans.name=t.name; t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Das ist '+(t.name==='none'?'keine der drei Figuren. Es hat keine rechten Winkel.':NAMES[t.name]+'.')}; nextStep(t,'ra'); return; }
+  let txt='<b>Noch nicht.</b> Zähle die Ecken und prüfe die rechten Winkel.';
+  if(t.shape==='squareRot' && v==='none') txt='<b>Noch nicht.</b> Die Figur ist nur gedreht. Dreh das iPad im Kopf: Hat sie 4 rechte Winkel und 4 gleich lange Seiten?';
+  else if(t.name==='none' && (v==='rect'||v==='square')) txt='<b>Schau genau.</b> Hat die Figur wirklich 4 rechte Winkel? Die Ecken sind schief.';
+  else if(t.name==='rect' && v==='square') txt='<b>Noch nicht.</b> Bei einem Quadrat sind alle 4 Seiten gleich lang. Sind sie das hier?';
+  t.msg={kind:'bad', text:txt};
+}
+function onRA(t,v){
+  if(Number(v)===t.ra){ t.ans.ra=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'ra',v);
+  if(t.stepErr>=2){ t.ans.ra=String(t.ra); t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Die rechten Winkel sind jetzt eingezeichnet. Es sind '+t.ra+'.'}; finish(t); return; }
+  t.msg={kind:'bad', text: t.name==='tri' ? '<b>Noch nicht.</b> Ein Dreieck hat höchstens 1 rechten Winkel. Ist hier eine Ecke wie die Ecke eines Heftes?' : '<b>Noch nicht.</b> Prüfe jede Ecke einzeln. Ein rechter Winkel sieht aus wie die Ecke eines Heftes.'};
+}
+function onCount(t,which,v){
+  const right = which==='countA' ? t.a : t.b;
+  const go=()=>{ if(which==='countA'){ t.ans.countA=String(t.a); nextStep(t, t.sq ? 'sum' : 'countB'); } else { t.ans.countB=String(t.b); nextStep(t,'sum'); } };
+  if(Number(v)===right){ t.msg=null; go(); return; }
+  wrongStep(t,which,v);
+  if(t.stepErr>=2){ t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Zähle die Kästchen an der Seite entlang: '+right+' Kästchen = '+right+' cm.'}; go(); return; }
+  t.msg={kind:'bad', text:'<b>Noch nicht.</b> Zähle die Kästchen an der Seite entlang – nicht die Linien.'};
+}
+function onSum(t,v){
+  const right = t.kind==='trisum' ? fs(t.u) : String(t.u);
+  if(v===right){ t.ans.sum=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'sum',v);
+  if(t.stepErr>=2){ t.ans.sum=right; t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Addiere alle Seiten einmal rundherum.'}; finish(t); return; }
+  let txt='<b>Noch nicht.</b> Laufe einmal um die Figur herum und addiere jede Seite.';
+  if(t.kind==='grid' && Number(v)===t.a*t.b) txt='<b>Achtung:</b> Du hast multipliziert. Der Umfang ist der Rand. Addiere die Seiten.';
+  else if(t.kind==='grid' && (Number(v)===t.a+t.b || Number(v)===2*t.a)) txt='<b>Fast.</b> Du hast nur 2 Seiten addiert. Die Figur hat 4 Seiten.';
+  else if(t.kind==='grid' && (Number(v)===2*t.a+t.b || Number(v)===3*t.a)) txt='<b>Fast.</b> Eine Seite fehlt noch. Zähle mit: Die Figur hat 4 Seiten.';
+  else if(t.kind==='trisum' && Number(v)===val(t.s[0])+val(t.s[1])) txt='<b>Fast.</b> Ein Dreieck hat 3 Seiten. Eine fehlt noch.';
+  t.msg={kind:'bad', text:txt};
+}
+function onFormula(t,v){
+  if(v===t.type){ t.ans.formula=v; t.msg=null; nextStep(t,'input'); return; }
+  wrongStep(t,'formula',v);
+  if(t.stepErr>=2){ t.ans.formula=t.type; t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Für ein '+NAMES[t.type]+' gilt '+FORMS[t.type]+'.'}; nextStep(t,'input'); return; }
+  t.msg={kind:'bad', text: t.type==='tri' ? '<b>Noch nicht.</b> Ein Dreieck hat 3 Seiten. Alle drei werden addiert.' : (t.type==='square' ? '<b>Noch nicht.</b> Beim Quadrat sind alle 4 Seiten gleich lang.' : '<b>Noch nicht.</b> Beim Rechteck gibt es zwei Seiten a und zwei Seiten b.')};
+}
+function onJudge(t,v){
+  const right = t.truth ? 'ja' : 'nein';
+  if(v===right){ t.ans.judge=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'judge',v);
+  t.ans.judge=right; t.revealed = t.stepErr>=1; finish(t);
+  S.results[S.idx]='help';
+  t.msg={kind:'info', text:'<b>Schau genau.</b>'};
+}
+function parseIn(s){ const parts=s.split(','); const l=parts[0]||'0', r=parts[1]||''; return simplify({i:Number((l+r).replace(/^0+(?=\d)/,'')||'0'), p:r.length}); }
+function target(t){ return t.kind==='umf' ? t.u : t.target; }
+function onCheck(t){
+  const s=t.input;
+  if(!s){ t.msg={kind:'info', text:'Tippe zuerst deine Antwort ein.'}; return; }
+  if(s.endsWith(',')||s.startsWith(',')){ t.msg={kind:'info', text:'Prüfe das Komma in deiner Antwort.'}; return; }
+  const x=parseIn(s), T=target(t);
+  if(eq(x,T)){
+    t.msg = (t.unit==='€' && fs(T).includes(',') && fs(T).split(',')[1].length===1) ? {kind:'good', text:'Bei Euro schreibt man zwei Stellen: '+L(euro(T),'€')+'.'} : null;
+    finish(t); return;
+  }
+  t.errors++; t.stepErr++;
+  if(t.stepErr>=2){ t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Schau dir die Rechnung unten an.'}; finish(t); return; }
+  const xv=val(x), tv=val(T);
+  let txt='<b>Noch nicht.</b> Rechne im Heft noch einmal nach. Die Tippkarten helfen dir.';
+  if(Math.abs(xv*10-tv)<1e-9 || Math.abs(xv/10-tv)<1e-9) txt='<b>Die Ziffern stimmen!</b> Prüfe das Komma.';
+  else if(t.kind==='umf'){
+    const a=t.v[0], b=t.v[1];
+    if(t.type==='rect' && eq(x,add(a,b))) txt='<b>Fast.</b> Du hast nur 2 Seiten addiert. Ein Rechteck hat 4 Seiten: u = 2 · a + 2 · b.';
+    else if(t.type==='rect' && eq(x,mul(a,b))) txt='<b>Achtung:</b> Du hast a · b gerechnet. Der Umfang ist der Rand: u = 2 · a + 2 · b.';
+    else if(t.type==='rect' && (eq(x,add(times(a,2),b)) || eq(x,add(a,times(b,2))))) txt='<b>Fast.</b> Eine Seite fehlt. Rechne beide Seiten mal 2.';
+    else if(t.type==='square' && (eq(x,a) || eq(x,times(a,2)) || eq(x,times(a,3)))) txt='<b>Fast.</b> Ein Quadrat hat 4 gleich lange Seiten: u = 4 · a.';
+    else if(t.type==='square' && eq(x,mul(a,a))) txt='<b>Achtung:</b> Du hast a · a gerechnet. Der Umfang ist u = 4 · a.';
+  } else if(t.kind==='rev'){
+    if(t.type==='rect' && eq(x,sub(t.u,times(t.known,2)))) txt='<b>Fast.</b> Das sind beide Seiten b zusammen. Teile noch durch 2.';
+    else if(t.type==='rect' && eq(x,sub(t.u,t.known))) txt='<b>Noch nicht.</b> Die Seite a kommt zweimal vor. Ziehe 2 · a ab.';
+    else if(t.type==='square' && Math.abs(xv-val(t.u)/2)<1e-9) txt='<b>Fast.</b> Ein Quadrat hat 4 Seiten. Teile durch 4.';
+  } else if(t.kind==='sach'){
+    txt='<b>Noch nicht.</b> Berechne zuerst den Umfang. Lies dann die Frage noch einmal: Was ist gesucht?';
+  }
+  t.msg={kind:'bad', text:txt};
+}
+function press(t,k){
+  let s=t.input;
+  if(k==='del') s=s.slice(0,-1);
+  else if(k===','){ if(!s.includes(',') && s.length<8) s+=','; }
+  else if(s.length<8) s+=k;
+  t.input=s; t.msg=null;
+}
+function next(){ if(S.idx>=N-1) S.finished=true; else S.idx++; render(); window.scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); }
+
+/* ---------- Tippkarten ---------- */
+function tipFocus(){
+  if(S.finished) return 0;
+  const t=S.tasks[S.idx];
+  if(t.kind==='recog'||t.kind==='stimmt') return 1;
+  if(t.kind==='rev') return 4;
+  if(t.kind==='umf'||t.kind==='sach') return 3;
+  return 2;
+}
+function toggleTips(open){
+  $tips.hidden=!open;
+  if(open){ const f=tipFocus(); $tips.querySelectorAll('.tipcard').forEach(c=>c.classList.toggle('focus', Number(c.dataset.tip)===f)); document.getElementById('tipsclose').focus(); }
+  else document.getElementById('tipbtn').focus();
+}
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click', function(e){
+  if(e.target===$tips){ toggleTips(false); return; }
+  const el=e.target.closest('[data-action]'); if(!el || el.disabled) return;
+  const a=el.dataset.action;
+  if(a==='tips'){ toggleTips(true); return; }
+  if(a==='tipsclose'){ toggleTips(false); return; }
+  if(a==='stufe'){ S.stufe=Number(el.dataset.s); newRound(); window.scrollTo({top:0}); return; }
+  if(a==='again'){ newRound(); window.scrollTo({top:0}); return; }
+  if(S.finished) return;
+  const t=S.tasks[S.idx], v=el.dataset.v;
+  if(a==='name'){ if(t.step==='name') onName(t,v); }
+  else if(a==='ra'){ if(t.step==='ra') onRA(t,v); }
+  else if(a==='countA'||a==='countB'){ if(t.step===a) onCount(t,a,v); }
+  else if(a==='sum'){ if(t.step==='sum') onSum(t,v); }
+  else if(a==='formula'){ if(t.step==='formula') onFormula(t,v); }
+  else if(a==='judge'){ if(t.step==='judge') onJudge(t,v); }
+  else if(a==='key'){ if(t.step==='input') press(t,el.dataset.k); }
+  else if(a==='check'){ if(t.step==='input') onCheck(t); }
+  else if(a==='next'){ next(); return; }
+  render();
+});
+document.addEventListener('keydown', function(e){
+  if(!$tips.hidden){ if(e.key==='Escape') toggleTips(false); return; }
+  if(S.finished) return;
+  const t=S.tasks[S.idx];
+  if(t.step==='input'){
+    if(/^[0-9]$/.test(e.key)){ press(t,e.key); render(); e.preventDefault(); }
+    else if(e.key===','||e.key==='.'){ press(t,','); render(); e.preventDefault(); }
+    else if(e.key==='Backspace'){ press(t,'del'); render(); e.preventDefault(); }
+    else if(e.key==='Enter'){ onCheck(t); render(); e.preventDefault(); }
+  } else if(t.step==='done' && e.key==='Enter' && !(e.target instanceof HTMLButtonElement)){ next(); e.preventDefault(); }
+});
+
+window.__FU = { S:S, generate:generate, fs:fs, val:val, render:render };
+newRound();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Klausurtraining Wellenoptik</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/bricolage-grotesque.css">
+<link rel="stylesheet" href="../fonts/jetbrains-mono.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: wie die Simulationen der Reihe – Kopf mit Reitern; je Aufgabe links Messwerte, Skizze und gestufte Hilfen, rechts Eingaben mit Prüfung und Musterlösung; schmal gestapelt */
+:root{
+  --bg:#edf0f3; --panel:#ffffff; --line:#d3d9e1; --fg:#15202b; --muted:#556272;
+  --accent:#1b4965; --accent-soft:#e1ebf2;
+  --code:#c1440e; --code-soft:#fbe9dd;
+  --ok:#1b7443; --ok-soft:#dff1e6; --bad:#b0271f; --bad-soft:#f8e1de; --warn:#9a5208; --warn-soft:#fbe9d6;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1319;--panel:#161d26;--line:#2a3542;--fg:#e4e9ef;--muted:#97a4b3;
+    --accent:#8fc1e3;--accent-soft:#16293a;--code:#ff9a6b;--code-soft:#3a2417;
+    --ok:#5fd08e;--ok-soft:#14301f;--bad:#ff8a80;--bad-soft:#3a1a18;--warn:#f0b35c;--warn-soft:#3a2a14;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1319;--panel:#161d26;--line:#2a3542;--fg:#e4e9ef;--muted:#97a4b3;
+  --accent:#8fc1e3;--accent-soft:#16293a;--code:#ff9a6b;--code-soft:#3a2417;
+  --ok:#5fd08e;--ok-soft:#14301f;--bad:#ff8a80;--bad-soft:#3a1a18;--warn:#f0b35c;--warn-soft:#3a2a14;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{margin:0;text-wrap:balance}
+p{margin:0}
+button,input{font:inherit}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font-family:var(--f-display);font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1.1;letter-spacing:-.01em}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.note{background:var(--accent-soft);border-radius:10px;padding:10px 14px;font-size:.95rem}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px;flex-wrap:wrap}
+.tabs button{font-weight:700;border:0;background:transparent;color:var(--muted);padding:10px 14px;border-radius:7px;cursor:pointer;min-height:44px}
+.tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+button:focus-visible,input:focus-visible,label:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.work{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.work{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{font-family:var(--f-display);font-size:1.15rem}
+h3{font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.sub{color:var(--muted);font-size:.92rem}
+.formula{font-family:var(--f-mono);background:var(--accent-soft);padding:8px 10px;border-radius:6px;font-size:.93rem;overflow-x:auto}
+.data{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.data div{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg)}
+.data small{display:block;font-size:.75rem;color:var(--muted);letter-spacing:.04em}
+.data b{font-family:var(--f-mono);font-size:1.15rem;color:var(--code);font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:10px 14px;cursor:pointer;min-height:44px;font-weight:700}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hint{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.hint b{color:var(--accent);font-size:.88rem}
+.field{display:flex;flex-direction:column;gap:6px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.field:last-of-type{border-bottom:0}
+.field label.q{font-weight:700}
+.unitwrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.unitwrap input{width:150px;max-width:100%;border:2px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg);color:var(--fg);font-family:var(--f-mono);font-size:1.05rem}
+.unit{font-family:var(--f-mono);color:var(--muted)}
+.field.ok input[type=text]{border-color:var(--ok)} .field.bad input[type=text]{border-color:var(--bad)}
+.choices{display:flex;flex-direction:column;gap:6px}
+.choices label{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;background:var(--bg)}
+.choices input{margin-top:4px;accent-color:var(--accent);width:18px;height:18px;flex:none}
+.choices label.right{border-color:var(--ok);background:var(--ok-soft)}
+.choices label.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.msg{border-radius:8px;padding:8px 12px;font-size:.94rem}
+.msg.ok{background:var(--ok-soft);color:var(--ok)} .msg.bad{background:var(--bad-soft);color:var(--bad)} .msg.info{background:var(--warn-soft);color:var(--fg)}
+.solution{background:var(--code-soft);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:.95rem}
+.solution .formula{background:var(--panel)}
+svg.sketch{width:100%;height:auto;display:block}
+svg.sketch text{font-family:var(--f-body);font-size:13px;fill:var(--muted)}
+.score{font-family:var(--f-display);font-size:2rem;color:var(--code)}
+.qcard{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:var(--panel)}
+.qcard p.qt{font-weight:700}
+.qlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.qlist{grid-template-columns:1fr}}
+.explain{font-size:.92rem;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Q1 Physik GK · 2. Reihe · Freiwilliges Übungsangebot</p>
+      <h1>Klausurtraining Wellenoptik</h1>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Aufgaben">
+      <button role="tab" id="tab-ds" aria-selected="true" data-tab="ds">1 · Doppelspalt</button>
+      <button role="tab" id="tab-gi" aria-selected="false" data-tab="gi">2 · Gitter</button>
+      <button role="tab" id="tab-sp" aria-selected="false" data-tab="sp">3 · Spektren</button>
+      <button role="tab" id="tab-po" aria-selected="false" data-tab="po">4 · Polarisation</button>
+      <button role="tab" id="tab-st" aria-selected="false" data-tab="st">5 · Selbsttest</button>
+    </div>
+  </header>
+  <p class="note">Für alle, die die Klausur schreiben – keine Hausaufgabe. Jede Rechenaufgabe hat Zufallswerte: Mit „Neue Werte“ übt ihr so oft ihr wollt. Erst selbst rechnen, dann Hilfen der Reihe nach öffnen, zum Schluss die Musterlösung.</p>
+  <main id="main"></main>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+const deg=r=>r*180/Math.PI, rad=d=>d*Math.PI/180;
+const f=(x,n=1)=>x.toLocaleString("de-DE",{minimumFractionDigits:n,maximumFractionDigits:n,useGrouping:false});
+const num=v=>{const x=parseFloat(String(v).replace(",",".").replace(/\s/g,""));return isNaN(x)?null:x;};
+const rel=(x,t,p)=>x!==null&&Math.abs(x-t)<=Math.abs(t)*p;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------------- Aufgabe 1: Doppelspalt ---------------- */
+function genDS(){
+  const lam=R(90,136)*5;                       // 450–680 nm
+  const d=pick([0.15,0.20,0.25,0.30,0.40,0.50]); // mm
+  const e=pick([2.0,2.5,3.0,3.5,4.0,4.5,5.0]);   // m
+  const k=pick([2,3,4]);
+  const aTrue=e*Math.tan(Math.asin(k*lam*1e-9/(d*1e-3)))*1000; // mm
+  const twoA=Math.round(2*aTrue*2)/2;           // auf 0,5 mm gemessen
+  const a=twoA/2;
+  const alpha=deg(Math.atan(a/1000/e));
+  const lamR=d*1e-3*Math.sin(rad(alpha))/k*1e9;
+  const lamK=d*1e-3*(a/1000/e)/k*1e9;
+  return {lam,d,e,k,twoA,a,alpha,lamR,lamK};
+}
+const DS={
+  title:"Doppelspalt: Wellenlänge aus Messwerten",
+  intro:v=>`<p>Ein Laser beleuchtet einen Doppelspalt mit dem Spaltabstand d. Auf dem Schirm im Abstand e wird der Abstand zwischen dem <b>−${v.k}.</b> und dem <b>+${v.k}.</b> Maximum gemessen.</p>`,
+  data:v=>[["Spaltabstand d",f(v.d,2)+" mm"],["Schirmabstand e",f(v.e,1)+" m"],["Ordnung k",String(v.k)],[`Abstand −${v.k}. bis +${v.k}.`,f(v.twoA,1)+" mm"]],
+  sketch:v=>sketchScreen(v.k,"Doppelspalt"),
+  hints:["Halbiert den gemessenen Abstand: das ist a_k, der Abstand des k-ten Maximums vom Hauptmaximum.","Winkel: tan α_k = a_k / e. Wellenlänge: d · sin α_k = k · λ. Alle Längen in Meter umrechnen!","Ist α_k klein (unter etwa 5°), gilt sin α ≈ tan α und damit λ ≈ d · a_k / (k · e). Beide Wege liefern dann praktisch dasselbe Ergebnis."],
+  fields:[
+    {id:"a",q:"a) Abstand a_k des k-ten Maximums vom Hauptmaximum",unit:"mm",check:(x,v)=>{
+      if(rel(x,v.a,0.005)) return [true];
+      if(rel(x,v.twoA,0.005)) return [false,"Das ist der ganze Abstand von −k bis +k. Halbieren!"];
+      return [false,"a_k = gemessener Abstand / 2."];}},
+    {id:"al",q:"b) Winkel α_k",unit:"°",check:(x,v)=>{
+      if(rel(x,v.alpha,0.03)) return [true];
+      if(rel(x,deg(Math.atan(v.twoA/1000/v.e)),0.03)) return [false,"Ihr habt den ganzen Abstand statt a_k verwendet."];
+      if(rel(x,v.alpha*Math.PI/180,0.05)) return [false,"Das ist der Winkel im Bogenmaß. Stellt den Taschenrechner auf DEG."];
+      return [false,"α_k = arctan(a_k / e) – a_k und e in derselben Einheit."];}},
+    {id:"l",q:"c) Wellenlänge λ",unit:"nm",check:(x,v)=>{
+      if(rel(x,v.lamR,0.012)) return [true];
+      if(rel(x,2*v.lamR,0.012)) return [false,"Doppelt so groß: a_k nicht halbiert?"];
+      if(rel(x,v.k*v.lamR,0.012)) return [false,"Ihr habt k vergessen: λ = d · sin α_k / k."];
+      if(rel(x,v.lamR/1e9,0.02)||rel(x,v.lamR/1e6,0.02)||rel(x,v.lamR/1e3,0.02)||rel(x,v.lamR*1e3,0.02)) return [false,"Zehnerpotenz prüfen: d in m (1 mm = 10⁻³ m), Ergebnis in nm (1 nm = 10⁻⁹ m)."];
+      return [false,"λ = d · sin α_k / k."];}},
+    {id:"b",type:"choice",q:"d) Warum darf man hier mit der Kleinwinkelnäherung rechnen?",
+      options:[["a","Weil Laserlicht einfarbig ist."],["b","Weil α_k nur wenige Zehntel Grad beträgt; dort sind sin α und tan α praktisch gleich."],["c","Weil am Doppelspalt immer sin α = tan α gilt."],["d","Weil der Spaltabstand kleiner als 1 mm ist."]],
+      check:x=>x==="b"?[true]:[false,{a:"Die Farbe hat mit der Näherung nichts zu tun.",c:"Nur für kleine Winkel! Bei 30° weichen sin und tan um 15 % ab.",d:"Entscheidend ist der Winkel, nicht d allein."}[x]||"Wählt eine Antwort."]}
+  ],
+  solution:v=>`<p>a_${v.k} = ${f(v.twoA,1)} mm / 2 = <b>${f(v.a,2)} mm</b></p>
+    <p class="formula">tan α = ${f(v.a/1000,5)} m / ${f(v.e,1)} m → α = ${f(v.alpha,3)}°</p>
+    <p class="formula">λ = d · sin α / k = ${f(v.d,2)}·10⁻³ m · ${f(Math.sin(rad(v.alpha)),5)} / ${v.k} = ${f(v.lamR,0)} nm</p>
+    <p>Kleinwinkelnäherung: λ ≈ d · a / (k · e) = ${f(v.lamK,0)} nm – praktisch gleich, weil α ≈ ${f(v.alpha,2)}° sehr klein ist. (Eingestellt war ${v.lam} nm; die Abweichung kommt vom Ablesen auf 0,5 mm.)</p>`
+};
+
+/* ---------------- Aufgabe 2: Gitter ---------------- */
+function genGI(){
+  let L,lam,e,g;
+  do{ L=pick([100,200,300,400,500,600,800,1000]); lam=R(80,140)*5; e=pick([0.50,0.75,1.00,1.25,1.50]); g=1e-3/L; }while(lam*1e-9/g>0.95);
+  const alT=Math.asin(lam*1e-9/g);
+  const twoA=Math.round(2*e*Math.tan(alT)*100*10)/10; // cm
+  const a=twoA/2, alpha=deg(Math.atan(a/100/e));
+  const lamR=g*Math.sin(rad(alpha))*1e9, lamK=g*(a/100/e)*1e9;
+  const kmax=Math.floor(g/(lamR*1e-9));
+  return {L,lam,e,g,twoA,a,alpha,lamR,lamK,kmax};
+}
+const GI={
+  title:"Gitter: Wellenlänge und höchste Ordnung",
+  intro:v=>`<p>Ein Laser beleuchtet ein Gitter mit <b>${v.L} Linien pro mm</b>. Auf dem Schirm wird der Abstand der beiden Maxima <b>1. Ordnung</b> gemessen.</p>`,
+  data:v=>[["Gitter",v.L+" Linien/mm"],["Schirmabstand e",f(v.e,2)+" m"],["Abstand −1. bis +1.",f(v.twoA,1)+" cm"]],
+  sketch:v=>sketchScreen(1,"Gitter"),
+  hints:["Gitterkonstante: g = 1 mm / Linienzahl. Abstand a₁ = gemessener Abstand / 2.","α₁ = arctan(a₁ / e), dann λ = g · sin α₁. Keine Kleinwinkelnäherung – am Gitter sind die Winkel groß!","Höchste Ordnung: sin α_k = k · λ / g ≤ 1, also k ≤ g / λ. Abrunden."],
+  fields:[
+    {id:"al",q:"a) Ablenkwinkel α₁",unit:"°",check:(x,v)=>{
+      if(rel(x,v.alpha,0.01)) return [true];
+      if(rel(x,deg(Math.atan(v.twoA/100/v.e)),0.01)) return [false,"Ihr habt den ganzen Abstand statt a₁ verwendet. Halbieren!"];
+      if(rel(x,rad(v.alpha),0.02)) return [false,"Bogenmaß! Taschenrechner auf DEG stellen."];
+      return [false,"α₁ = arctan(a₁ / e) mit a₁ und e in derselben Einheit."];}},
+    {id:"l",q:"b) Wellenlänge λ",unit:"nm",check:(x,v)=>{
+      if(rel(x,v.lamR,0.01)) return [true];
+      if(Math.abs(v.lamK-v.lamR)/v.lamR>0.012 && rel(x,v.lamK,0.008)) return [false,`Kleinwinkelnäherung! Bei α ≈ ${f(v.alpha,0)}° ist sin α ≠ tan α. Rechnet λ = g · sin α₁.`];
+      if(rel(x,v.lamR/1e9,0.02)||rel(x,v.lamR/1e3,0.02)||rel(x,v.lamR*1e3,0.02)) return [false,"Zehnerpotenz prüfen: g = 1 mm / Linienzahl in Meter umrechnen, λ in nm angeben."];
+      return [false,"λ = g · sin α₁ mit g = 1 mm / "+v.L+"."];}},
+    {id:"k",q:"c) Höchste beobachtbare Ordnung k_max",unit:"",check:(x,v)=>{
+      if(x===v.kmax) return [true];
+      if(x===v.kmax+1) return [false,`Für k = ${v.kmax+1} wäre sin α = ${f((v.kmax+1)*v.lamR*1e-9/v.g,2)} > 1 – unmöglich.`];
+      if(x!==null&&x<v.kmax) return [false,`Prüft k = ${x+1}: sin α = ${f((x+1)*v.lamR*1e-9/v.g,2)} ≤ 1 – diese Ordnung gibt es noch.`];
+      return [false,"k_max = größte ganze Zahl ≤ g / λ."];}}
+  ],
+  solution:v=>`<p>g = 1 mm / ${v.L} = ${f(v.g*1e6,3)} µm; a₁ = ${f(v.twoA,1)} cm / 2 = ${f(v.a,2)} cm</p>
+    <p class="formula">α₁ = arctan(${f(v.a/100,4)} m / ${f(v.e,2)} m) = ${f(v.alpha,2)}°</p>
+    <p class="formula">λ = g · sin α₁ = ${f(v.g*1e6,3)} µm · ${f(Math.sin(rad(v.alpha)),4)} = ${f(v.lamR,0)} nm</p>
+    <p class="formula">g / λ = ${f(v.g/(v.lamR*1e-9),2)} → k_max = ${v.kmax}</p>
+    <p>Mit Kleinwinkelnäherung käme ${f(v.lamK,0)} nm heraus (${f((v.lamK-v.lamR)/v.lamR*100,1)} % zu groß).</p>`
+};
+
+/* ---------------- Aufgabe 3: Spektren ---------------- */
+function genSP(){
+  const L=pick([100,200,300,400]), e=pick([0.50,1.00,1.50,2.00]);
+  const lmin=pick([400,410,420]), lmax=pick([700,720,750,780]);
+  const g=1e-3/L, pos=(k,l)=>e*Math.tan(Math.asin(k*l*1e-9/g))*100;
+  const a3=pos(3,lmin), a2=pos(2,lmax);
+  return {L,e,lmin,lmax,g,a3,a2,w:a2-a3,l2:1.5*lmin};
+}
+const SP={
+  title:"Spektren: Überlappung der Ordnungen",
+  intro:v=>`<p>Weißes Licht fällt auf ein Gitter mit <b>${v.L} Linien pro mm</b>. Das sichtbare Licht reicht in diesem Versuch von <b>${v.lmin} nm</b> (violett) bis <b>${v.lmax} nm</b> (rot). Der Schirm steht im Abstand e.</p>`,
+  data:v=>[["Gitter",v.L+" Linien/mm"],["Schirmabstand e",f(v.e,2)+" m"],["violette Grenze",v.lmin+" nm"],["rote Grenze",v.lmax+" nm"]],
+  sketch:v=>sketchSpectra(v),
+  hints:["Zwei Ordnungen überlappen, wenn das rote Ende der niedrigeren Ordnung weiter außen liegt als das violette Ende der höheren: k · λ_rot > (k+1) · λ_violett.","Am selben Ort gilt: k₁ · λ₁ = k₂ · λ₂. Die Lage berechnet ihr mit sin α = k · λ / g und a = e · tan α.","Breite der Überlappungszone = a(2. Ordnung, rot) − a(3. Ordnung, violett)."],
+  fields:[
+    {id:"o",type:"choice",q:"a) Überlappen die 1. und die 2. Ordnung?",options:[["j","Ja"],["n","Nein"]],check:(x,v)=>x==="n"?[true]:[false,`1 · ${v.lmax} nm < 2 · ${v.lmin} nm = ${2*v.lmin} nm – das rote Ende der 1. Ordnung liegt innen.`]},
+    {id:"l2",q:"b) Welche Wellenlänge der 2. Ordnung liegt dort, wo die 3. Ordnung beginnt?",unit:"nm",check:(x,v)=>{
+      if(rel(x,v.l2,0.005)) return [true];
+      if(rel(x,v.lmin*2/3,0.01)) return [false,"Andersherum: 2 · λ = 3 · λ_violett."];
+      if(rel(x,3*v.lmin,0.005)) return [false,"Das ist 3 · λ_violett. Gesucht ist λ mit 2 · λ = 3 · λ_violett."];
+      return [false,"2 · λ = 3 · "+v.lmin+" nm."];}},
+    {id:"a3",q:"c) Abstand des violetten Anfangs der 3. Ordnung vom Hauptmaximum",unit:"cm",check:(x,v)=>{
+      if(rel(x,v.a3,0.015)) return [true];
+      if(rel(x,v.e*100*3*v.lmin*1e-9/v.g,0.015)) return [false,"Kleinwinkelnäherung? In der 3. Ordnung sind die Winkel groß."];
+      return [false,"sin α = 3 · λ_violett / g, a = e · tan α."];}},
+    {id:"w",q:"d) Breite der Überlappungszone von 2. und 3. Ordnung",unit:"cm",check:(x,v)=>{
+      if(rel(x,v.w,0.04)) return [true];
+      return [false,"Erst a(2. Ordnung, rot) berechnen, dann a(3. Ordnung, violett) abziehen."];}}
+  ],
+  solution:v=>`<p>a) 1 · ${v.lmax} nm < 2 · ${v.lmin} nm → keine Überlappung von 1. und 2. Ordnung.</p>
+    <p>b) 2 · λ = 3 · ${v.lmin} nm → λ = <b>${f(v.l2,0)} nm</b>. Ab dieser Wellenlänge überlappt die 2. Ordnung mit der 3. – unabhängig von der Gitterkonstante.</p>
+    <p class="formula">c) sin α = 3 · ${v.lmin} nm / ${f(v.g*1e9,0)} nm = ${f(3*v.lmin*1e-9/v.g,4)} → a = ${f(v.a3,1)} cm</p>
+    <p class="formula">   sin α = 2 · ${v.lmax} nm / ${f(v.g*1e9,0)} nm = ${f(2*v.lmax*1e-9/v.g,4)} → a = ${f(v.a2,1)} cm</p>
+    <p>d) Überlappung von ${f(v.a3,1)} cm bis ${f(v.a2,1)} cm → Breite <b>${f(v.w,1)} cm</b>.</p>`
+};
+
+/* ---------------- Skizzen ---------------- */
+function sketchScreen(k,label){
+  let s=`<svg class="sketch" viewBox="0 0 520 150" role="img" aria-label="Skizze: Laser, ${label}, Schirm mit Maxima">`;
+  s+=`<rect x="10" y="62" width="44" height="22" rx="3" fill="var(--accent)"/><text x="14" y="102">Laser</text>`;
+  s+=`<line x1="54" y1="73" x2="120" y2="73" stroke="var(--code)" stroke-width="2"/>`;
+  s+=`<rect x="120" y="30" width="6" height="86" fill="var(--muted)"/><text x="98" y="138">${label}</text>`;
+  s+=`<line x1="126" y1="73" x2="440" y2="73" stroke="var(--line)" stroke-dasharray="4 4"/>`;
+  s+=`<line x1="440" y1="10" x2="440" y2="136" stroke="var(--fg)" stroke-width="3"/><text x="452" y="140">Schirm</text>`;
+  const n=Math.max(k,1);
+  for(let i=-n;i<=n;i++){ const y=73+i*(54/n); s+=`<circle cx="440" cy="${y}" r="${i===0?6:4}" fill="var(--code)"/>`; }
+  s+=`<line x1="126" y1="73" x2="440" y2="19" stroke="var(--code)" stroke-width="1.2" opacity=".7"/>`;
+  s+=`<path d="M190 73 A64 64 0 0 0 188 62" fill="none" stroke="var(--fg)"/><text x="196" y="66">α</text>`;
+  s+=`<line x1="470" y1="19" x2="470" y2="73" stroke="var(--fg)"/><text x="476" y="50">a</text>`;
+  s+=`<line x1="126" y1="128" x2="440" y2="128" stroke="var(--fg)"/><text x="270" y="124">e</text></svg>`;
+  return s;
+}
+function sketchSpectra(v){
+  const W=500, x0=20, scale=(W-40)/Math.max(v.a2*1.15,v.e*100*Math.tan(Math.asin(Math.min(.99,3*v.lmax*1e-9/v.g))));
+  const pos=(k,l)=>v.e*100*Math.tan(Math.asin(k*l*1e-9/v.g));
+  let s=`<svg class="sketch" viewBox="0 0 ${W} 120" role="img" aria-label="Schirmbild der Spektren 1. bis 3. Ordnung">`;
+  s+=`<defs><linearGradient id="spg" x1="0" x2="1"><stop offset="0" stop-color="#7a3cff"/><stop offset=".25" stop-color="#2f6bff"/><stop offset=".45" stop-color="#22c55e"/><stop offset=".65" stop-color="#facc15"/><stop offset=".82" stop-color="#fb923c"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs>`;
+  s+=`<line x1="${x0}" y1="70" x2="${W-10}" y2="70" stroke="var(--line)"/>`;
+  s+=`<rect x="${x0-3}" y="40" width="6" height="40" fill="var(--fg)" opacity=".8"/><text x="${x0-6}" y="98">0</text>`;
+  [1,2,3].forEach((k,i)=>{
+    const a=pos(k,v.lmin), b=pos(k,v.lmax);
+    if(!isFinite(b)) return;
+    const y=[46,58,34][i];
+    s+=`<rect x="${x0+a*scale}" y="${y}" width="${(b-a)*scale}" height="12" fill="url(#spg)" opacity=".9"/><text x="${x0+a*scale}" y="${y-3}">${k}. Ordnung</text>`;
+  });
+  s+=`<rect x="${x0+v.a3*scale}" y="84" width="${Math.max(2,v.w*scale)}" height="6" fill="var(--code)"/><text x="${x0+v.a3*scale}" y="108">Überlappung 2./3.</text></svg>`;
+  return s;
+}
+
+/* ---------------- Aufgabe 4: Polarisation (Fragenpool) ---------------- */
+const POOL=[
+ ["Zwei Polfilter (Polarisator und Analysator) stehen gekreuzt, also unter 90°. Was sieht man hinter dem zweiten Filter?",["hell","etwa halb so hell wie hinter einem Filter","dunkel","bunte Farben"],2,"Der Polarisator lässt nur eine Schwingungsrichtung durch; der gekreuzte Analysator sperrt genau diese."],
+ ["Man dreht einen einzelnen Polfilter vor einer Glühlampe. Was beobachtet man?",["Die Helligkeit bleibt gleich.","Es wird zweimal pro Umdrehung dunkel.","Es wird viermal pro Umdrehung dunkel.","Die Farbe ändert sich."],0,"Lampenlicht ist unpolarisiert: In jeder Stellung kommt etwa die Hälfte durch."],
+ ["Man dreht einen Polfilter vor einem Tablet-Display. Was beobachtet man?",["Die Helligkeit bleibt gleich.","Es wird zweimal pro Umdrehung (fast) dunkel.","Das Display wird heller als ohne Filter.","Nichts – Displays leuchten nicht."],1,"Display-Licht ist bereits linear polarisiert; das Display wirkt wie ein Polarisator."],
+ ["Welche Welle lässt sich NICHT polarisieren?",["Radiowelle","Seilwelle","Schall in Luft","Licht"],2,"Schall ist eine Longitudinalwelle: Er schwingt in Ausbreitungsrichtung, es gibt nur eine Schwingungsrichtung."],
+ ["Was folgt daraus, dass sich Licht polarisieren lässt?",["Licht ist eine Longitudinalwelle.","Licht ist eine Transversalwelle.","Licht besteht aus Teilchen.","Licht ist in Wasser langsamer."],1,"Nur Transversalwellen haben verschiedene Schwingungsrichtungen, die ein Filter auswählen kann."],
+ ["Polarisierende Sonnenbrillen haben eine senkrechte Durchlassrichtung. Warum?",["Weil Sonnenlicht senkrecht polarisiert ist.","Weil Spiegelungen an Wasser und Straße überwiegend waagerecht polarisiert sind.","Weil senkrechte Filter mehr Licht durchlassen.","Aus optischen Gründen ohne physikalische Wirkung."],1,"Reflektiertes Licht schwingt überwiegend parallel zur spiegelnden Fläche, also waagerecht – die senkrechte Durchlassrichtung sperrt es."],
+ ["Zwischen zwei gekreuzte Filter wird ein dritter Filter unter 45° gesteckt. Was passiert?",["Es bleibt dunkel.","Es wird wieder etwas hell.","Es wird heller als mit einem Filter.","Das Licht wird farbig."],1,"Der mittlere Filter lässt eine 45°-Komponente durch, von der der letzte Filter wieder einen Teil durchlässt."],
+ ["Polarisator und Analysator stehen unter 45°. Wie hell ist es hinter dem Analysator?",["genauso hell wie bei paralleler Stellung","abgeschwächt, aber nicht dunkel","völlig dunkel","heller als ohne Filter"],1,"Nur die Komponente parallel zur Durchlassrichtung kommt durch – das ist weniger als bei paralleler Stellung."],
+ ["Eine Seilwelle schwingt senkrecht und läuft auf einen waagerechten Schlitz zu. Was passiert?",["Sie läuft ungehindert durch.","Sie wird am Schlitz ausgelöscht.","Sie wird zur Longitudinalwelle.","Sie wird gebeugt und läuft verstärkt weiter."],1,"Die Schwingung hat keine Komponente in Schlitzrichtung – nichts kommt durch."],
+ ["Wie heißt Licht, dessen Schwingungsrichtung ständig zufällig wechselt?",["linear polarisiert","unpolarisiert","longitudinal","monochromatisch"],1,"Licht von Sonne und Glühlampe ist unpolarisiert; hinter einem Polfilter ist es linear polarisiert."]
+];
+
+/* ---------------- Aufgabe 5: Selbsttest (identisch mit dem Forms-Selbsttest) ---------------- */
+const QUIZ=[
+ ["Was zeigt die Beugung von Licht an einem sehr schmalen Spalt?",["Licht breitet sich immer geradlinig aus.","Licht verhält sich wie eine Welle.","Licht besteht aus Teilchen.","Licht wird im Spalt gebrochen."],1],
+ ["Ein Spalt wird schmaler. Was passiert mit dem hellen Fleck auf dem Schirm?",["Er wird schmaler.","Er wird breiter.","Er bleibt gleich.","Er verschwindet sofort."],1],
+ ["Was zeigte Foucaults Messung von 1850?",["Licht ist in Wasser langsamer als in Luft – wie vom Wellenmodell vorhergesagt.","Licht ist in Wasser schneller – wie vom Teilchenmodell vorhergesagt.","Licht ist in Wasser genauso schnell wie in Luft.","Licht wird in Wasser nicht gebrochen."],0],
+ ["Am Doppelspalt entsteht ein dunkler Streifen, wenn der Gangunterschied … beträgt.",["0","λ","λ/2, 3λ/2, 5λ/2 …","2λ"],2],
+ ["Wann darf man am Doppelspalt sin α ≈ tan α verwenden?",["immer","nur bei kleinen Winkeln (wenige Grad)","nur am Gitter","nur bei rotem Licht"],1],
+ ["Wie lautet die Gittergleichung?",["g · sin αₖ = k · λ","g · tan αₖ = k · λ","g = k · λ · sin αₖ","λ = g · k · sin αₖ"],0],
+ ["Was ändert sich beim Übergang vom Doppelspalt zum Gitter (gleicher Spaltabstand)?",["Die Maxima wandern nach außen.","Die Maxima werden schärfer und heller, ihre Lage bleibt.","Die Maxima verschwinden.","Das Muster wird bunt."],1],
+ ["Gitter mit 500 Linien/mm, λ = 600 nm: Welche Ordnung ist die höchste?",["1","2","3","4"],2],
+ ["Weißes Licht am Gitter: Welche Farbe wird in der 1. Ordnung am stärksten abgelenkt?",["Violett","Grün","Rot","Alle gleich stark"],2],
+ ["Warum überlappen die 2. und die 3. Ordnung eines Gitterspektrums?",["Weil 2 · 750 nm > 3 · 400 nm ist.","Weil das Gitter zu grob ist.","Weil rotes Licht langsamer ist.","Sie überlappen nie."],0],
+ ["Man betrachtet eine Hg-Spektrallampe durch ein Gitter. Was sieht man?",["ein kontinuierliches Spektrum","einzelne farbige Linien (Linienspektrum)","nur weißes Licht","nur dunkle Linien"],1],
+ ["Welche Welle lässt sich NICHT polarisieren?",["Licht","Radiowelle","Schall","Seilwelle"],2],
+ ["Polarisator und Analysator stehen gekreuzt (90°). Was sieht man?",["hell","halb so hell","dunkel","bunte Farben"],2],
+ ["Was folgt daraus, dass Licht polarisierbar ist?",["Licht ist eine Longitudinalwelle.","Licht ist eine Transversalwelle.","Licht besteht aus Teilchen.","Licht braucht ein Medium."],1],
+ ["Wann reicht das Strahlenmodell zur Beschreibung von Licht aus?",["wenn Öffnungen und Hindernisse sehr groß gegenüber der Wellenlänge sind","wenn das Licht einfarbig ist","wenn die Öffnung kleiner als die Wellenlänge ist","nie"],0],
+ ["Welche Beobachtung kann das Wellenmodell NICHT erklären?",["Beugung","Interferenz","Photoeffekt: Rotes Licht löst auch bei großer Helligkeit keine Elektronen aus.","Polarisation"],2]
+];
+
+/* ---------------- Rendering ---------------- */
+const TASKS={ds:[DS,genDS],gi:[GI,genGI],sp:[SP,genSP]};
+const state={tab:"ds",vals:{},hints:{},sol:{}};
+try{const t=localStorage.getItem("kt-tab"); if(t) state.tab=t;}catch(e){}
+
+function renderTask(key){
+  const [T,gen]=TASKS[key];
+  if(!state.vals[key]) state.vals[key]=gen();
+  const v=state.vals[key], h=state.hints[key]||0;
+  let hints=""; for(let i=0;i<h;i++) hints+=`<div class="hint"><b>Hilfe ${i+1}</b><span>${esc(T.hints[i])}</span></div>`;
+  $("main").innerHTML=`<div class="work">
+    <div class="col">
+      <section class="card"><h2>${T.title}</h2>${T.intro(v)}
+        <div class="data">${T.data(v).map(([a,b])=>`<div><small>${a}</small><b>${b}</b></div>`).join("")}</div>
+        ${T.sketch(v)}
+        <div class="btnrow"><button class="btn" type="button" id="newvals">Neue Werte</button></div>
+      </section>
+      <section class="card"><h3>Gestufte Hilfen</h3>${hints||`<p class="sub">Versucht es zuerst allein.</p>`}
+        ${h<3?`<div class="btnrow"><button class="btn" type="button" id="hintbtn">Hilfe ${h+1} öffnen</button></div>`:""}</section>
+    </div>
+    <div class="col">
+      <form class="card" id="tf" novalidate><h2>Eure Ergebnisse</h2>
+        ${T.fields.map(fl=>fl.type==="choice"
+          ? `<div class="field" id="fd-${fl.id}"><label class="q" id="lq-${fl.id}">${esc(fl.q)}</label><div class="choices" role="radiogroup" aria-labelledby="lq-${fl.id}">${fl.options.map(([k,t])=>`<label><input type="radio" name="c-${fl.id}" id="c-${fl.id}-${k}" value="${k}"><span>${esc(t)}</span></label>`).join("")}</div><div id="ms-${fl.id}"></div></div>`
+          : `<div class="field" id="fd-${fl.id}"><label class="q" for="in-${fl.id}">${esc(fl.q)}</label><div class="unitwrap"><input type="text" inputmode="decimal" id="in-${fl.id}" autocomplete="off">${fl.unit?`<span class="unit">${fl.unit}</span>`:""}</div><div id="ms-${fl.id}"></div></div>`).join("")}
+        <div class="btnrow"><button class="btn primary" type="submit">Prüfen</button><button class="btn" type="button" id="solbtn">Musterlösung</button></div>
+        <div id="solbox"></div>
+      </form>
+    </div></div>`;
+  $("newvals").onclick=()=>{state.vals[key]=gen();state.hints[key]=0;renderTask(key);};
+  const hb=$("hintbtn"); if(hb) hb.onclick=()=>{state.hints[key]=h+1;renderTask(key);};
+  $("solbtn").onclick=()=>{$("solbox").innerHTML=`<div class="solution"><h3>Musterlösung</h3>${T.solution(v)}</div>`;};
+  $("tf").onsubmit=e=>{
+    e.preventDefault();
+    T.fields.forEach(fl=>{
+      let x;
+      if(fl.type==="choice") x=(document.querySelector(`input[name="c-${fl.id}"]:checked`)||{}).value;
+      else x=num($("in-"+fl.id).value);
+      const [ok,msg]=(x===undefined||x===null)?[false,"Noch keine Eingabe."]:fl.check(x,v);
+      $("fd-"+fl.id).classList.toggle("ok",ok); $("fd-"+fl.id).classList.toggle("bad",!ok);
+      $("ms-"+fl.id).innerHTML=ok?`<div class="msg ok">Richtig.</div>`:`<div class="msg bad">${esc(msg)}</div>`;
+    });
+  };
+}
+
+function mcBlock(list,prefix,withExplain){
+  return `<div class="qlist">${list.map((q,i)=>`<div class="qcard" id="${prefix}-${i}"><p class="qt">${i+1}. ${esc(q[0])}</p><div class="choices" role="radiogroup" aria-label="Frage ${i+1}">${q[1].map((o,j)=>`<label id="${prefix}-${i}-l${j}"><input type="radio" name="${prefix}-${i}" id="${prefix}-${i}-${j}" value="${j}"><span>${esc(o)}</span></label>`).join("")}</div><div id="${prefix}-${i}-m"></div></div>`).join("")}</div>`;
+}
+function grade(list,prefix,withExplain){
+  let n=0;
+  list.forEach((q,i)=>{
+    const sel=document.querySelector(`input[name="${prefix}-${i}"]:checked`);
+    q[1].forEach((_,j)=>$(`${prefix}-${i}-l${j}`).classList.remove("right","wrong"));
+    $(`${prefix}-${i}-l${q[2]}`).classList.add("right");
+    if(sel && +sel.value===q[2]) n++;
+    else if(sel) $(`${prefix}-${i}-l${sel.value}`).classList.add("wrong");
+    $(`${prefix}-${i}-m`).innerHTML = withExplain ? `<p class="explain">${esc(q[3])}</p>` : "";
+  });
+  return n;
+}
+let poolSel=[];
+function renderPol(){
+  const idx=[...POOL.keys()].sort(()=>Math.random()-.5).slice(0,5);
+  poolSel=idx.map(i=>POOL[i]);
+  $("main").innerHTML=`<section class="card"><h2>Polarisation: fünf Fragen aus dem Pool</h2><p class="sub">Mit „Neue Fragen“ zieht ihr fünf andere aus zehn Fragen.</p>
+    ${mcBlock(poolSel,"p",true)}
+    <div class="btnrow"><button class="btn primary" type="button" id="pcheck">Auswerten</button><button class="btn" type="button" id="pnew">Neue Fragen</button><span id="pscore" class="sub" aria-live="polite"></span></div></section>`;
+  $("pcheck").onclick=()=>{const n=grade(poolSel,"p",true);$("pscore").textContent=`${n} von 5 richtig.`;};
+  $("pnew").onclick=renderPol;
+}
+function renderQuiz(){
+  $("main").innerHTML=`<section class="card"><h2>Selbsttest zur ganzen Reihe</h2><p class="sub">16 Fragen – dieselben wie im Forms-Selbsttest. Kreuzt an und wertet am Ende aus.</p>
+    ${mcBlock(QUIZ,"q",false)}
+    <div class="btnrow"><button class="btn primary" type="button" id="qcheck">Auswerten</button><button class="btn" type="button" id="qreset">Neu beginnen</button></div>
+    <div id="qres" aria-live="polite"></div></section>`;
+  $("qcheck").onclick=()=>{
+    const n=grade(QUIZ,"q",false);
+    const tips=[];
+    const map=[[0,1,14,"Beugung und Strahlenmodell (Std. 1)"],[2,2,2,"Brechung und Foucault (Std. 2)"],[3,4,4,"Doppelspalt (Std. 3/4) – Aufgabe 1"],[5,7,7,"Gitter (Std. 5) – Aufgabe 2"],[8,10,10,"Spektren (Std. 6) – Aufgabe 3"],[11,13,13,"Polarisation (Std. 7) – Aufgabe 4"]];
+    map.forEach(([a,b,c,t])=>{const ids=[...new Set([...Array(b-a+1).keys()].map(x=>x+a).concat([c]))]; if(ids.some(i=>{const s=document.querySelector(`input[name="q-${i}"]:checked`);return !s||+s.value!==QUIZ[i][2];})) tips.push(t);});
+    $("qres").innerHTML=`<div class="solution"><span class="score">${n} / 16</span>${tips.length?`<p>Wiederholt noch einmal: ${tips.map(esc).join(" · ")}</p>`:`<p>Alles richtig – sehr gut vorbereitet!</p>`}</div>`;
+  };
+  $("qreset").onclick=renderQuiz;
+}
+function show(tab){
+  state.tab=tab; try{localStorage.setItem("kt-tab",tab);}catch(e){}
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===tab?"true":"false"));
+  if(TASKS[tab]) renderTask(tab); else if(tab==="po") renderPol(); else renderQuiz();
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.tab));
+show(state.tab);
+</script>
+</body>
+</html>

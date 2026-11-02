@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Einheiten-Trainer</title>
+<link rel="stylesheet" href="../fonts/baloo-2.css">
+<link rel="stylesheet" href="../fonts/nunito.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+:root { --bg:#FBFAF7; --surface:#FFFFFF; --fg:#2B2B2B; --muted:#6B6480; --primary:#3A2560; --primary-soft:#F1ECF9; --accent:#E07B26; --accent-soft:#FDF3E8; --sand:#EFE9DC; --ok:#2E7D4F; --ok-soft:#E3F3E8; --err:#C0392B; --err-soft:#FBE7E4; --line:#C9BCE4; --font-display:'Baloo 2','Nunito',system-ui,sans-serif; --font-body:'Nunito',system-ui,sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#1B1626; --surface:#272036; --fg:#F2EEF8; --muted:#B3A9C9; --primary:#CDB9F2; --primary-soft:#342A4A; --accent:#F0A05A; --accent-soft:#3F2E22; --sand:#3A3327; --ok:#7BD3A0; --ok-soft:#1F3A2B; --err:#F08C80; --err-soft:#45231F; --line:#4D4166; color-scheme: dark } }
+:root[data-theme="dark"] { --bg:#1B1626; --surface:#272036; --fg:#F2EEF8; --muted:#B3A9C9; --primary:#CDB9F2; --primary-soft:#342A4A; --accent:#F0A05A; --accent-soft:#3F2E22; --sand:#3A3327; --ok:#7BD3A0; --ok-soft:#1F3A2B; --err:#F08C80; --err-soft:#45231F; --line:#4D4166; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); margin:0; font-size:18px; line-height:1.45; }
+[hidden] { display:none !important; }
+*, *::before, *::after { box-sizing:border-box; }
+button { font-family:inherit; font-size:inherit; color:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+button:focus-visible, summary:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+svg { max-width:100%; }
+
+.app { max-width:820px; margin:0 auto; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:16px 40px; }
+.head h1 { font-family:var(--font-display); color:var(--primary); font-size:2.1rem; line-height:1.1; margin:0; }
+.head .sub { color:var(--muted); font-size:.95rem; margin:4px 0 0; }
+
+.levels { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 12px; }
+.levels button { flex:1 1 150px; min-width:0; min-height:48px; border:1px solid var(--line); background:var(--surface); color:var(--primary); font-weight:800; font-size:1rem; border-radius:12px; padding:8px 10px; display:flex; align-items:center; justify-content:center; gap:6px; }
+.levels button[aria-selected="true"] { background:var(--primary); color:#fff; border-color:var(--primary); }
+.levels button .check { display:none; width:22px; height:22px; border-radius:50%; background:var(--ok); color:#fff; font-size:.85rem; align-items:center; justify-content:center; flex:none; }
+.levels button.done .check { display:inline-flex; }
+
+.cheat { background:var(--primary-soft); border-radius:14px; padding:4px 14px; margin:0 0 14px; }
+.cheat summary { cursor:pointer; font-weight:800; min-height:48px; display:flex; align-items:center; gap:10px; list-style:none; color:var(--primary); }
+.cheat summary::-webkit-details-marker { display:none; }
+.cheat summary .arrow::before { content:'▸'; font-size:1.4rem; line-height:1; }
+.cheat[open] summary .arrow::before { content:'▾'; }
+.cheat-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; padding:4px 0 14px; }
+.cheat-col { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 12px; min-width:0; font-size:.95rem; }
+.cheat-col h3 { margin:0 0 6px; font-family:var(--font-display); font-size:1.15rem; color:var(--primary); display:flex; align-items:center; gap:6px; }
+.cheat-col h3 svg { width:26px; height:26px; flex:none; }
+.cheat-col p { margin:4px 0; }
+.cheat-col .units { font-weight:800; font-size:1.05rem; }
+.cheat-col .mini { color:var(--muted); font-size:.85rem; }
+@media (max-width:560px) { .cheat-grid { grid-template-columns:1fr; } }
+
+.card { background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; }
+.level h2 { font-family:var(--font-display); color:var(--primary); font-size:1.5rem; margin:0 0 4px; }
+.instr { margin:0 0 12px; color:var(--muted); }
+.progress { display:flex; align-items:center; gap:12px; margin:0 0 14px; font-weight:700; font-size:.95rem; }
+.progress .bar { flex:1; height:12px; background:var(--sand); border-radius:99px; overflow:hidden; }
+.progress .bar i { display:block; height:100%; width:0; background:var(--accent); border-radius:99px; transition:width .3s; }
+.bonus-tag { display:inline-block; background:var(--accent-soft); color:var(--accent); font-weight:800; border-radius:99px; padding:2px 12px; font-size:.9rem; margin-bottom:8px; }
+
+.q { font-family:var(--font-display); font-size:1.6rem; line-height:1.25; margin:0 0 16px; color:var(--fg); display:flex; align-items:center; gap:14px; }
+.q .pict { flex:none; width:72px; height:72px; color:var(--primary); background:var(--primary-soft); border-radius:14px; padding:8px; }
+.q .pict svg { width:100%; height:100%; display:block; }
+.q span { min-width:0; }
+
+.choices { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+.choices.four { grid-template-columns:repeat(4, 1fr); }
+.choice { min-height:76px; border:2px solid var(--line); background:var(--surface); border-radius:14px; font-weight:800; font-size:1.25rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:8px 6px; color:var(--primary); min-width:0; }
+.choice svg { width:38px; height:38px; }
+.choice.correct { background:var(--ok-soft); border-color:var(--ok); color:var(--ok); }
+.choice.wrong { background:var(--err-soft); border-color:var(--err); color:var(--err); }
+.choice:disabled { cursor:default; opacity:.9; }
+@media (max-width:480px) { .choices.four { grid-template-columns:repeat(2, 1fr); } .choice { min-height:64px; font-size:1.15rem; } }
+
+.fb { margin-top:14px; margin-bottom:14px; border-radius:12px; padding:12px 14px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.fb p { margin:0; flex:1 1 220px; min-width:0; }
+.fb.ok { background:var(--ok-soft); color:var(--ok); font-weight:700; }
+.fb.err { background:var(--err-soft); color:var(--err); }
+.fb.err strong { display:block; }
+.fb.info { background:var(--accent-soft); color:var(--fg); }
+
+.btn { min-height:48px; border:0; border-radius:12px; padding:10px 22px; font-weight:800; font-size:1.05rem; background:var(--primary); color:#fff; }
+.btn.accent { background:var(--accent); color:#fff; }
+.btn.ghost { background:var(--surface); color:var(--primary); border:2px solid var(--line); }
+.btn.danger { background:var(--err); color:#fff; }
+.actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+
+.result { text-align:center; }
+.result h3 { font-family:var(--font-display); color:var(--primary); font-size:1.8rem; margin:0 0 6px; }
+.result .big { font-size:1.4rem; font-weight:800; margin:0 0 6px; }
+.result .actions { justify-content:center; }
+
+.eq { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px; font-family:var(--font-display); font-size:1.9rem; margin:0 0 16px; }
+.eq input { width:150px; max-width:100%; min-height:56px; text-align:center; font:inherit; font-size:1.8rem; color:var(--fg); background:var(--sand); border:2px solid var(--line); border-radius:12px; padding:4px 10px; caret-color:transparent; }
+.eq input.focus { border-color:var(--accent); }
+.eq input.good { border-color:var(--ok); background:var(--ok-soft); }
+.eq input.bad { border-color:var(--err); background:var(--err-soft); }
+.keypad { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; max-width:360px; margin:0 auto; }
+.key { min-height:58px; border:1px solid var(--line); background:var(--sand); border-radius:12px; font-size:1.5rem; font-weight:800; color:var(--fg); }
+.key.del { background:var(--accent-soft); color:var(--accent); }
+.key.go { background:var(--primary); color:#fff; font-size:1.15rem; grid-column:span 3; }
+.key.comma { font-size:2rem; line-height:1; }
+.key:active { transform:scale(.97); }
+
+.final-list { list-style:none; padding:0; margin:12px 0; display:grid; gap:8px; }
+.final-list li { background:var(--primary-soft); border-radius:12px; padding:10px 14px; display:flex; justify-content:space-between; gap:10px; font-weight:700; }
+.final-list li span:last-child { white-space:nowrap; }
+.final-note { background:var(--accent-soft); border-radius:12px; padding:12px 14px; font-weight:700; margin:12px 0 0; }
+
+.reset-wrap { margin-top:28px; text-align:center; }
+.reset-wrap .inline-confirm { display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; }
+.reset-wrap .btn { font-size:.95rem; min-height:48px; }
+.footnote { color:var(--muted); font-size:.85rem; text-align:center; margin-top:8px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } }
+</style>
+
+<div class="app">
+  <header class="head">
+    <h1>Einheiten-Trainer</h1>
+    <p class="sub">Naturwissenschaften · Jahrgang 6 · Stunde 11</p>
+  </header>
+
+  <div class="levels" role="tablist" aria-label="Level wählen">
+    <button type="button" role="tab" id="tab1" data-level="1" aria-selected="true"><span class="check" aria-hidden="true">✓</span>Level 1</button>
+    <button type="button" role="tab" id="tab2" data-level="2" aria-selected="false"><span class="check" aria-hidden="true">✓</span>Level 2</button>
+    <button type="button" role="tab" id="tab3" data-level="3" aria-selected="false"><span class="check" aria-hidden="true">✓</span>Level 3</button>
+    <button type="button" role="tab" id="tab4" data-level="4" aria-selected="false">Ergebnis</button>
+  </div>
+
+  <details class="cheat" id="cheat">
+    <summary><span class="arrow" aria-hidden="true"></span> Spickzettel: Einheiten, Messgeräte, Umrechnen</summary>
+    <div class="cheat-grid">
+      <div class="cheat-col">
+        <h3><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ic-lineal"/></svg>Länge</h3>
+        <p class="units">mm · cm · m · km</p>
+        <p>Messgerät: <strong>Lineal, Maßband</strong></p>
+        <p>1 m = 100 cm<br>1 cm = 10 mm<br>1 km = 1000 m</p>
+        <p class="mini">Fingernagel ≈ 1 cm · ein Schritt ≈ 1 m</p>
+      </div>
+      <div class="cheat-col">
+        <h3><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ic-waage"/></svg>Masse</h3>
+        <p class="units">mg · g · kg · t</p>
+        <p>Messgerät: <strong>Waage</strong></p>
+        <p>1 kg = 1000 g</p>
+        <p class="mini">Büroklammer ≈ 1 g · Packung Zucker = 1 kg</p>
+      </div>
+      <div class="cheat-col">
+        <h3><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ic-becher"/></svg>Volumen</h3>
+        <p class="units">ml · l</p>
+        <p>Messgerät: <strong>Messbecher</strong></p>
+        <p>1 l = 1000 ml</p>
+        <p class="mini">Teelöffel ≈ 5 ml · Milchtüte = 1 l</p>
+      </div>
+    </div>
+  </details>
+
+  <!-- Level 1 -->
+  <section class="level card" id="lvl1" role="tabpanel" aria-labelledby="tab1">
+    <h2>Level 1: Länge, Masse oder Volumen?</h2>
+    <p class="instr">Lies die Frage. Tippe an, was gemessen wird.</p>
+    <div class="progress"><span class="ptext"></span><div class="bar"><i></i></div></div>
+    <div class="task">
+      <p class="q"><span class="qtext"></span></p>
+      <div class="choices">
+        <button type="button" class="choice" data-val="laenge"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ic-lineal"/></svg>Länge</button>
+        <button type="button" class="choice" data-val="masse"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ic-waage"/></svg>Masse</button>
+        <button type="button" class="choice" data-val="volumen"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#ic-becher"/></svg>Volumen</button>
+      </div>
+      <div class="fb" hidden></div>
+    </div>
+    <div class="result" hidden></div>
+  </section>
+
+  <!-- Level 2 -->
+  <section class="level card" id="lvl2" role="tabpanel" aria-labelledby="tab2" hidden>
+    <h2>Level 2: Welche Einheit passt?</h2>
+    <p class="instr">Schau dir das Ding an. Tippe die Einheit an, die am besten passt.</p>
+    <div class="progress"><span class="ptext"></span><div class="bar"><i></i></div></div>
+    <div class="task">
+      <p class="q"><span class="pict"></span><span class="qtext"></span></p>
+      <div class="choices four"></div>
+      <div class="fb" hidden></div>
+    </div>
+    <div class="result" hidden></div>
+  </section>
+
+  <!-- Level 3 -->
+  <section class="level card" id="lvl3" role="tabpanel" aria-labelledby="tab3" hidden>
+    <h2>Level 3: Umrechnen</h2>
+    <p class="instr">Tippe die Zahl mit der Tastatur ein. Dann tippe auf „Prüfen“.</p>
+    <div class="progress"><span class="ptext"></span><div class="bar"><i></i></div></div>
+    <div class="task">
+      <div class="bonus-tag" hidden>Knobelaufgabe (freiwillig)</div>
+      <div class="eq">
+        <span class="lhs"></span><span>=</span>
+        <input type="text" id="ans" readonly inputmode="none" autocomplete="off" aria-label="Deine Antwort" value="">
+        <span class="unit"></span>
+      </div>
+      <div class="fb" hidden></div>
+      <div class="keypad" aria-label="Bildschirm-Tastatur">
+        <button type="button" class="key" data-k="7">7</button><button type="button" class="key" data-k="8">8</button><button type="button" class="key" data-k="9">9</button>
+        <button type="button" class="key" data-k="4">4</button><button type="button" class="key" data-k="5">5</button><button type="button" class="key" data-k="6">6</button>
+        <button type="button" class="key" data-k="1">1</button><button type="button" class="key" data-k="2">2</button><button type="button" class="key" data-k="3">3</button>
+        <button type="button" class="key comma" data-k="," aria-label="Komma">,</button><button type="button" class="key" data-k="0">0</button><button type="button" class="key del" data-k="del" aria-label="Löschen">⌫</button>
+        <button type="button" class="key go" data-k="go">Prüfen</button>
+      </div>
+    </div>
+    <div class="result" hidden></div>
+  </section>
+
+  <!-- Ergebnis -->
+  <section class="level card result" id="lvl4" role="tabpanel" aria-labelledby="tab4" hidden>
+    <h3>Fertig!</h3>
+    <p class="big">Dein Ergebnis:</p>
+    <ul class="final-list" id="finalList"></ul>
+    <p class="final-note">Zeig deiner Lehrkraft dein Ergebnis und hefte danach M 1 ein.</p>
+    <p class="footnote" id="finalHint" hidden>Du hast noch nicht alle Level gespielt. Du kannst oben ein Level auswählen.</p>
+  </section>
+
+  <div class="reset-wrap">
+    <button type="button" class="btn ghost" id="resetBtn">Alles zurücksetzen</button>
+    <div class="inline-confirm" id="resetConfirm" hidden>
+      <span>Wirklich alles löschen?</span>
+      <button type="button" class="btn danger" id="resetYes">Ja</button>
+      <button type="button" class="btn ghost" id="resetNo">Nein</button>
+    </div>
+  </div>
+</div>
+
+<!-- Symbol-Bibliothek (Inline-SVG) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="ic-lineal" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="6" y="22" width="52" height="20" rx="2"/>
+      <path d="M14 22v8M22 22v5M30 22v8M38 22v5M46 22v8M54 22v5"/>
+    </g>
+    <g id="ic-waage" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M32 12v40M20 52h24M10 20h44"/>
+      <path d="M10 20l-6 16h12zM54 20l-6 16h12z"/>
+      <circle cx="32" cy="12" r="3"/>
+    </g>
+    <g id="ic-becher" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 10h28l-4 44H22z"/>
+      <path d="M26 22h8M26 32h8M26 42h8"/>
+      <path d="M46 16h6a4 4 0 0 1 0 8h-6"/>
+    </g>
+    <g id="p-muenze" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="30" cy="30" rx="18" ry="18"/>
+      <path d="M30 20v20M24 26h12M24 34h12"/>
+      <path d="M48 20a18 18 0 0 1 0 20"/>
+    </g>
+    <g id="p-hefter" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="16" y="8" width="34" height="48" rx="3"/>
+      <path d="M12 18h8M12 30h8M12 42h8M26 24h16M26 32h16"/>
+    </g>
+    <g id="p-raum" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 20l26-12 26 12v36H6z"/>
+      <rect x="26" y="34" width="12" height="22"/>
+      <rect x="12" y="30" width="8" height="8"/>
+    </g>
+    <g id="p-strasse" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 56L24 8h16l16 48z"/>
+      <path d="M32 16v6M32 30v8M32 46v8" stroke-dasharray="0"/>
+    </g>
+    <g id="p-klammer" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 44V16a8 8 0 0 1 16 0v30a5 5 0 0 1-10 0V22"/>
+    </g>
+    <g id="p-zucker" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 20h32v36H16z"/>
+      <path d="M20 20l4-10h16l4 10"/>
+      <path d="M24 34h16M24 42h10"/>
+    </g>
+    <g id="p-lkw" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="18" width="34" height="26"/>
+      <path d="M38 26h12l8 8v10H38z"/>
+      <circle cx="16" cy="48" r="5"/><circle cx="48" cy="48" r="5"/>
+    </g>
+    <g id="p-salz" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 22h20v30a4 4 0 0 1-4 4H26a4 4 0 0 1-4-4z"/>
+      <path d="M26 22l2-10h8l2 10"/>
+      <circle cx="28" cy="14" r="1"/><circle cx="36" cy="14" r="1"/>
+      <path d="M14 46l2-2M10 54l2-2M18 56l2-2"/>
+    </g>
+    <g id="p-loeffel" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="20" cy="22" rx="10" ry="13"/>
+      <path d="M28 30l24 24"/>
+    </g>
+    <g id="p-eimer" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 24h40l-5 32H17z"/>
+      <path d="M16 24a16 14 0 0 1 32 0"/>
+      <path d="M12 24h40" />
+    </g>
+    <g id="p-paeckchen" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="18" y="18" width="28" height="38" rx="2"/>
+      <path d="M40 18l6-12M24 34h16M24 42h10"/>
+    </g>
+    <g id="p-wanne" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 30h52v8a12 12 0 0 1-12 12H18A12 12 0 0 1 6 38z"/>
+      <path d="M12 30V16a6 6 0 0 1 12 0M20 16l-2 4M14 50l-2 6M50 50l2 6"/>
+    </g>
+  </defs>
+</svg>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Daten ---------- */
+  var KINDS = { laenge: 'Länge', masse: 'Masse', volumen: 'Volumen' };
+
+  var L1 = [
+    { q: 'Wie weit ist es bis zur Schule?', a: 'laenge', hint: 'Hier fragt man, wie weit etwas entfernt ist. Das misst man mit dem Maßband → Länge.' },
+    { q: 'Wie schwer ist dein Tornister?', a: 'masse', hint: 'Hier fragt man, wie schwer etwas ist. Das misst man mit einer Waage → Masse.' },
+    { q: 'Wie viel passt in deine Trinkflasche?', a: 'volumen', hint: 'Hier fragt man, wie viel hineinpasst. Das misst man mit einem Messbecher → Volumen.' },
+    { q: 'Wie lang ist dein Bleistift?', a: 'laenge', hint: 'Hier fragt man, wie lang etwas ist. Das misst man mit einem Lineal → Länge.' },
+    { q: 'Wie viel Wasser ist im Eimer?', a: 'volumen', hint: 'Hier fragt man, wie viel Wasser drin ist. Das misst man mit einem Messbecher → Volumen.' },
+    { q: 'Wie schwer ist ein Apfel?', a: 'masse', hint: 'Hier fragt man, wie schwer etwas ist. Das misst man mit einer Waage → Masse.' },
+    { q: 'Wie hoch ist die Tür?', a: 'laenge', hint: 'Hier fragt man, wie hoch etwas ist. Das misst man mit einem Maßband → Länge.' },
+    { q: 'Wie viel Saft ist im Trinkpäckchen?', a: 'volumen', hint: 'Hier fragt man, wie viel Saft drin ist. Das misst man mit einem Messbecher → Volumen.' },
+    { q: 'Wie schwer ist ein Auto?', a: 'masse', hint: 'Hier fragt man, wie schwer etwas ist. Das misst man mit einer Waage → Masse.' },
+    { q: 'Wie dick ist ein Buch?', a: 'laenge', hint: 'Hier fragt man, wie dick etwas ist. Das misst man mit einem Lineal → Länge.' }
+  ];
+
+  var LEN = ['mm', 'cm', 'm', 'km'], MAS = ['mg', 'g', 'kg', 't'];
+  var L2 = [
+    { name: 'Dicke einer Münze', pict: 'p-muenze', a: 'mm', opts: LEN, hint: 'Eine Münze ist sehr dünn: nur ein paar Millimeter. Dein Fingernagel ist schon etwa 1 cm breit.' },
+    { name: 'Länge deines Hefters', pict: 'p-hefter', a: 'cm', opts: LEN, hint: 'Ein Hefter ist ungefähr 30 cm lang. Das sind 30 Fingernagel-Breiten.' },
+    { name: 'Höhe des Klassenraums', pict: 'p-raum', a: 'm', opts: LEN, hint: 'Der Klassenraum ist ungefähr 3 m hoch. Das sind etwa drei Schritte.' },
+    { name: 'Entfernung von Essen nach Köln', pict: 'p-strasse', a: 'km', opts: LEN, hint: 'Von Essen nach Köln sind es ungefähr 70 km. Das sind 70 000 Schritte!' },
+    { name: 'eine Büroklammer', pict: 'p-klammer', a: 'g', opts: MAS, hint: 'Eine Büroklammer wiegt ungefähr 1 g.' },
+    { name: 'eine Packung Zucker', pict: 'p-zucker', a: 'kg', opts: MAS, hint: 'Eine Packung Zucker wiegt genau 1 kg.' },
+    { name: 'ein Lkw mit Ladung', pict: 'p-lkw', a: 't', opts: MAS, hint: 'Ein Lkw mit Ladung wiegt viele Tonnen. 1 t ist so viel wie 1000 Packungen Zucker.' },
+    { name: 'ein Salzkorn', pict: 'p-salz', a: 'mg', opts: MAS, hint: 'Ein Salzkorn ist viel leichter als eine Büroklammer (1 g). Es wiegt nur ein paar Milligramm.' },
+    { name: 'ein Teelöffel Wasser', pict: 'p-loeffel', a: 'ml', opts: ['ml', 'l', 'g', 'cm'], hint: 'In einen Teelöffel passen ungefähr 5 ml.' },
+    { name: 'ein Eimer Wasser', pict: 'p-eimer', a: 'l', opts: ['ml', 'l', 'kg', 'm'], hint: 'In einen Eimer passen ungefähr 10 l. Das sind 10 Milchtüten.' },
+    { name: 'ein Trinkpäckchen', pict: 'p-paeckchen', a: 'ml', opts: ['ml', 'l', 'cm', 'g'], hint: 'In ein Trinkpäckchen passen 200 ml. Das ist weniger als eine Milchtüte (1 l).' },
+    { name: 'eine volle Badewanne', pict: 'p-wanne', a: 'l', opts: ['ml', 'l', 'm', 'kg'], hint: 'In eine Badewanne passen über 100 l. Das sind mehr als 100 Milchtüten.' }
+  ];
+
+  var L3 = [
+    { lhs: '1 m', unit: 'cm', a: 100, hint: 'Denk an: 1 m = 100 cm.' },
+    { lhs: '1 cm', unit: 'mm', a: 10, hint: 'Denk an: 1 cm = 10 mm.' },
+    { lhs: '1 kg', unit: 'g', a: 1000, hint: 'Denk an: 1 kg = 1000 g.' },
+    { lhs: '1 l', unit: 'ml', a: 1000, hint: 'Denk an: 1 l = 1000 ml.' },
+    { lhs: '1 km', unit: 'm', a: 1000, hint: 'Denk an: 1 km = 1000 m.' },
+    { lhs: '2 m', unit: 'cm', a: 200, hint: 'Denk an: 1 m = 100 cm. Also 2 m = 2 · 100 cm.' },
+    { lhs: '3 kg', unit: 'g', a: 3000, hint: 'Denk an: 1 kg = 1000 g. Also 3 kg = 3 · 1000 g.' },
+    { lhs: '5 cm', unit: 'mm', a: 50, hint: 'Denk an: 1 cm = 10 mm. Also 5 cm = 5 · 10 mm.' },
+    { lhs: '2 l', unit: 'ml', a: 2000, hint: 'Denk an: 1 l = 1000 ml. Also 2 l = 2 · 1000 ml.' },
+    { lhs: '1,5 kg', unit: 'g', a: 1500, hint: 'Denk an: 1 kg = 1000 g. 1,5 kg ist 1 kg und ein halbes kg. Ein halbes kg = 500 g.' }
+  ];
+  var L3B = [
+    { lhs: '250 ml', unit: 'l', a: 0.25, hint: 'Denk an: 1000 ml = 1 l. 250 ml ist ein Viertel davon. Ein Viertel schreibt man 0,25.' },
+    { lhs: '50 cm', unit: 'm', a: 0.5, hint: 'Denk an: 100 cm = 1 m. 50 cm ist die Hälfte davon. Die Hälfte schreibt man 0,5.' }
+  ];
+
+  /* ---------- Hilfen ---------- */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function fmt(n) { return String(n).replace('.', ','); }
+
+  var STORE_KEY = 'nw6-einheiten-trainer';
+  function load() { try { var s = localStorage.getItem(STORE_KEY); return s ? JSON.parse(s) : {}; } catch (e) { return {}; } }
+  function save(obj) { try { localStorage.setItem(STORE_KEY, JSON.stringify(obj)); } catch (e) { /* ohne Speicher geht es trotzdem */ } }
+  var saved = load();
+
+  /* ---------- Zustand ---------- */
+  var S = {
+    1: { items: [], i: 0, correct: 0, tries: 0 },
+    2: { items: [], i: 0, correct: 0, tries: 0 },
+    3: { items: [], i: 0, correct: 0, tries: 0, bonus: false, bonusCorrect: 0, buf: '' }
+  };
+  var TOTAL = { 1: L1.length, 2: L2.length, 3: L3.length };
+
+  /* ---------- Tabs ---------- */
+  var tabs = $$('.levels button');
+  tabs.forEach(function (b) {
+    b.addEventListener('click', function () { showLevel(+b.dataset.level); });
+  });
+  function showLevel(n) {
+    tabs.forEach(function (b) { b.setAttribute('aria-selected', String(+b.dataset.level === n)); });
+    [1, 2, 3, 4].forEach(function (k) { $('#lvl' + k).hidden = (k !== n); });
+    if (n === 4) renderFinal();
+    try { $('#lvl' + n).scrollIntoView({ block: 'nearest' }); } catch (e) { /* egal */ }
+  }
+  function markDone() {
+    [1, 2, 3].forEach(function (k) {
+      var d = saved[k];
+      $('#tab' + k).classList.toggle('done', !!(d && d.done));
+    });
+  }
+
+  /* ---------- Gemeinsame Level-Logik ---------- */
+  function startLevel(n) {
+    var st = S[n];
+    st.i = 0; st.correct = 0; st.tries = 0;
+    if (n === 1) st.items = shuffle(L1);
+    if (n === 2) st.items = shuffle(L2);
+    if (n === 3) { st.items = L3; st.bonus = false; st.bonusCorrect = 0; st.buf = ''; }
+    $('#lvl' + n + ' .result').hidden = true;
+    $('#lvl' + n + ' .task').hidden = false;
+    renderTask(n);
+  }
+
+  function progress(n, text, i, total) {
+    var p = $('#lvl' + n + ' .progress');
+    $('.ptext', p).textContent = text;
+    $('.bar i', p).style.width = Math.round((i / total) * 100) + '%';
+  }
+
+  function hideFb(n) { var fb = $('#lvl' + n + ' .fb'); fb.hidden = true; fb.innerHTML = ''; fb.className = 'fb'; }
+
+  function showFb(n, kind, html, buttons) {
+    var fb = $('#lvl' + n + ' .fb');
+    fb.className = 'fb ' + kind;
+    fb.innerHTML = '<p>' + html + '</p>';
+    buttons.forEach(function (b) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn ' + (b.cls || '');
+      btn.textContent = b.label;
+      btn.addEventListener('click', b.on);
+      fb.appendChild(btn);
+    });
+    fb.hidden = false;
+    try { fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* egal */ }
+    var first = $('button', fb); if (first) first.focus({ preventScroll: true });
+  }
+
+  function renderTask(n) {
+    var st = S[n];
+    hideFb(n);
+    if (n === 1) {
+      var it = st.items[st.i];
+      progress(1, 'Aufgabe ' + (st.i + 1) + ' von ' + TOTAL[1], st.i, TOTAL[1]);
+      $('#lvl1 .qtext').textContent = it.q;
+      $$('#lvl1 .choice').forEach(function (b) { b.disabled = false; b.className = 'choice'; });
+    } else if (n === 2) {
+      var it2 = st.items[st.i];
+      progress(2, 'Aufgabe ' + (st.i + 1) + ' von ' + TOTAL[2], st.i, TOTAL[2]);
+      $('#lvl2 .qtext').textContent = it2.name;
+      $('#lvl2 .pict').innerHTML = '<svg viewBox="0 0 64 64" aria-hidden="true"><use href="#' + it2.pict + '"/></svg>';
+      var box = $('#lvl2 .choices');
+      box.innerHTML = '';
+      var opts = (it2.opts === LEN || it2.opts === MAS) ? it2.opts : shuffle(it2.opts);
+      opts.forEach(function (u) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'choice'; b.dataset.val = u; b.textContent = u;
+        b.addEventListener('click', function () { answer(2, u, b); });
+        box.appendChild(b);
+      });
+    } else if (n === 3) {
+      var list = st.bonus ? L3B : L3;
+      var it3 = list[st.i];
+      $('#lvl3 .bonus-tag').hidden = !st.bonus;
+      if (st.bonus) progress(3, 'Knobelaufgabe ' + (st.i + 1) + ' von ' + L3B.length, st.i, L3B.length);
+      else progress(3, 'Aufgabe ' + (st.i + 1) + ' von ' + TOTAL[3], st.i, TOTAL[3]);
+      $('#lvl3 .lhs').textContent = it3.lhs;
+      $('#lvl3 .unit').textContent = it3.unit;
+      st.buf = '';
+      var inp = $('#ans'); inp.value = ''; inp.className = 'focus';
+      $$('#lvl3 .key').forEach(function (k) { k.disabled = false; });
+    }
+  }
+
+  function currentItem(n) {
+    var st = S[n];
+    if (n === 3) return (st.bonus ? L3B : L3)[st.i];
+    return st.items[st.i];
+  }
+
+  function answer(n, val, btn) {
+    var st = S[n], it = currentItem(n);
+    var right = (n === 3) ? checkNumber(val, it.a) : (val === it.a);
+    var sol = (n === 1) ? KINDS[it.a] : (n === 3 ? fmt(it.a) + ' ' + it.unit : it.a);
+    if (right) {
+      if (st.bonus) st.bonusCorrect++; else st.correct++;
+      lockChoices(n, it, btn, true);
+      showFb(n, 'ok', st.tries === 0 ? 'Richtig!' : 'Richtig! Jetzt stimmt es.', [{ label: 'Weiter', on: function () { next(n); } }]);
+      return;
+    }
+    st.tries++;
+    if (st.tries === 1) {
+      if (btn) { btn.classList.add('wrong'); }
+      if (n === 3) { $('#ans').className = 'bad'; }
+      disableChoices(n, true);
+      showFb(n, 'err', '<strong>Das stimmt noch nicht.</strong>' + it.hint, [{ label: 'Nochmal', cls: 'accent', on: function () { retry(n); } }]);
+    } else {
+      lockChoices(n, it, btn, false);
+      showFb(n, 'info', '<strong>Die richtige Antwort ist: ' + sol + '.</strong> ' + it.hint, [{ label: 'Weiter', on: function () { next(n); } }]);
+    }
+  }
+
+  function retry(n) {
+    hideFb(n);
+    disableChoices(n, false);
+    $$('#lvl' + n + ' .choice').forEach(function (b) { b.classList.remove('wrong'); });
+    if (n === 3) { S[3].buf = ''; var inp = $('#ans'); inp.value = ''; inp.className = 'focus'; }
+  }
+
+  function disableChoices(n, dis) {
+    $$('#lvl' + n + ' .choice').forEach(function (b) { b.disabled = dis; });
+    $$('#lvl' + n + ' .key').forEach(function (b) { b.disabled = dis; });
+  }
+
+  function lockChoices(n, it, btn, right) {
+    disableChoices(n, true);
+    if (n === 3) {
+      var inp = $('#ans');
+      if (right) { inp.className = 'good'; }
+      else { inp.className = 'good'; inp.value = fmt(it.a); }
+      return;
+    }
+    $$('#lvl' + n + ' .choice').forEach(function (b) {
+      if (b.dataset.val === it.a) b.classList.add('correct');
+      else if (b === btn && !right) b.classList.add('wrong');
+    });
+  }
+
+  function next(n) {
+    var st = S[n];
+    st.i++; st.tries = 0;
+    var total = (n === 3 && st.bonus) ? L3B.length : TOTAL[n];
+    if (st.i >= total) { finishLevel(n); return; }
+    renderTask(n);
+  }
+
+  function finishLevel(n) {
+    var st = S[n];
+    var res = $('#lvl' + n + ' .result');
+    $('#lvl' + n + ' .task').hidden = true;
+    progress(n, 'Geschafft!', 1, 1);
+    var html, btns = [];
+    if (n === 3 && st.bonus) {
+      html = '<h3>Super!</h3><p class="big">Knobelaufgabe: ' + st.bonusCorrect + ' von ' + L3B.length + ' richtig</p>' +
+             '<p>Level 3: ' + st.correct + ' von ' + TOTAL[3] + ' richtig</p>';
+      btns = [{ label: 'Zum Ergebnis', on: function () { showLevel(4); } }, { label: 'Nochmal', cls: 'ghost', on: function () { startLevel(3); } }];
+      saved[3] = { correct: st.correct, total: TOTAL[3], done: true, bonusCorrect: st.bonusCorrect, bonusTotal: L3B.length };
+    } else {
+      html = '<h3>Geschafft!</h3><p class="big">' + st.correct + ' von ' + TOTAL[n] + ' richtig</p>';
+      var nextLabel = n < 3 ? 'Nächstes Level' : 'Zum Ergebnis';
+      if (n === 3) {
+        btns.push({ label: 'Knobelaufgabe (freiwillig)', cls: 'accent', on: function () { st.bonus = true; st.i = 0; st.tries = 0; st.bonusCorrect = 0; res.hidden = true; $('#lvl3 .task').hidden = false; renderTask(3); } });
+      }
+      btns.push({ label: nextLabel, on: function () { if (n < 3) { startLevel(n + 1); showLevel(n + 1); } else { showLevel(4); } } });
+      btns.push({ label: 'Nochmal', cls: 'ghost', on: function () { startLevel(n); } });
+      saved[n] = { correct: st.correct, total: TOTAL[n], done: true };
+    }
+    save(saved); markDone();
+    res.innerHTML = html + '<div class="actions"></div>';
+    var act = $('.actions', res);
+    btns.forEach(function (b) {
+      var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn ' + (b.cls || ''); btn.textContent = b.label;
+      btn.addEventListener('click', b.on); act.appendChild(btn);
+    });
+    res.hidden = false;
+    var first = $('button', res); if (first) first.focus({ preventScroll: true });
+  }
+
+  /* ---------- Level 1: feste Buttons ---------- */
+  $$('#lvl1 .choice').forEach(function (b) {
+    b.addEventListener('click', function () { answer(1, b.dataset.val, b); });
+  });
+
+  /* ---------- Level 3: Bildschirm-Tastatur ---------- */
+  function checkNumber(str, a) {
+    var s = String(str).trim().replace(/\s/g, '').replace('.', ',');
+    if (s === '' || s === ',') return false;
+    if (s.charAt(0) === ',') s = '0' + s;
+    if (!/^\d+(,\d+)?$/.test(s)) return false;
+    var v = parseFloat(s.replace(',', '.'));
+    return Math.abs(v - a) < 1e-9;
+  }
+  function keyPress(k) {
+    var st = S[3], inp = $('#ans');
+    if (k === 'go') {
+      if (st.buf === '' || st.buf === ',') { showFb(3, 'info', 'Tippe zuerst eine Zahl ein.', [{ label: 'OK', cls: 'ghost', on: function () { hideFb(3); } }]); return; }
+      answer(3, st.buf, null); return;
+    }
+    hideFb(3);
+    if (k === 'del') st.buf = st.buf.slice(0, -1);
+    else if (k === ',') { if (st.buf.indexOf(',') === -1) st.buf += ','; }
+    else if (st.buf.length < 8) { if (st.buf === '0') st.buf = k; else st.buf += k; }
+    inp.value = st.buf; inp.className = 'focus';
+  }
+  $$('#lvl3 .key').forEach(function (b) {
+    b.addEventListener('click', function () { if (!b.disabled) keyPress(b.dataset.k); });
+  });
+  document.addEventListener('keydown', function (e) {
+    if ($('#lvl3').hidden || $('#lvl3 .task').hidden) return;
+    if (/^[0-9]$/.test(e.key)) { e.preventDefault(); keyPress(e.key); }
+    else if (e.key === ',' || e.key === '.') { e.preventDefault(); keyPress(','); }
+    else if (e.key === 'Backspace') { e.preventDefault(); keyPress('del'); }
+    else if (e.key === 'Enter') {
+      var fb = $('#lvl3 .fb');
+      if (fb.hidden) { e.preventDefault(); keyPress('go'); }
+    }
+  });
+  $('#ans').addEventListener('focus', function () { this.blur(); });
+
+  /* ---------- Ergebnis ---------- */
+  function renderFinal() {
+    var ul = $('#finalList'); ul.innerHTML = '';
+    var names = { 1: 'Level 1: Länge, Masse oder Volumen?', 2: 'Level 2: Welche Einheit passt?', 3: 'Level 3: Umrechnen' };
+    var allDone = true;
+    [1, 2, 3].forEach(function (k) {
+      var d = saved[k], li = document.createElement('li');
+      var left = document.createElement('span'), right = document.createElement('span');
+      left.textContent = names[k];
+      if (d && d.done) { right.textContent = d.correct + ' von ' + d.total + ' richtig'; }
+      else { right.textContent = 'noch nicht gespielt'; allDone = false; }
+      li.appendChild(left); li.appendChild(right); ul.appendChild(li);
+      if (k === 3 && d && d.bonusTotal) {
+        var li2 = document.createElement('li');
+        li2.innerHTML = '<span>Knobelaufgabe (freiwillig)</span><span>' + d.bonusCorrect + ' von ' + d.bonusTotal + ' richtig</span>';
+        ul.appendChild(li2);
+      }
+    });
+    $('#finalHint').hidden = allDone;
+  }
+
+  /* ---------- Zurücksetzen ---------- */
+  $('#resetBtn').addEventListener('click', function () { $('#resetBtn').hidden = true; $('#resetConfirm').hidden = false; $('#resetYes').focus(); });
+  $('#resetNo').addEventListener('click', function () { $('#resetConfirm').hidden = true; $('#resetBtn').hidden = false; });
+  $('#resetYes').addEventListener('click', function () {
+    saved = {};
+    try { localStorage.removeItem(STORE_KEY); } catch (e) { /* egal */ }
+    markDone();
+    startLevel(1); startLevel(2); startLevel(3);
+    $('#resetConfirm').hidden = true; $('#resetBtn').hidden = false;
+    showLevel(1);
+  });
+
+  /* ---------- Start ---------- */
+  markDone();
+  startLevel(1); startLevel(2); startLevel(3);
+  showLevel(1);
+})();
+</script>
+</body>
+</html>

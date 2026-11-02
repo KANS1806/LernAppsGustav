@@ -1,0 +1,1510 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AURORA-6 Bodenstation</title>
+<link rel="stylesheet" href="../fonts/orbitron.css">
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/jetbrains-mono.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: Bordcomputer-Konsole. Dunkler Orbit-Hintergrund, ein zentrales Panel pro Ansicht,
+   Module als Karten im Raster, Rätselschritte als nacheinander aufklappende Panels.
+   Einziges Thema (dunkle Konsole) – bewusst, die Seite spielt im Weltraum. */
+:root{
+  --space:#070B16; --space2:#0D1426; --panel:#121B33; --panel2:#182443; --line:#27345C; --line2:#3A4C7E;
+  --ink:#EAF0FF; --muted:#9FAED0; --dim:#6B7AA3;
+  --cyan:#55D6F0; --cyan-ink:#06212B; --cyan-soft:rgba(85,214,240,.14);
+  --orange:#FF9A3D; --orange-ink:#2A1300; --orange-soft:rgba(255,154,61,.16);
+  --green:#5FE3A1; --green-soft:rgba(95,227,161,.16);
+  --red:#FF6B7A; --red-soft:rgba(255,107,122,.16);
+  --blue:#4F7CFF;
+  --font-display:"Orbitron","Segoe UI",Roboto,system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",Roboto,system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:16px; --r-s:10px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--space); color:var(--ink);
+  font-family:var(--font-body); font-size:18px; line-height:1.45;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.55) 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 8%, rgba(255,255,255,.45) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 62% 42%, rgba(255,255,255,.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 30% 72%, rgba(255,255,255,.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 66%, rgba(255,255,255,.5) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 45% 90%, rgba(255,255,255,.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 50%, rgba(255,255,255,.4) 50%, transparent 51%),
+    radial-gradient(ellipse at 50% -20%, #16224A 0%, transparent 60%);
+  background-attachment:fixed;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{
+  max-width:900px; margin:0 auto; display:flex; flex-direction:column; gap:16px;
+  padding-block:16px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.wrap.wide{max-width:1200px}
+:focus-visible{outline:3px solid var(--cyan); outline-offset:2px}
+button{font:inherit; color:inherit; cursor:pointer}
+input{font:inherit; color:inherit}
+h1,h2,h3{font-family:var(--font-display); letter-spacing:.02em; text-wrap:balance; margin:0}
+h1{font-size:clamp(1.4rem,4vw,2.1rem); font-weight:700}
+h2{font-size:clamp(1.15rem,3vw,1.5rem); font-weight:700}
+h3{font-size:1.05rem; font-weight:700; color:var(--cyan)}
+p{margin:0}
+.eyebrow{font-family:var(--font-display); font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan); font-weight:500}
+.muted{color:var(--muted)}
+.mono{font-family:var(--font-mono)}
+.num{font-variant-numeric:tabular-nums}
+
+/* Kopfleiste */
+.bar{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line); border-radius:var(--r);
+  padding:12px 16px;
+}
+.bar .brand{display:flex; align-items:center; gap:12px; min-width:0}
+.bar .brand .logo{width:40px; height:40px; flex:none}
+.bar .brand h1{font-size:1.1rem; line-height:1.2}
+.bar .brand .sub{font-size:.85rem; color:var(--muted)}
+.bar .stats{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.chip{
+  display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line2); border-radius:999px; padding:6px 12px;
+  font-family:var(--font-mono); font-size:.95rem; background:var(--space2); white-space:nowrap
+}
+.chip .lab{font-family:var(--font-display); font-size:.65rem; letter-spacing:.12em; color:var(--dim); text-transform:uppercase}
+.chip.alert{border-color:var(--orange); color:var(--orange)}
+.chip.ok{border-color:var(--green); color:var(--green)}
+.chip.team{border-color:var(--cyan); color:var(--cyan)}
+
+/* Panels */
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:18px}
+.panel.glow{box-shadow:0 0 0 1px rgba(85,214,240,.25), 0 0 40px rgba(85,214,240,.08)}
+.panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px}
+.nova{
+  font-family:var(--font-mono); font-size:1rem; line-height:1.55; background:var(--space2); border:1px solid var(--line);
+  border-left:4px solid var(--cyan); border-radius:var(--r-s); padding:14px 16px; white-space:pre-wrap
+}
+.nova b{color:var(--cyan); font-weight:700}
+.nova.mara{border-left-color:var(--orange)}
+.nova.mara b{color:var(--orange)}
+.cursor{display:inline-block; width:.6em; height:1.1em; background:var(--cyan); vertical-align:-.2em; animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* Buttons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:52px; padding:12px 22px;
+  border-radius:12px; border:2px solid var(--cyan); background:var(--cyan); color:var(--cyan-ink);
+  font-family:var(--font-display); font-weight:700; font-size:1rem; letter-spacing:.04em; text-decoration:none
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45; cursor:not-allowed; filter:none}
+.btn.ghost{background:transparent; color:var(--cyan)}
+.btn.ghost:hover{background:var(--cyan-soft)}
+.btn.warn{background:var(--orange); border-color:var(--orange); color:var(--orange-ink)}
+.btn.ok{background:var(--green); border-color:var(--green); color:#03301B}
+.btn.quiet{background:transparent; border-color:var(--line2); color:var(--muted); font-family:var(--font-body); font-weight:400; letter-spacing:0}
+.btn.quiet:hover{background:var(--panel2); color:var(--ink)}
+.btn.big{min-height:64px; font-size:1.15rem; padding:16px 28px}
+.row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+.row.end{justify-content:flex-end}
+.row.between{justify-content:space-between}
+.stack{display:flex; flex-direction:column; gap:12px}
+
+/* Startseite */
+.hero{
+  text-align:center; padding:40px 20px 32px; display:flex; flex-direction:column; align-items:center; gap:16px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(85,214,240,.12), transparent 60%),
+    var(--panel);
+}
+.hero .logo{width:120px; height:120px}
+.hero h1{font-size:clamp(1.8rem,6vw,3rem); font-weight:900; letter-spacing:.08em}
+.hero .tag{color:var(--muted); font-size:1.05rem; max-width:34em}
+.choose{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px}
+.choice{
+  text-align:left; display:flex; flex-direction:column; gap:10px; background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:20px;
+  color:var(--ink)
+}
+.choice:hover{border-color:var(--cyan); background:var(--panel2)}
+.choice .ico{width:48px; height:48px; color:var(--cyan)}
+.choice h2{font-size:1.2rem}
+.choice p{color:var(--muted); font-size:.98rem}
+
+/* Teamwahl */
+.teams{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:12px}
+.teambtn{
+  min-height:84px; border-radius:var(--r-s); border:2px solid var(--line2); background:var(--space2);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  font-family:var(--font-display); font-weight:700; font-size:1.4rem
+}
+.teambtn small{font-family:var(--font-body); font-weight:400; font-size:.8rem; color:var(--muted); letter-spacing:0}
+.teambtn:hover{border-color:var(--cyan); color:var(--cyan)}
+
+/* Modulraster */
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px}
+.mod{
+  text-align:left; display:flex; gap:14px; align-items:flex-start; background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:16px;
+  color:var(--ink); position:relative; min-width:0
+}
+.mod:hover{border-color:var(--cyan); background:var(--panel2)}
+.mod .ico{width:52px; height:52px; flex:none; color:var(--cyan); background:var(--space2); border-radius:12px; padding:9px; border:1px solid var(--line)}
+.mod .t{display:flex; flex-direction:column; gap:4px; min-width:0}
+.mod .t .n{font-family:var(--font-display); font-size:.72rem; letter-spacing:.14em; color:var(--dim)}
+.mod .t h3{color:var(--ink); font-size:1.02rem}
+.mod .t .s{font-size:.9rem; color:var(--muted)}
+.mod .st{position:absolute; top:12px; right:12px; font-family:var(--font-display); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; padding:4px 8px; border-radius:999px; border:1px solid var(--line2); color:var(--dim)}
+.mod.done{border-color:var(--green)}
+.mod.done .ico{color:var(--green); border-color:var(--green)}
+.mod.done .st{border-color:var(--green); color:var(--green); background:var(--green-soft)}
+.mod.next{border-color:var(--orange); box-shadow:0 0 0 1px rgba(255,154,61,.35), 0 0 26px rgba(255,154,61,.12)}
+.mod.next .st{border-color:var(--orange); color:var(--orange); background:var(--orange-soft)}
+.mod.open .st{border-color:var(--cyan); color:var(--cyan); background:var(--cyan-soft)}
+
+/* Modulansicht */
+.modhead{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.modhead .ico{width:64px; height:64px; color:var(--cyan); background:var(--space2); border-radius:14px; padding:11px; border:1px solid var(--line); flex:none}
+.modhead .t{min-width:0}
+.vorort{
+  display:flex; gap:14px; align-items:flex-start; background:var(--orange-soft); border:1px solid rgba(255,154,61,.4); border-radius:var(--r-s); padding:14px 16px
+}
+.vorort .ico{width:40px; height:40px; color:var(--orange); flex:none}
+.vorort .eyebrow{color:var(--orange)}
+.steps{display:flex; flex-direction:column; gap:12px}
+.step{
+  background:var(--space2); border:1px solid var(--line); border-radius:var(--r); padding:16px; display:flex; flex-direction:column; gap:12px
+}
+.step.locked{opacity:.45; filter:saturate(.3)}
+.step.locked > *:not(.step-head){display:none}
+.step.done{border-color:var(--green)}
+.step.done > *:not(.step-head):not(.done-line){display:none}
+.step-head{display:flex; align-items:center; gap:12px}
+.step-head .no{
+  flex:none; width:34px; height:34px; border-radius:50%; border:2px solid var(--cyan); color:var(--cyan); display:grid; place-items:center;
+  font-family:var(--font-display); font-weight:700; font-size:.95rem
+}
+.step.done .step-head .no{border-color:var(--green); color:var(--green); background:var(--green-soft)}
+.step.locked .step-head .no{border-color:var(--line2); color:var(--dim)}
+.step-head h3{color:var(--ink)}
+.done-line{color:var(--green); font-size:.95rem; display:flex; gap:8px; align-items:center}
+.done-line .ico,.btn .ico{width:22px; height:22px; flex:none}
+.nova .ico{width:20px; height:20px}
+.q{font-size:1.05rem}
+.opts{display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.opt{
+  min-height:56px; text-align:left; padding:12px 14px; border-radius:var(--r-s); border:2px solid var(--line2); background:var(--panel);
+  display:flex; gap:10px; align-items:center; font-size:1rem
+}
+.opt .k{flex:none; width:30px; height:30px; border-radius:8px; border:1px solid var(--line2); display:grid; place-items:center; font-family:var(--font-display); font-size:.85rem; color:var(--cyan)}
+.opt:hover{border-color:var(--cyan)}
+.opt.wrong{border-color:var(--red); background:var(--red-soft); animation:shake .35s}
+.opt.right{border-color:var(--green); background:var(--green-soft)}
+.opt.sel{border-color:var(--orange); background:var(--orange-soft)}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.inrow{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.inrow label{font-size:1rem; color:var(--muted)}
+.field{
+  display:inline-flex; align-items:center; gap:8px; background:var(--panel); border:2px solid var(--line2); border-radius:var(--r-s); padding:4px 4px 4px 14px
+}
+.field input{
+  width:7.5em; min-height:46px; background:transparent; border:0; font-family:var(--font-mono); font-size:1.25rem; color:var(--ink); outline:none
+}
+.field .u{font-family:var(--font-mono); color:var(--muted); padding-right:10px}
+.field.wrong{border-color:var(--red); animation:shake .35s}
+.field.right{border-color:var(--green)}
+.fb{min-height:1.5em; font-size:1rem}
+.fb.bad{color:var(--red)}
+.fb.good{color:var(--green)}
+.fb.info{color:var(--orange)}
+.calc{font-family:var(--font-mono); background:var(--panel); border:1px dashed var(--line2); border-radius:var(--r-s); padding:12px 14px; font-size:1.05rem}
+.calc b{color:var(--orange)}
+.tipp{
+  background:var(--panel); border:1px solid var(--line2); border-radius:var(--r-s); padding:12px 14px; display:flex; gap:10px; align-items:flex-start; font-size:.98rem
+}
+.tipp .ico{width:24px; height:24px; color:var(--orange); flex:none}
+.hints{display:flex; flex-direction:column; gap:10px}
+.hint{background:var(--orange-soft); border:1px solid rgba(255,154,61,.4); border-radius:var(--r-s); padding:12px 14px}
+.hint .eyebrow{color:var(--orange); margin-bottom:4px}
+
+/* Freigabe */
+.unlock{
+  background:linear-gradient(180deg,rgba(95,227,161,.18),rgba(95,227,161,.04)); border:1px solid var(--green); border-radius:var(--r); padding:20px;
+  display:flex; flex-direction:column; gap:12px; animation:pop .5s ease-out
+}
+@keyframes pop{0%{transform:scale(.96); opacity:0}100%{transform:scale(1); opacity:1}}
+.code{
+  font-family:var(--font-display); font-size:clamp(1.6rem,5vw,2.4rem); font-weight:900; letter-spacing:.14em; color:var(--green);
+  background:var(--space2); border:1px dashed var(--green); border-radius:var(--r-s); padding:12px 18px; display:inline-block
+}
+.merke{background:var(--space2); border-left:4px solid var(--green); border-radius:var(--r-s); padding:12px 16px}
+.merke .eyebrow{color:var(--green)}
+
+/* Leitstand */
+.clock{
+  font-family:var(--font-display); font-weight:900; font-size:clamp(3.5rem,14vw,9rem); letter-spacing:.06em; line-height:1; text-align:center;
+  color:var(--cyan); text-shadow:0 0 30px rgba(85,214,240,.35); font-variant-numeric:tabular-nums
+}
+.clock.warn{color:var(--orange); text-shadow:0 0 30px rgba(255,154,61,.4)}
+.clock.crit{color:var(--red); text-shadow:0 0 30px rgba(255,107,122,.5); animation:blink 1s steps(1) infinite}
+.phase{text-align:center; font-family:var(--font-display); font-size:clamp(1.1rem,3vw,1.6rem); letter-spacing:.08em; color:var(--ink)}
+.phase small{display:block; font-family:var(--font-body); letter-spacing:0; color:var(--muted); font-size:1rem; margin-top:6px}
+.progress{height:14px; background:var(--space2); border:1px solid var(--line); border-radius:999px; overflow:hidden}
+.progress i{display:block; height:100%; background:linear-gradient(90deg,var(--cyan),var(--blue)); width:0%; transition:width 1s linear}
+.systems{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px}
+.sys{background:var(--space2); border:1px solid var(--line); border-radius:var(--r-s); padding:10px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center}
+.sys .ico{width:34px; height:34px; color:var(--red)}
+.sys .n{font-size:.82rem; color:var(--muted)}
+.sys .l{font-family:var(--font-display); font-size:.6rem; letter-spacing:.12em; color:var(--red)}
+.sys.ok .ico,.sys.ok .l{color:var(--green)}
+table.rot{width:100%; border-collapse:collapse; font-size:.95rem}
+table.rot th,table.rot td{border:1px solid var(--line); padding:8px 6px; text-align:center}
+table.rot th{font-family:var(--font-display); font-size:.7rem; letter-spacing:.1em; color:var(--muted); background:var(--space2)}
+table.rot td.cur{background:var(--orange-soft); color:var(--orange); font-weight:700}
+table.rot td.past{color:var(--dim)}
+.tablewrap{overflow-x:auto}
+.settings{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px}
+.settings label{display:flex; flex-direction:column; gap:6px; font-size:.9rem; color:var(--muted)}
+.settings input{min-height:46px; background:var(--space2); border:2px solid var(--line2); border-radius:var(--r-s); padding:6px 12px; font-family:var(--font-mono); font-size:1.1rem; width:100%}
+.flash{animation:flashbg 1s ease-out 3}
+@keyframes flashbg{0%{box-shadow:0 0 0 0 rgba(255,154,61,.9)}100%{box-shadow:0 0 0 24px rgba(255,154,61,0)}}
+
+/* Rätsel-Elemente */
+.widget{background:var(--panel); border:1px solid var(--line2); border-radius:var(--r); padding:16px; display:flex; flex-direction:column; gap:12px; align-items:center}
+.widget .w-title{align-self:flex-start; font-family:var(--font-display); font-size:.78rem; letter-spacing:.14em; color:var(--cyan); text-transform:uppercase}
+.disc{width:min(100%,360px); max-width:100%; aspect-ratio:1; display:block}
+.disc text{font-family:var(--font-mono); font-weight:700}
+.cipher{font-family:var(--font-mono); font-size:1.3rem; letter-spacing:.08em; background:var(--space2); border:1px solid var(--line); border-radius:var(--r-s); padding:12px 16px; line-height:1.8; width:100%; text-align:center}
+.cipher .sym{display:inline-block; min-width:1.4em; color:var(--orange); font-size:1.45rem; vertical-align:middle}
+.filterbox{position:relative; width:100%; min-height:150px; background:#F3F0E8; border-radius:var(--r-s); overflow:hidden; border:1px solid var(--line)}
+.filterbox .layer{position:absolute; inset:0; padding:16px 18px; font-family:var(--font-mono); font-weight:700; font-size:1.1rem; line-height:1.7; word-break:break-word}
+.filterbox .layer.red{color:#D7262E}
+.filterbox .layer.blue{color:#1F3BD6}
+.filterbox .tint{position:absolute; inset:0; background:#E8302A; mix-blend-mode:multiply; opacity:0; pointer-events:none}
+.slider{width:100%; display:flex; align-items:center; gap:12px}
+.slider input[type=range]{flex:1; accent-color:var(--orange); min-height:40px}
+.slider .lab{font-family:var(--font-display); font-size:.7rem; letter-spacing:.12em; color:var(--muted); white-space:nowrap}
+.chart{width:100%; max-width:460px; display:block}
+.chart .barbtn{cursor:pointer}
+.chart .barbtn:hover rect{filter:brightness(1.2)}
+.chart text{font-family:var(--font-body); fill:var(--ink)}
+.chart .ax{stroke:var(--line2)}
+.lockpad{display:grid; grid-template-columns:repeat(3,64px); grid-template-rows:repeat(3,64px); gap:8px}
+.lockpad button{border-radius:12px; border:2px solid var(--line2); background:var(--space2); font-size:1.6rem; color:var(--cyan)}
+.lockpad button:hover{border-color:var(--cyan)}
+.lockpad .c{background:var(--panel2); border-color:var(--line); font-size:1rem; color:var(--muted); font-family:var(--font-display)}
+.seq{font-size:1.8rem; letter-spacing:.2em; min-height:2.4em; font-family:var(--font-mono); color:var(--orange); background:var(--space2); border:1px solid var(--line); border-radius:var(--r-s); padding:8px 16px; min-width:260px; text-align:center}
+.rings{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+.ring{display:flex; flex-direction:column; align-items:center; gap:4px}
+.ring button{width:56px; height:40px; border-radius:8px; border:1px solid var(--line2); background:var(--space2); color:var(--cyan); font-size:1.2rem}
+.ring .win{width:56px; height:120px; border:2px solid #A98A4A; border-radius:8px; background:linear-gradient(180deg,#4E3F22,#8A6B33 50%,#4E3F22); display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; overflow:hidden; position:relative}
+.ring .win span{display:block; height:40px; line-height:40px; color:#2C2109; opacity:.45; font-size:1rem}
+.ring .win span.c{color:#FFF4D6; opacity:1; font-size:1.5rem; text-shadow:0 1px 0 #000}
+.ring .win::after{content:""; position:absolute; left:0; right:0; top:40px; height:40px; border-top:2px solid rgba(255,244,214,.6); border-bottom:2px solid rgba(255,244,214,.6); pointer-events:none}
+.nodes{position:relative; width:100%; max-width:420px; aspect-ratio:3/2; background:var(--space2); border:1px solid var(--line); border-radius:var(--r-s); overflow:hidden}
+.node{position:absolute; width:56px; height:56px; border-radius:50%; border:3px solid var(--red); background:var(--panel); color:var(--red); font-family:var(--font-display); font-weight:700; font-size:1.1rem; transform:translate(-50%,-50%); animation:pulse 1.2s ease-in-out infinite}
+.node.ok{border-color:var(--green); color:var(--green); animation:none}
+@keyframes pulse{50%{box-shadow:0 0 0 10px rgba(255,107,122,.0)}0%{box-shadow:0 0 0 0 rgba(255,107,122,.6)}}
+.proto{width:100%; display:flex; flex-direction:column; gap:8px; font-family:var(--font-mono)}
+.proto.noisy{filter:blur(2.5px) contrast(1.4); transform:scaleX(-1); animation:noise .12s steps(2) infinite}
+@keyframes noise{50%{transform:scaleX(-1) translateX(2px)}}
+.pline{display:flex; justify-content:space-between; gap:12px; border:2px solid var(--line2); background:var(--space2); border-radius:var(--r-s); padding:10px 14px; text-align:left; font-size:1.02rem}
+.pline:hover{border-color:var(--orange)}
+.pline.sel{border-color:var(--orange); background:var(--orange-soft)}
+.pline.ok{border-color:var(--green); background:var(--green-soft)}
+.pline.bad{border-color:var(--red); background:var(--red-soft)}
+.pline .v{color:var(--orange)}
+.sortlist{display:flex; flex-direction:column; gap:8px; width:100%}
+.sortitem{display:flex; align-items:center; gap:12px; border:2px solid var(--line2); background:var(--space2); border-radius:var(--r-s); padding:8px 12px}
+.sortitem .pos{flex:none; width:32px; height:32px; border-radius:50%; border:1px solid var(--line2); display:grid; place-items:center; font-family:var(--font-display); color:var(--cyan); font-size:.9rem}
+.sortitem .nm{flex:1; font-size:1.05rem}
+.sortitem button{width:44px; height:44px; border-radius:8px; border:1px solid var(--line2); background:var(--panel); color:var(--cyan); font-size:1.1rem}
+.sortitem.ok{border-color:var(--green)}
+.sortitem.bad{border-color:var(--red)}
+.figure{width:100%; max-width:520px; display:block}
+.figure .reg{cursor:pointer; fill:var(--cyan-soft); stroke:var(--cyan); stroke-width:2}
+.figure .reg:hover{fill:rgba(85,214,240,.3)}
+.figure .reg.on{fill:rgba(95,227,161,.35); stroke:var(--green)}
+.figure text{font-family:var(--font-mono); fill:var(--ink); font-size:14px}
+.figure .dim{fill:var(--orange); font-weight:700}
+.grille{position:relative; width:100%; max-width:420px; font-family:var(--font-mono); font-weight:700; font-size:clamp(1rem,4.2vw,1.5rem); letter-spacing:0; background:#F3F0E8; color:#2A2A33; border-radius:var(--r-s); overflow:hidden; border:1px solid var(--line)}
+.grille .g{display:grid; grid-template-columns:repeat(var(--cols),1fr); padding:0}
+.grille .g span{text-align:center; height:2.1em; line-height:2.1em}
+.grille .mask{position:absolute; inset:0; display:grid; grid-template-columns:repeat(var(--cols),1fr); padding:0; pointer-events:none; transition:transform .25s; align-content:start}
+.grille .mask span{background:#2E2A2A; height:2.1em}
+.grille .mask span.hole{background:transparent; box-shadow:inset 0 0 0 2px rgba(255,154,61,.85)}
+.dial{width:min(100%,300px); aspect-ratio:1; display:block}
+.dial text{font-family:var(--font-mono); font-weight:700}
+.slots{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+.slot{min-width:84px; min-height:52px; border:2px dashed var(--line2); border-radius:var(--r-s); display:grid; place-items:center; font-family:var(--font-mono); font-size:1.2rem; color:var(--muted); padding:0 10px}
+.slot.cur{border-style:solid; border-color:var(--orange); color:var(--orange)}
+.slot.ok{border-style:solid; border-color:var(--green); color:var(--green)}
+.ask{background:var(--orange-soft); border:1px solid rgba(255,154,61,.4); border-radius:var(--r-s); padding:10px 14px; width:100%; text-align:center}
+
+/* Finale */
+.final{
+  text-align:center; padding:36px 20px; display:flex; flex-direction:column; align-items:center; gap:16px;
+  background:radial-gradient(ellipse at 50% 0%, rgba(95,227,161,.16), transparent 60%), var(--panel); border:1px solid var(--green); border-radius:var(--r)
+}
+.final h1{font-size:clamp(1.6rem,5vw,2.6rem); color:var(--green); letter-spacing:.08em}
+.capsule{width:140px; height:140px}
+.summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; width:100%; max-width:620px}
+.summary .k{background:var(--space2); border:1px solid var(--line); border-radius:var(--r-s); padding:12px}
+.summary .k .lab{font-family:var(--font-display); font-size:.62rem; letter-spacing:.12em; color:var(--muted); text-transform:uppercase}
+.summary .k .v{font-family:var(--font-mono); font-size:1.4rem; color:var(--cyan)}
+.toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:var(--panel2); border:1px solid var(--cyan); color:var(--ink); padding:12px 18px; border-radius:12px; z-index:20; max-width:min(92vw,520px); text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.sr{position:absolute; left:-9999px}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important; transition:none !important}
+}
+@media (max-width:480px){
+  .lockpad{grid-template-columns:repeat(3,56px); grid-template-rows:repeat(3,56px)}
+  .ring .win{width:48px}
+  .ring button{width:48px}
+}
+</style>
+
+<div id="app" class="wrap"></div>
+<div id="toast" class="toast" hidden></div>
+<script>
+/* ========= AURORA-6 Bodenstation – Kern ========= */
+(function(){
+'use strict';
+const $ = (sel, root=document) => root.querySelector(sel);
+const el = (tag, attrs={}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)) {
+    if (k === 'class') n.className = v;
+    else if (k === 'html') n.innerHTML = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) { if (k == null) continue; n.append(k.nodeType ? k : document.createTextNode(String(k))); }
+  return n;
+};
+const fmtClock = s => { s = Math.max(0, Math.round(s)); const m = Math.floor(s/60), r = s%60; return `${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`; };
+const fmtNum = x => String(x).replace('.', ',');
+const parseNum = str => {
+  if (str == null) return NaN;
+  let s = String(str).trim().toLowerCase().replace(/\s+/g,'');
+  s = s.replace(/(m²|cm²|dm²|km²|mm²|kw|kg|ml|cm|dm|km|mm|m|l|g|n|€)+$/,'');
+  s = s.replace(/\./g, (m, i, all) => (all.indexOf(',') > -1 ? '' : m)); // 1.000,5 -> 1000,5
+  s = s.replace(',', '.');
+  if (!/^-?\d*\.?\d+$/.test(s)) return NaN;
+  return parseFloat(s);
+};
+const store = {
+  get(k){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+let toastT;
+const toast = msg => { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(()=> t.hidden = true, 2600); };
+
+/* ---- Icons (inline SVG) ---- */
+const I = {
+  logo: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="32" r="9" fill="currentColor" fill-opacity=".15"/><rect x="4" y="27" width="16" height="10" rx="2"/><rect x="44" y="27" width="16" height="10" rx="2"/><path d="M20 32h3M41 32h3M32 23v-9M27 14h10M32 41v9"/><circle cx="32" cy="32" r="3" fill="currentColor"/></svg>`,
+  lunge: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M24 6v14"/><path d="M24 20c-3 4-5 6-9 7-5 1-9 5-9 11 0 3 3 4 6 3l6-3c3-1.5 4-4 4-8z"/><path d="M24 20c3 4 5 6 9 7 5 1 9 5 9 11 0 3-3 4-6 3l-6-3c-3-1.5-4-4-4-8z"/></svg>`,
+  herz: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M24 41S6 30 6 17a9 9 0 0 1 18-2 9 9 0 0 1 18 2c0 13-18 24-18 24z"/><path d="M10 24h7l3-5 4 10 3-6h11"/></svg>`,
+  muskel: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="19" width="6" height="10" rx="1.5"/><rect x="38" y="19" width="6" height="10" rx="1.5"/><rect x="10" y="15" width="6" height="18" rx="1.5"/><rect x="32" y="15" width="6" height="18" rx="1.5"/><path d="M16 24h16"/></svg>`,
+  hebel: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 30 42 18"/><path d="M24 25v15"/><path d="M14 40h20"/><rect x="34" y="11" width="8" height="7" rx="1"/><circle cx="10" cy="29" r="3"/></svg>`,
+  tank: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="8" width="28" height="34" rx="6"/><path d="M10 26c5-3 9 3 14 0s9-3 14 0"/><path d="M18 8V5h12v3"/><path d="M16 34h4M28 34h4"/></svg>`,
+  verdauung: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 5v9"/><path d="M22 14c-8 0-12 5-12 10s4 8 8 8h12c4 0 7 3 7 6s-3 5-7 5H14"/><path d="M14 22h10M14 28h10"/></svg>`,
+  solar: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="10" width="36" height="22" rx="2"/><path d="M18 10v22M30 10v22M6 21h36"/><path d="M24 32v10M16 42h16"/></svg>`,
+  kapsel: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M32 4c10 8 14 20 14 32v8H18v-8C18 24 22 12 32 4z"/><circle cx="32" cy="26" r="6"/><path d="M18 44 10 54h12M46 44l8 10H42"/><path d="M26 54l6 8 6-8"/></svg>`,
+  tipp: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.5c-.8.7-1 1.5-1 2.5H9c0-1-.2-1.8-1-2.5A6 6 0 0 1 12 3z"/></svg>`,
+  box: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>`,
+  monitor: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="40" height="26" rx="3"/><path d="M16 42h16M24 34v8"/><path d="M12 24l6-6 6 4 8-8"/></svg>`,
+  tablet: `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="32" height="40" rx="4"/><path d="M20 38h8"/><path d="M16 14h16M16 22h10"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>`,
+  back: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>`
+};
+const svg = (name, cls='ico') => { const s = el('span', {class: cls}); s.innerHTML = I[name]; s.firstElementChild.setAttribute('width','100%'); s.firstElementChild.setAttribute('height','100%'); s.style.display='inline-block'; return s; };
+
+/* ---- Sound (nur nach Klick) ---- */
+let actx = null;
+function ensureAudio(){ try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch(e){} }
+function beep(freq=880, dur=0.18, type='square', vol=0.08, when=0){
+  if (!actx) return;
+  try {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, actx.currentTime + when);
+    g.gain.linearRampToValueAtTime(vol, actx.currentTime + when + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + when + dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(actx.currentTime + when); o.stop(actx.currentTime + when + dur + 0.05);
+  } catch(e){}
+}
+const sfx = {
+  ok(){ beep(660,.12,'sine',.1); beep(990,.18,'sine',.1,.12); },
+  bad(){ beep(220,.25,'sawtooth',.06); },
+  click(){ beep(1200,.05,'square',.03); },
+  signal(){ for (let i=0;i<3;i++){ beep(880,.25,'square',.09,i*.4); beep(1320,.25,'square',.09,i*.4+.2); } },
+  alarm(){ for (let i=0;i<4;i++){ beep(520,.3,'sawtooth',.07,i*.5); beep(390,.3,'sawtooth',.07,i*.5+.25); } },
+  unlock(){ [523,659,784,1046].forEach((f,i)=>beep(f,.22,'sine',.1,i*.11)); }
+};
+function speak(text){
+  try {
+    if (!('speechSynthesis' in window)) return false;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'de-DE'; u.rate = 0.95; u.pitch = 1.0;
+    const voices = speechSynthesis.getVoices();
+    const v = voices.find(v => /de/i.test(v.lang) && /female|anna|katja|petra|hedda|vicki|marlene/i.test(v.name)) || voices.find(v => /de/i.test(v.lang));
+    if (v) u.voice = v;
+    speechSynthesis.speak(u); return true;
+  } catch(e){ return false; }
+}
+
+/* ---- Einstellungen & Rotation ---- */
+const DEF = { intro: 5, runde: 7, finale: 6 };
+const NMOD = 7;
+function settings(){ return Object.assign({}, DEF, store.get('aurora6-settings') || {}); }
+function totalSeconds(st){ return (st.intro + NMOD*st.runde + st.finale) * 60; }
+/* Team t (1..7) in Runde r (1..7) -> Modulnummer */
+const moduleFor = (team, round) => ((team - 1 + round - 1) % NMOD) + 1;
+function phaseAt(elapsed, st){
+  const intro = st.intro*60, runde = st.runde*60, fin = st.finale*60;
+  if (elapsed < intro) return { kind:'intro', left: intro - elapsed, round:0 };
+  const t = elapsed - intro;
+  const r = Math.floor(t / runde) + 1;
+  if (r <= NMOD) return { kind:'round', round:r, left: runde - (t - (r-1)*runde) };
+  const f = t - NMOD*runde;
+  if (f < fin) return { kind:'finale', left: fin - f, round: NMOD+1 };
+  return { kind:'over', left:0, round: NMOD+2 };
+}
+
+/* ---- Story-Texte ---- */
+const NOTRUF = `Hier spricht Kommandantin Mara Steen, Raumstation AURORA-6. Bodenstation, hört ihr mich?
+Ein Sonnensturm hat unseren Bordcomputer NOVA getroffen. Alle sieben Systeme der Station sind gesperrt: Sauerstoff, Kühlkreislauf, Trainingsmodul, Luken-Mechanik, Wassertank, Nahrungsversorgung und Solarflügel.
+NOVA hat alle Freigabecodes vergessen. Ich habe aber noch die Messdaten und Baupläne der Station. Allein schaffe ich das nicht.
+Ihr seid meine Bodenstation. Rechnet, messt, untersucht. NOVA prüft jeden Code.
+Ihr habt 60 Minuten. Dann ist der Sauerstoff im Kommandomodul aufgebraucht. Viel Erfolg, Bodenstation. Ende.`;
+
+/* ========= Ansichten ========= */
+const app = $('#app');
+function route(){
+  const h = (location.hash || '').replace('#','');
+  if (h === 'leitstand') renderLeitstand();
+  else if (h === 'team') renderTeam();
+  else renderStart();
+}
+window.addEventListener('hashchange', route);
+function go(h){ if (location.hash !== '#'+h) location.hash = h; else route(); }
+
+/* ---- Startseite ---- */
+function renderStart(){
+  stopTimers();
+  app.className = 'wrap';
+  app.replaceChildren(
+    el('section', {class:'panel hero glow'},
+      svg('logo','logo'),
+      el('div', {class:'eyebrow'}, 'Notruf aus dem Orbit'),
+      el('h1', {}, 'AURORA-6 Bodenstation'),
+      el('p', {class:'tag'}, 'Ein Sonnensturm hat den Bordcomputer NOVA getroffen. Sieben Systeme der Raumstation sind gesperrt. Die Bodenstation hat 60 Minuten, um sie freizuschalten.')
+    ),
+    el('div', {class:'choose'},
+      el('button', {class:'choice', onclick:()=>go('leitstand')},
+        svg('monitor','ico'), el('h2', {}, 'Leitstand'), el('p', {}, 'Für den Beamer: Notruf abspielen, großer Countdown, Wechselsignal alle 7 Minuten, Startsequenz zum Schluss.')),
+      el('button', {class:'choice', onclick:()=>go('team')},
+        svg('tablet','ico'), el('h2', {}, 'Teamkonsole'), el('p', {}, 'Für das Tablet eines Teams: Teamnummer wählen, sieben Module freischalten, Codes eingeben, Hinweise anfordern.'))
+    ),
+    el('p', {class:'muted', style:'text-align:center;font-size:.9rem'}, 'Die Seite speichert nichts auf einem Server. Der Fortschritt bleibt nur auf diesem Gerät, bis „Neue Mission“ gewählt wird.')
+  );
+}
+
+/* ---- Leitstand ---- */
+let timers = [];
+function stopTimers(){ timers.forEach(clearInterval); timers = []; }
+function renderLeitstand(){
+  stopTimers();
+  app.className = 'wrap wide';
+  const L = store.get('aurora6-leitstand') || { startAt:null, systems:[0,0,0,0,0,0,0] };
+  const st = settings();
+  const save = () => store.set('aurora6-leitstand', L);
+
+  const head = el('header', {class:'bar'},
+    el('div', {class:'brand'}, svg('logo','logo'), el('div', {}, el('h1', {}, 'AURORA-6 · Leitstand'), el('div', {class:'sub'}, 'Bodenstation Essen · Bordcomputer NOVA'))),
+    el('div', {class:'row'},
+      el('button', {class:'btn quiet', onclick:()=>go('')}, svg('back','ico'), 'Startseite'))
+  );
+
+  if (!L.startAt){
+    /* Vor dem Start: Notruf + Einstellungen */
+    const novaBox = el('div', {class:'nova mara', id:'notrufText'}, '', el('span', {class:'cursor'}));
+    let typing = null;
+    const playNotruf = () => {
+      ensureAudio(); sfx.alarm();
+      clearInterval(typing);
+      const cur = el('span', {class:'cursor'});
+      const tn = document.createTextNode('');
+      novaBox.replaceChildren(tn, cur);
+      let i = 0; const txt = NOTRUF;
+      const spoke = speak(txt);
+      const stepMs = spoke ? 55 : 28;
+      typing = setInterval(()=>{ i++; tn.nodeValue = txt.slice(0,i); if (i >= txt.length){ clearInterval(typing); cur.remove(); } }, stepMs);
+    };
+    const fields = el('div', {class:'settings'},
+      el('label', {}, 'Notruf-Phase (Minuten)', el('input', {type:'number', min:1, max:20, value:st.intro, id:'setIntro'})),
+      el('label', {}, 'Dauer pro Modul-Runde (Minuten)', el('input', {type:'number', min:3, max:15, value:st.runde, id:'setRunde'})),
+      el('label', {}, 'Startsequenz (Minuten)', el('input', {type:'number', min:1, max:15, value:st.finale, id:'setFinale'}))
+    );
+    const total = el('p', {class:'muted'});
+    const updTotal = () => { const s = readSettings(); total.textContent = `Gesamtdauer: ${s.intro} + 7 × ${s.runde} + ${s.finale} = ${s.intro + 7*s.runde + s.finale} Minuten`; };
+    const readSettings = () => ({ intro: +$('#setIntro').value || DEF.intro, runde: +$('#setRunde').value || DEF.runde, finale: +$('#setFinale').value || DEF.finale });
+    fields.addEventListener('input', updTotal);
+    const start = () => {
+      const s = readSettings(); store.set('aurora6-settings', s);
+      ensureAudio(); sfx.signal();
+      L.startAt = Date.now(); L.systems = [0,0,0,0,0,0,0]; save(); renderLeitstand();
+    };
+    app.replaceChildren(head,
+      el('section', {class:'panel glow'},
+        el('div', {class:'panel-head'}, el('div', {}, el('div', {class:'eyebrow'}, 'Eingehender Notruf'), el('h2', {}, 'Raumstation AURORA-6 · Kommandantin Mara Steen')),
+          el('button', {class:'btn warn', onclick:playNotruf}, 'Notruf abspielen')),
+        novaBox,
+        el('p', {class:'muted', style:'margin-top:10px;font-size:.95rem'}, 'Der Notruf wird mit Sprachausgabe des Tablets oder Rechners vorgelesen, falls verfügbar. Sonst läuft der Text als Funkspruch durch.')
+      ),
+      el('section', {class:'panel'},
+        el('div', {class:'panel-head'}, el('div', {}, el('div', {class:'eyebrow'}, 'Missionsplan'), el('h2', {}, 'Zeiten einstellen'))),
+        fields, el('div', {style:'height:10px'}), total,
+        el('p', {class:'muted', style:'margin-top:8px;font-size:.95rem'}, 'Sieben Teams, sieben Module. Team 1 beginnt bei Modul 1, Team 2 bei Modul 2 und so weiter. Nach jeder Runde wechseln alle zum nächsten Modul.')
+      ),
+      el('div', {class:'row end'}, el('button', {class:'btn big', onclick:start}, 'Mission starten'))
+    );
+    updTotal();
+    return;
+  }
+
+  /* Laufende Mission */
+  const clock = el('div', {class:'clock num'}, '00:00');
+  const phase = el('div', {class:'phase'}, '');
+  const prog = el('div', {class:'progress'}, el('i'));
+  const sysNames = MODULES.map(m => m.short);
+  const sysRow = el('div', {class:'systems'});
+  const drawSys = () => sysRow.replaceChildren(...MODULES.map((m,i) => el('button', {class:'sys'+(L.systems[i]?' ok':''), onclick:()=>{ L.systems[i] = L.systems[i]?0:1; save(); drawSys(); if (L.systems[i]) { ensureAudio(); sfx.ok(); } }},
+    svg(m.icon,'ico'), el('div', {class:'n'}, m.short), el('div', {class:'l'}, L.systems[i] ? 'Freigegeben' : 'Gesperrt'))));
+  drawSys();
+  const table = el('div', {class:'tablewrap'});
+  const drawTable = (round) => {
+    const t = el('table', {class:'rot'});
+    t.append(el('thead', {}, el('tr', {}, el('th', {}, 'Team'), ...Array.from({length:NMOD},(_,r)=>el('th', {}, `Runde ${r+1}`)))));
+    const tb = el('tbody');
+    for (let team=1; team<=NMOD; team++){
+      tb.append(el('tr', {}, el('th', {}, `Team ${team}`), ...Array.from({length:NMOD},(_,r)=>{
+        const m = moduleFor(team, r+1);
+        return el('td', {class: (r+1)===round ? 'cur' : ((r+1)<round ? 'past' : '')}, `M${m}`);
+      })));
+    }
+    t.append(tb); table.replaceChildren(t);
+  };
+  let lastPhaseKey = null;
+  const finaleBtn = el('button', {class:'btn ok', onclick:()=>showFinale()}, 'Startsequenz zeigen');
+  const resetBtn = el('button', {class:'btn quiet', onclick:()=>{ if (resetBtn.dataset.sure){ store.del('aurora6-leitstand'); renderLeitstand(); } else { resetBtn.dataset.sure = '1'; resetBtn.textContent = 'Wirklich zurücksetzen?'; setTimeout(()=>{ delete resetBtn.dataset.sure; resetBtn.textContent = 'Mission zurücksetzen'; }, 4000); } }}, 'Mission zurücksetzen');
+  const main = el('section', {class:'panel glow', id:'leitMain'}, clock, phase, prog);
+  app.replaceChildren(head, main,
+    el('section', {class:'panel'}, el('div', {class:'panel-head'}, el('div', {}, el('div', {class:'eyebrow'}, 'Systemstatus'), el('h2', {}, 'Antippen, wenn ein Team ein System freigemeldet hat'))), sysRow),
+    el('section', {class:'panel'}, el('div', {class:'panel-head'}, el('div', {}, el('div', {class:'eyebrow'}, 'Rotationsplan'), el('h2', {}, 'Welches Team ist an welchem Modul?'))), table),
+    el('div', {class:'row between'}, resetBtn, finaleBtn)
+  );
+  const tick = () => {
+    const s = settings();
+    const elapsed = (Date.now() - L.startAt)/1000;
+    const tot = totalSeconds(s);
+    const left = tot - elapsed;
+    clock.textContent = fmtClock(left);
+    clock.className = 'clock num' + (left < 300 ? ' crit' : (left < 900 ? ' warn' : ''));
+    prog.firstChild.style.width = Math.min(100, elapsed/tot*100).toFixed(2) + '%';
+    const p = phaseAt(elapsed, s);
+    const key = p.kind + p.round;
+    if (p.kind === 'intro') phase.innerHTML = `NOTRUF · BRIEFING<small>Teams wählen Teamnummer und Rollen. Runde 1 beginnt in ${fmtClock(p.left)}.</small>`;
+    else if (p.kind === 'round') phase.innerHTML = `RUNDE ${p.round} VON 7<small>Wechsel in ${fmtClock(p.left)} · Team 1 ist an Modul ${moduleFor(1,p.round)}, Team 2 an Modul ${moduleFor(2,p.round)} …</small>`;
+    else if (p.kind === 'finale') phase.innerHTML = `STARTSEQUENZ<small>Alle Teams melden ihre Codes. Noch ${fmtClock(p.left)} bis zum Ende der Mission.</small>`;
+    else phase.innerHTML = `ZEIT ABGELAUFEN<small>Der Sauerstoff im Kommandomodul ist aufgebraucht.</small>`;
+    if (key !== lastPhaseKey){
+      if (lastPhaseKey !== null){ ensureAudio(); if (p.kind === 'round') sfx.signal(); else if (p.kind === 'finale') sfx.unlock(); else if (p.kind === 'over') sfx.alarm(); main.classList.remove('flash'); void main.offsetWidth; main.classList.add('flash'); }
+      drawTable(p.kind === 'round' ? p.round : (p.kind === 'intro' ? 0 : 99));
+      lastPhaseKey = key;
+    }
+  };
+  tick(); timers.push(setInterval(tick, 500));
+
+  function showFinale(){
+    stopTimers(); ensureAudio(); sfx.unlock();
+    app.replaceChildren(head,
+      el('section', {class:'final'},
+        svg('kapsel','capsule'),
+        el('div', {class:'eyebrow'}, 'Bordcomputer NOVA'),
+        el('h1', {}, 'Alle Systeme wiederhergestellt'),
+        el('p', {class:'tag', style:'color:var(--muted);max-width:40em'}, 'Sauerstoff, Kühlkreislauf, Trainingsmodul, Luken-Mechanik, Wassertank, Nahrungsversorgung und Solarflügel laufen wieder. Kommandantin Steen startet die Rückkehrkapsel. Danke, Bodenstation Essen.'),
+        el('div', {class:'nova mara', style:'text-align:left;max-width:40em'}, 'Bodenstation, hier Mara Steen. Ich sehe sieben grüne Lampen. Ihr habt gemessen, gerechnet und nicht aufgegeben. Ich komme nach Hause. Ende.'),
+        el('div', {class:'row'}, el('button', {class:'btn ghost', onclick:()=>renderLeitstand()}, 'Zurück zum Leitstand'))
+      )
+    );
+  }
+}
+
+/* ---- Teamkonsole ---- */
+let T = null; // Teamzustand
+function loadTeam(){ T = store.get('aurora6-team') || { team:null, startAt:null, done:{}, energy:100, hints:{}, attempts:0, open:null }; }
+function saveTeam(){ store.set('aurora6-team', T); }
+function renderTeam(){
+  stopTimers();
+  app.className = 'wrap';
+  if (!T) loadTeam();
+  if (!T.team) return renderTeamSelect();
+  if (T.open) return renderModule(T.open);
+  renderGridView();
+}
+function renderTeamSelect(){
+  const btns = [];
+  for (let t=1; t<=NMOD; t++){
+    btns.push(el('button', {class:'teambtn', onclick:()=>{ ensureAudio(); sfx.click(); T.team = t; T.startAt = Date.now(); saveTeam(); renderTeam(); }}, `Team ${t}`, el('small', {}, `Start: Modul ${moduleFor(t,1)}`)));
+  }
+  app.replaceChildren(
+    el('header', {class:'bar'},
+      el('div', {class:'brand'}, svg('logo','logo'), el('div', {}, el('h1', {}, 'AURORA-6 · Teamkonsole'), el('div', {class:'sub'}, 'Bodenstation Essen · Bordcomputer NOVA'))),
+      el('button', {class:'btn quiet', onclick:()=>go('')}, svg('back','ico'), 'Startseite')),
+    el('section', {class:'panel glow'},
+      el('div', {class:'eyebrow'}, 'Verbindung aufbauen'), el('h2', {}, 'Welches Team seid ihr?'),
+      el('p', {class:'muted', style:'margin:8px 0 14px'}, 'Eure Teamnummer steht auf eurem Logbuch. Sie legt fest, bei welchem Modul ihr startet.'),
+      el('div', {class:'teams'}, ...btns)),
+    el('section', {class:'nova'}, el('b', {}, 'NOVA: '), 'Verbindung zur Bodenstation hergestellt. Rollen im Team: Funker (liest vor), Rechner, Schreiber (Logbuch), Techniker (Geräte an der Station). Wartet auf Teamnummer …')
+  );
+}
+function teamBar(){
+  const energy = el('span', {class:'chip'+(T.energy<40?' alert':''), id:'chipEnergy'}, el('span', {class:'lab'}, 'Energie'), `${T.energy} %`);
+  const clock = el('span', {class:'chip', id:'chipClock'}, el('span', {class:'lab'}, 'Mission'), '00:00');
+  const done = Object.keys(T.done).length;
+  const bar = el('header', {class:'bar'},
+    el('div', {class:'brand'}, svg('logo','logo'), el('div', {}, el('h1', {}, 'AURORA-6 · Teamkonsole'), el('div', {class:'sub'}, `${done} von 7 Systemen freigegeben`))),
+    el('div', {class:'stats'}, el('span', {class:'chip team'}, `Team ${T.team}`), energy, clock)
+  );
+  const tick = () => { const s = settings(); const elapsed = (Date.now() - T.startAt)/1000; clock.lastChild.nodeValue = fmtClock(totalSeconds(s) - elapsed); };
+  tick(); timers.push(setInterval(tick, 1000));
+  return bar;
+}
+function currentRound(){ const s = settings(); const p = phaseAt((Date.now()-T.startAt)/1000, s); return p.kind === 'round' ? p.round : (p.kind === 'intro' ? 1 : NMOD); }
+function renderGridView(){
+  stopTimers();
+  const doneCount = Object.keys(T.done).length;
+  if (doneCount === NMOD) return renderTeamFinale();
+  const round = currentRound();
+  const next = moduleFor(T.team, round);
+  const order = Array.from({length:NMOD},(_,r)=>moduleFor(T.team, r+1));
+  const cards = MODULES.map((m,i) => {
+    const n = i+1; const isDone = !!T.done[n];
+    const cls = 'mod' + (isDone ? ' done' : (n === next ? ' next' : ''));
+    return el('button', {class:cls, onclick:()=>{ ensureAudio(); sfx.click(); T.open = n; saveTeam(); renderModule(n); }},
+      svg(m.icon,'ico'), el('div', {class:'t'}, el('div', {class:'n'}, `MODUL ${n}`), el('h3', {}, m.name), el('div', {class:'s'}, m.system)),
+      el('span', {class:'st'}, isDone ? 'Frei' : (n === next ? 'Jetzt' : 'Gesperrt')));
+  });
+  const newBtn = el('button', {class:'btn quiet', onclick:()=>{ if (newBtn.dataset.sure){ store.del('aurora6-team'); T = null; renderTeam(); } else { newBtn.dataset.sure='1'; newBtn.textContent='Wirklich alles löschen?'; setTimeout(()=>{ delete newBtn.dataset.sure; newBtn.textContent='Neue Mission (alles löschen)'; },4000);} }}, 'Neue Mission (alles löschen)');
+  app.replaceChildren(teamBar(),
+    el('section', {class:'nova'}, el('b', {}, 'NOVA: '), `Team ${T.team}, eure Reihenfolge: ${order.map(n=>'M'+n).join(' → ')}. Geht zur Station mit der Nummer des Moduls. Dort liegen Geräte und Unterlagen. Jedes freigegebene System schickt einen Freigabecode an die Kommandantin.`),
+    el('div', {class:'grid'}, ...cards),
+    el('div', {class:'row between'}, el('button', {class:'btn quiet', onclick:()=>go('')}, svg('back','ico'), 'Startseite'), newBtn)
+  );
+}
+function renderTeamFinale(){
+  const s = settings(); const used = Math.round((Date.now()-T.startAt)/1000);
+  const hintsTotal = Object.values(T.hints).reduce((a,b)=>a+b,0);
+  ensureAudio(); sfx.unlock();
+  app.replaceChildren(teamBar(),
+    el('section', {class:'final'},
+      svg('kapsel','capsule'),
+      el('div', {class:'eyebrow'}, 'Bordcomputer NOVA'),
+      el('h1', {}, 'Mission erfüllt'),
+      el('p', {style:'color:var(--muted);max-width:40em'}, `Team ${T.team} hat alle sieben Systeme der AURORA-6 freigeschaltet. Meldet eure Codes beim Leitstand, damit die Startsequenz beginnen kann.`),
+      el('div', {class:'summary'},
+        el('div', {class:'k'}, el('div', {class:'lab'}, 'Systeme'), el('div', {class:'v'}, '7 / 7')),
+        el('div', {class:'k'}, el('div', {class:'lab'}, 'Energie'), el('div', {class:'v'}, `${T.energy} %`)),
+        el('div', {class:'k'}, el('div', {class:'lab'}, 'Hinweise'), el('div', {class:'v'}, String(hintsTotal))),
+        el('div', {class:'k'}, el('div', {class:'lab'}, 'Zeit'), el('div', {class:'v'}, fmtClock(Math.min(used, totalSeconds(s)))))),
+      el('div', {class:'stack', style:'width:100%;max-width:620px;text-align:left'},
+        el('div', {class:'eyebrow'}, 'Eure Freigabecodes'),
+        ...MODULES.map((m,i)=>el('div', {class:'tipp'}, el('b', {class:'mono', style:'color:var(--green);min-width:8em'}, m.code), `Modul ${i+1} · ${m.name}`))),
+      el('div', {class:'nova mara', style:'text-align:left;max-width:40em'}, el('b', {}, 'Mara Steen: '), 'Bodenstation, ich sehe grüne Lampen. Ihr habt gemessen, gerechnet und nicht aufgegeben. Danke, Team ' + T.team + '.'),
+      el('div', {class:'row'}, el('button', {class:'btn ghost', onclick:()=>{ T.open=null; saveTeam(); renderGridViewForce(); }}, 'Module ansehen'))
+    )
+  );
+}
+function renderGridViewForce(){
+  /* Modulübersicht auch nach Abschluss anzeigen */
+  stopTimers();
+  const cards = MODULES.map((m,i) => el('button', {class:'mod done', onclick:()=>{ T.open = i+1; saveTeam(); renderModule(i+1); }},
+    svg(m.icon,'ico'), el('div', {class:'t'}, el('div', {class:'n'}, `MODUL ${i+1}`), el('h3', {}, m.name), el('div', {class:'s'}, m.system)), el('span', {class:'st'}, 'Frei')));
+  app.replaceChildren(teamBar(), el('div', {class:'grid'}, ...cards), el('div', {class:'row'}, el('button', {class:'btn ghost', onclick:()=>renderTeamFinale()}, 'Zur Abschlussmeldung')));
+}
+
+/* ---- Modulansicht & Schritt-Engine ---- */
+function renderModule(n){
+  stopTimers();
+  const m = MODULES[n-1];
+  const isDone = !!T.done[n];
+  const back = el('button', {class:'btn quiet', onclick:()=>{ T.open = null; saveTeam(); renderTeam(); }}, svg('back','ico'), 'Alle Module');
+  const head = el('section', {class:'panel glow'},
+    el('div', {class:'modhead'}, svg(m.icon,'ico'), el('div', {class:'t'}, el('div', {class:'eyebrow'}, `Modul ${n} · ${m.system}`), el('h2', {}, m.name))),
+    el('div', {style:'height:12px'}),
+    el('div', {class:'nova mara'}, el('b', {}, 'Mara Steen: '), m.story),
+    el('div', {style:'height:12px'}),
+    el('div', {class:'vorort'}, svg('box','ico'), el('div', {}, el('div', {class:'eyebrow'}, 'Vor Ort an der Station'), el('div', {}, m.vorOrt)))
+  );
+  const stepsBox = el('section', {class:'steps'});
+  const hintBox = el('section', {class:'panel'}, el('div', {class:'panel-head'}, el('div', {}, el('div', {class:'eyebrow'}, 'Funkkanal'), el('h2', {}, 'Hinweise von NOVA'))));
+  const hintsList = el('div', {class:'hints'});
+  const usedHints = T.hints[n] || 0;
+  const costs = [5,10,15];
+  const hintBtn = el('button', {class:'btn ghost', onclick:()=>{
+    const k = T.hints[n] || 0; if (k >= m.hints.length) return;
+    T.hints[n] = k+1; T.energy = Math.max(0, T.energy - costs[k]); saveTeam(); ensureAudio(); sfx.click();
+    drawHints(); const chip = $('#chipEnergy'); if (chip){ chip.lastChild.nodeValue = `${T.energy} %`; chip.classList.toggle('alert', T.energy<40); }
+  }}, '');
+  const drawHints = () => {
+    const k = T.hints[n] || 0;
+    hintsList.replaceChildren(...m.hints.slice(0,k).map((h,i)=>el('div', {class:'hint'}, el('div', {class:'eyebrow'}, `Hinweis ${i+1}`), h)));
+    if (k >= m.hints.length){ hintBtn.disabled = true; hintBtn.textContent = 'Keine weiteren Hinweise'; }
+    else hintBtn.textContent = `Hinweis ${k+1} anfordern (−${costs[k]} % Energie)`;
+  };
+  drawHints();
+  hintBox.append(hintsList, el('div', {style:'height:10px'}), hintBtn);
+  app.replaceChildren(teamBar(), head, stepsBox, isDone ? null : hintBox, el('div', {class:'row'}, back));
+
+  if (isDone){ stepsBox.append(unlockPanel(n, m)); return; }
+
+  /* Schritte nacheinander */
+  const steps = m.steps.map((s, i) => {
+    const box = el('div', {class:'step locked'}, el('div', {class:'step-head'}, el('div', {class:'no'}, String(i+1)), el('h3', {}, s.title)));
+    return { def:s, box, state:'locked' };
+  });
+  const activate = (i) => {
+    const st = steps[i]; st.state = 'active'; st.box.className = 'step';
+    const body = el('div', {class:'stack'});
+    st.box.append(body);
+    const api = {
+      done(summary){
+        if (st.state === 'done') return;
+        st.state = 'done'; st.box.className = 'step done';
+        st.box.append(el('div', {class:'done-line'}, svg('check','ico'), summary || 'Erledigt'));
+        ensureAudio(); sfx.ok();
+        if (i+1 < steps.length) { activate(i+1); steps[i+1].box.scrollIntoView({behavior:'smooth', block:'center'}); }
+        else finish();
+      },
+      fail(){ T.attempts++; saveTeam(); ensureAudio(); sfx.bad(); }
+    };
+    st.def.render(body, api);
+    stepsBox.append(...steps.map(s=>s.box));
+  };
+  const finish = () => {
+    T.done[n] = true; T.open = n; saveTeam(); ensureAudio(); sfx.unlock();
+    const u = unlockPanel(n, m); stepsBox.append(u); u.scrollIntoView({behavior:'smooth', block:'center'});
+    hintBox.remove();
+    const sub = $('.bar .sub'); if (sub) sub.textContent = `${Object.keys(T.done).length} von 7 Systemen freigegeben`;
+  };
+  stepsBox.append(...steps.map(s=>s.box));
+  activate(0);
+}
+function unlockPanel(n, m){
+  const allDone = Object.keys(T.done).length === NMOD;
+  return el('div', {class:'unlock'},
+    el('div', {class:'eyebrow', style:'color:var(--green)'}, `System freigegeben · Modul ${n}`),
+    el('h2', {}, m.name + ' läuft wieder'),
+    el('div', {}, el('span', {class:'code'}, m.code)),
+    el('p', {}, 'Schreibt den Freigabecode in euer Logbuch und meldet ihn beim Leitstand.'),
+    el('div', {class:'merke'}, el('div', {class:'eyebrow'}, 'Das steckt dahinter'), m.merke),
+    el('div', {class:'row'}, el('button', {class:'btn ok', onclick:()=>{ T.open = null; saveTeam(); renderTeam(); }}, allDone ? 'Zur Abschlussmeldung' : 'Weiter zum nächsten Modul'))
+  );
+}
+
+/* ---- Schritt-Bausteine ---- */
+/* Multiple Choice: options = [{t:'Text', ok:true, note:'Zusatz nach richtiger Wahl'}] */
+function mc(title, question, options, opts={}){
+  return { title, render(box, api){
+    box.append(el('p', {class:'q'}, question));
+    const fb = el('div', {class:'fb'});
+    const grid = el('div', {class:'opts'});
+    options.forEach((o, i) => {
+      const b = el('button', {class:'opt'}, el('span', {class:'k'}, 'ABCDEF'[i]), o.t);
+      b.addEventListener('click', ()=>{
+        if (o.ok){ grid.querySelectorAll('.opt').forEach(x=>x.disabled=true); b.classList.add('right'); fb.className='fb good'; fb.textContent = o.note || 'Richtig.'; api.done(opts.summary || o.t); }
+        else { b.classList.add('wrong'); setTimeout(()=>b.classList.remove('wrong'), 500); fb.className='fb bad'; fb.textContent = o.fb || 'Das passt nicht. Schaut noch einmal genau hin.'; api.fail(); }
+      });
+      grid.append(b);
+    });
+    box.append(grid, fb);
+    if (opts.tipp) box.append(el('div', {class:'tipp'}, svg('tipp','ico'), el('div', {}, opts.tipp)));
+  }};
+}
+/* Zahleneingabe: fields = [{label, unit, answer, tol, min, max, id}] */
+function num(title, question, fields, opts={}){
+  return { title, render(box, api){
+    if (question) box.append(el('p', {class:'q', html: question}));
+    if (opts.calc) box.append(el('div', {class:'calc', html: opts.calc}));
+    const rows = fields.map(f => {
+      const inp = el('input', {type:'text', inputmode:'decimal', autocomplete:'off', id:f.id || ('f_'+Math.random().toString(36).slice(2,8)), placeholder:'…'});
+      const field = el('div', {class:'field'}, inp, f.unit ? el('span', {class:'u'}, f.unit) : null);
+      return { f, inp, field, row: el('div', {class:'inrow'}, f.label ? el('label', {for:inp.id}, f.label) : null, field) };
+    });
+    const fb = el('div', {class:'fb'});
+    let tries = 0;
+    const check = () => {
+      let allOk = true, anyEmpty = false;
+      rows.forEach(r => {
+        const v = parseNum(r.inp.value);
+        if (r.inp.value.trim() === '') { anyEmpty = true; }
+        let ok;
+        if (r.f.min != null) ok = !isNaN(v) && v >= r.f.min && v <= r.f.max;
+        else ok = !isNaN(v) && Math.abs(v - r.f.answer) <= (r.f.tol ?? 0.001);
+        r.field.classList.toggle('wrong', !ok); r.field.classList.toggle('right', ok);
+        if (!ok) allOk = false;
+      });
+      if (anyEmpty && !allOk){ fb.className='fb info'; fb.textContent = 'Bitte alle Felder ausfüllen.'; return; }
+      if (allOk){ fb.className='fb good'; fb.textContent = opts.good || 'NOVA bestätigt: passt.'; rows.forEach(r=>r.inp.disabled=true); btn.disabled = true;
+        api.done(opts.summary ? opts.summary(rows.map(r=>r.inp.value)) : rows.map(r=> (r.f.label? r.f.label+' ' : '') + r.inp.value + (r.f.unit? ' '+r.f.unit:'')).join(' · ')); }
+      else { tries++; api.fail(); fb.className='fb bad'; fb.textContent = tries >= 2 && opts.tipp2 ? opts.tipp2 : (opts.bad || 'NOVA lehnt ab. Rechnet noch einmal nach und prüft das Komma.'); }
+    };
+    const btn = el('button', {class:'btn', onclick:check}, 'Prüfen');
+    rows.forEach(r => r.inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); }));
+    box.append(...rows.map(r=>r.row), el('div', {class:'row'}, btn), fb);
+    if (opts.tipp) box.append(el('div', {class:'tipp'}, svg('tipp','ico'), el('div', {html: opts.tipp})));
+  }};
+}
+/* Eigenes Element */
+function custom(title, render){ return { title, render }; }
+
+window.A6 = { el, svg, mc, num, custom, parseNum, fmtNum, sfx, ensureAudio, toast, I };
+window.A6.boot = () => { route(); };
+})();
+</script>
+<script>
+/* ========= AURORA-6 – Die sieben Module ========= */
+(function(){
+'use strict';
+const { el, svg, mc, num, custom, parseNum, fmtNum, sfx, ensureAudio } = window.A6;
+const svgNS = 'http://www.w3.org/2000/svg';
+const S = (tag, attrs={}, ...kids) => { const n = document.createElementNS(svgNS, tag); for (const [k,v] of Object.entries(attrs)) n.setAttribute(k, v); kids.forEach(k => n.append(k.nodeType ? k : document.createTextNode(String(k)))); return n; };
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const fbEl = () => el('div', {class:'fb'});
+const setFb = (fb, cls, txt) => { fb.className = 'fb ' + cls; fb.textContent = txt; };
+
+/* ---------- Widget: Drehscheibe ---------- */
+const SYM = ['◆','●','▲','■','✶','⬢','◐','✚','⌂','≋'];
+const LET = 'ABCDEFGHIJ';
+const KEY = 3; // richtige Einstellung: D
+const enc = d => SYM[(d + KEY) % 10];
+function drehscheibe(){
+  const wrap = el('div', {class:'widget'});
+  let k = 0;
+  const sv = S('svg', {viewBox:'0 0 340 340', class:'disc', role:'img', 'aria-label':'Drehscheibe'});
+  const defs = S('defs');
+  defs.innerHTML = `<radialGradient id="dg1" cx="50%" cy="40%"><stop offset="0" stop-color="#2A3B6E"/><stop offset="1" stop-color="#121B33"/></radialGradient><radialGradient id="dg2" cx="50%" cy="40%"><stop offset="0" stop-color="#1B2A52"/><stop offset="1" stop-color="#0D1426"/></radialGradient>`;
+  sv.append(defs);
+  sv.append(S('circle', {cx:170, cy:170, r:160, fill:'url(#dg1)', stroke:'#55D6F0', 'stroke-width':2}));
+  // Außenring: Symbole
+  for (let j=0;j<10;j++){
+    const a = (j*36 - 90) * Math.PI/180;
+    const x = 170 + Math.cos(a)*138, y = 170 + Math.sin(a)*138;
+    sv.append(S('text', {x, y:y+7, 'text-anchor':'middle', 'font-size':24, fill:'#FF9A3D'}, SYM[j]));
+    const a2 = ((j*36)+18-90)*Math.PI/180;
+    sv.append(S('line', {x1:170+Math.cos(a2)*118, y1:170+Math.sin(a2)*118, x2:170+Math.cos(a2)*158, y2:170+Math.sin(a2)*158, stroke:'#27345C'}));
+  }
+  const inner = S('g', {style:'transition:transform .35s; transform-origin:170px 170px'});
+  inner.append(S('circle', {cx:170, cy:170, r:112, fill:'url(#dg2)', stroke:'#3A4C7E', 'stroke-width':2}));
+  const digits = [];
+  for (let j=0;j<10;j++){
+    const a = (j*36 - 90) * Math.PI/180;
+    const t = S('text', {x:170+Math.cos(a)*92, y:170+Math.sin(a)*92+8, 'text-anchor':'middle', 'font-size':26, fill:'#EAF0FF'}, String(j));
+    t.dataset.cx = 170+Math.cos(a)*92; t.dataset.cy = 170+Math.sin(a)*92;
+    digits.push(t); inner.append(t);
+  }
+  inner.append(S('circle', {cx:170, cy:170, r:40, fill:'#070B16', stroke:'#55D6F0'}));
+  const lab = S('text', {x:170, y:180, 'text-anchor':'middle', 'font-size':28, fill:'#55D6F0'}, 'A');
+  inner.append(lab);
+  sv.append(inner);
+  // Zeiger oben
+  sv.append(S('path', {d:'M170 2 L160 20 L180 20 Z', fill:'#55D6F0'}));
+  const letEl = el('b', {}, 'A');
+  const upd = () => { inner.style.transform = `rotate(${k*36}deg)`; lab.textContent = LET[k]; lab.setAttribute('transform', `rotate(${-k*36} 170 170)`); letEl.textContent = LET[k];
+    digits.forEach(t => t.setAttribute('transform', `rotate(${-k*36} ${t.dataset.cx} ${t.dataset.cy})`)); };
+  const ctrl = el('div', {class:'row'},
+    el('button', {class:'btn ghost', 'aria-label':'Nach links drehen', onclick:()=>{ k = (k+9)%10; upd(); sfx.click(); }}, '↺ drehen'),
+    el('span', {class:'chip'}, el('span', {class:'lab'}, 'Einstellung'), letEl),
+    el('button', {class:'btn ghost', 'aria-label':'Nach rechts drehen', onclick:()=>{ k = (k+1)%10; upd(); sfx.click(); }}, 'drehen ↻')
+  );
+  wrap.append(el('div', {class:'w-title'}, 'Drehscheibe · Stellt den Schlüsselbuchstaben ein'), sv, ctrl,
+    el('p', {class:'muted', style:'font-size:.95rem;text-align:center'}, 'Jedes Zeichen außen steht für die Ziffer, die innen darunter steht. Stimmt die Einstellung, könnt ihr die Nachricht lesen.'));
+  upd();
+  return wrap;
+}
+const cipherLine = (parts) => {
+  const line = el('div', {class:'cipher'});
+  parts.forEach(p => { if (typeof p === 'number') line.append(el('span', {class:'sym'}, enc(p))); else line.append(p); });
+  return line;
+};
+
+/* ---------- Widget: Farbfilter ---------- */
+function farbfilter(blueText){
+  const wrap = el('div', {class:'widget'});
+  const noise = 'ZX7 QK 3F1 PWL 9VH 2R TBQ 6N DJ 8M GY 0S CU 5E A4 XO 7L KZ 1W NP 3Q RB 9D FG 6T HV 2M'.split(' ');
+  const redTxt = Array.from({length:14},(_,i)=>noise[(i*5)%noise.length]).join('  ');
+  const red = el('div', {class:'layer red'}, redTxt);
+  const blue = el('div', {class:'layer blue'}, blueText);
+  const tint = el('div', {class:'tint'});
+  const box = el('div', {class:'filterbox'}, blue, red, tint);
+  const range = el('input', {type:'range', min:0, max:100, value:0, id:'filterRange', 'aria-label':'Rotfilter'});
+  const apply = () => { const v = range.value/100; red.style.opacity = String(1 - v); tint.style.opacity = String(v*0.55); blue.style.opacity = String(0.25 + 0.75*v); };
+  range.addEventListener('input', apply); apply();
+  wrap.append(el('div', {class:'w-title'}, 'Blutfilter · Rotfilter über die Nachricht schieben'), box,
+    el('div', {class:'slider'}, el('span', {class:'lab'}, 'Kein Filter'), range, el('span', {class:'lab'}, 'Rotfilter')));
+  return wrap;
+}
+
+/* ---------- Widget: Säulendiagramm ---------- */
+function pulsChart(data, onPick){
+  const w = 460, h = 280, pad = 50, bw = 80;
+  const sv = S('svg', {viewBox:`0 0 ${w} ${h}`, class:'chart', role:'img', 'aria-label':'Säulendiagramm Puls'});
+  const maxV = 160, scale = (h-pad-30)/maxV;
+  for (let v=0; v<=maxV; v+=40){
+    const y = h-pad - v*scale;
+    sv.append(S('line', {x1:pad, x2:w-10, y1:y, y2:y, class:'ax', 'stroke-dasharray': v? '3 4':'0'}));
+    sv.append(S('text', {x:pad-8, y:y+5, 'text-anchor':'end', 'font-size':13}, String(v)));
+  }
+  sv.append(S('text', {x:pad-8, y:16, 'text-anchor':'end', 'font-size':12, fill:'#9FAED0'}, 'Schläge/min'));
+  data.forEach((d,i) => {
+    const x = pad + 30 + i*(bw+40);
+    const g = S('g', {class:'barbtn', tabindex:0, role:'button', 'aria-label':d.label});
+    const r = S('rect', {x, y:h-pad-d.v*scale, width:bw, height:d.v*scale, rx:6, fill: d.col});
+    g.append(r, S('text', {x:x+bw/2, y:h-pad+20, 'text-anchor':'middle', 'font-size':14}, d.label), S('text', {x:x+bw/2, y:h-pad+38, 'text-anchor':'middle', 'font-size':12, fill:'#9FAED0'}, d.sub||''));
+    const pick = () => onPick(d, r);
+    g.addEventListener('click', pick); g.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); pick(); } });
+    sv.append(g);
+  });
+  return sv;
+}
+
+/* ---------- Widget: Richtungsschloss ---------- */
+function richtungsschloss(target, onOpen){
+  const wrap = el('div', {class:'widget'});
+  let seq = '';
+  const disp = el('div', {class:'seq', 'aria-live':'polite'}, '· · · · · ·');
+  const fb = fbEl();
+  const upd = () => { disp.textContent = seq.split('').join(' ') || '· · · · · ·'; };
+  const push = ch => { if (seq.length >= 6) return; seq += ch; upd(); sfx.click(); };
+  const pad = el('div', {class:'lockpad'},
+    el('span'), el('button', {onclick:()=>push('↑'), 'aria-label':'hoch'}, '↑'), el('span'),
+    el('button', {onclick:()=>push('←'), 'aria-label':'links'}, '←'), el('button', {class:'c', onclick:()=>{ seq=''; upd(); setFb(fb,'',''); }}, 'C'), el('button', {onclick:()=>push('→'), 'aria-label':'rechts'}, '→'),
+    el('span'), el('button', {onclick:()=>push('↓'), 'aria-label':'runter'}, '↓'), el('span')
+  );
+  const open = el('button', {class:'btn', onclick:()=>{
+    if (seq.length < 6){ setFb(fb,'info','Das Schloss braucht sechs Richtungen.'); return; }
+    if (seq === target){ setFb(fb,'good','Klack. Das Schloss springt auf.'); open.disabled = true; pad.querySelectorAll('button').forEach(b=>b.disabled=true); onOpen(); }
+    else { setFb(fb,'bad','Das Schloss klemmt. Prüft jede Entscheidung: Rand oder Innen? Gerade oder ungerade?'); seq=''; upd(); sfx.bad(); }
+  }}, 'Schloss öffnen');
+  wrap.append(el('div', {class:'w-title'}, 'Richtungsschloss · Sechs Richtungen in der richtigen Reihenfolge'), disp, pad, el('div', {class:'row'}, open), fb);
+  return wrap;
+}
+
+/* ---------- Widget: Cryptex ---------- */
+function cryptex(word, onOpen){
+  const wrap = el('div', {class:'widget'});
+  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const pos = word.split('').map(()=>0);
+  const rings = el('div', {class:'rings'});
+  const fb = fbEl();
+  const wins = [];
+  word.split('').forEach((_, i) => {
+    const win = el('div', {class:'win', 'aria-live':'polite'});
+    wins.push(win);
+    const up = el('button', {'aria-label':`Ring ${i+1} hoch`, onclick:()=>{ pos[i] = (pos[i]+25)%26; draw(); sfx.click(); }}, '▲');
+    const dn = el('button', {'aria-label':`Ring ${i+1} runter`, onclick:()=>{ pos[i] = (pos[i]+1)%26; draw(); sfx.click(); }}, '▼');
+    rings.append(el('div', {class:'ring'}, up, win, dn));
+  });
+  const draw = () => wins.forEach((w,i) => { const p = pos[i]; w.replaceChildren(el('span', {}, ALPHA[(p+25)%26]), el('span', {class:'c'}, ALPHA[p]), el('span', {}, ALPHA[(p+1)%26])); });
+  draw();
+  const open = el('button', {class:'btn', onclick:()=>{
+    const w = pos.map(p=>ALPHA[p]).join('');
+    if (w === word){ setFb(fb,'good','Der Riegel fährt zurück. Das Cryptex ist offen.'); open.disabled = true; rings.querySelectorAll('button').forEach(b=>b.disabled=true); onOpen(); }
+    else { setFb(fb,'bad','Der Riegel klemmt. Sucht die Knochen mit den Nummern des Knochen-Codes und lest die Anfangsbuchstaben ab.'); sfx.bad(); }
+  }}, 'Cryptex öffnen');
+  wrap.append(el('div', {class:'w-title'}, 'Cryptex · Vier Ringe, ein Wort'), rings, el('div', {class:'row'}, open), fb);
+  return wrap;
+}
+
+/* ---------- Widget: Störsignal (Knoten in Reihenfolge) ---------- */
+function stoersignal(onDone){
+  const wrap = el('div', {class:'widget'});
+  const area = el('div', {class:'nodes'});
+  const spots = shuffle([[18,25],[50,70],[80,30],[35,78],[68,22],[85,75]]).slice(0,5);
+  let next = 1;
+  const fb = fbEl();
+  spots.forEach((p,i) => {
+    const b = el('button', {class:'node', style:`left:${p[0]}%;top:${p[1]}%`, onclick:()=>{
+      if (i+1 === next){ b.classList.add('ok'); next++; sfx.click(); if (next > spots.length){ setFb(fb,'good','Signal stabil. Das Protokoll wird lesbar.'); onDone(); } }
+      else { setFb(fb,'bad','Falsche Reihenfolge. Das Signal bricht ab. Beginnt bei 1.'); area.querySelectorAll('.node').forEach(n=>n.classList.remove('ok')); next = 1; sfx.bad(); }
+    }}, String(i+1));
+    area.append(b);
+  });
+  wrap.append(el('div', {class:'w-title'}, 'Störsignal · Knoten in der Reihenfolge 1 bis 5 antippen'), area, fb);
+  return wrap;
+}
+
+/* ---------- Widget: Lochschablone ---------- */
+function lochschablone(onRead){
+  const cols = 12, rows = 5, correct = 2;
+  const hint = 'ZERLEGEDIEFIGURINRECHTECKE'; // 26 Buchstaben, ein Wort pro Zeile
+  // Löcher in Schablonen-Koordinaten (Zeile, Spalte 0..9); bei Stellung 2 liegen sie in den Rasterspalten 2..11
+  const holes = [];
+  [[0,1,7],[1,4,3],[2,2,5],[3,6,2],[4,0,9]].forEach(([r,c0,len]) => { for (let c=c0; c<c0+len; c++) holes.push([r,c]); });
+  const letters = Array.from({length:rows},()=>Array.from({length:cols},()=>'ABDEFGHIKLMNOPRSTUWZ'[Math.floor(Math.random()*20)]));
+  holes.forEach(([r,c],i) => { letters[r][c + correct] = hint[i]; });
+  const g = el('div', {class:'g', style:`--cols:${cols};padding:0`});
+  letters.forEach(row => row.forEach(ch => g.append(el('span', {}, ch))));
+  const mask = el('div', {class:'mask', style:`--cols:${cols};padding:0;grid-template-columns:repeat(${cols+4},1fr);width:${(cols+4)/cols*100}%;left:${-2/cols*100}%`});
+  for (let r=0;r<rows;r++) for (let c=0;c<cols+4;c++){ const isHole = holes.some(h=>h[0]===r && h[1]===c-2); mask.append(el('span', {class: isHole?'hole':''})); }
+  const box = el('div', {class:'grille', style:`--cols:${cols}`}, g, mask);
+  const range = el('input', {type:'range', min:0, max:4, value:0, id:'grilleRange', 'aria-label':'Schablone verschieben'});
+  const apply = () => { const cell = box.clientWidth / cols; mask.style.transform = `translateX(${(range.value - 0) * cell}px)`; };
+  range.addEventListener('input', apply);
+  const ro = new ResizeObserver(apply); ro.observe(box);
+  const fb = fbEl();
+  const inp = el('input', {type:'text', id:'grilleWord', autocomplete:'off', placeholder:'letztes Wort'});
+  const check = () => {
+    const v = inp.value.trim().toLowerCase().replace(/[^a-zäöü]/g,'');
+    if (v === 'rechtecke' || v === 'rechteck'){ setFb(fb,'good','Genau. Der Tipp lautet: Zerlege die Figur in Rechtecke.'); inp.disabled = true; onRead(); }
+    else { setFb(fb,'bad','Verschiebt die Schablone, bis in den Löchern Wörter erscheinen. Lest zeilenweise.'); sfx.bad(); }
+  };
+  inp.addEventListener('keydown', e=>{ if (e.key==='Enter') check(); });
+  const wrap = el('div', {class:'widget'}, el('div', {class:'w-title'}, 'Lochschablone · Verschieben, bis der Tipp lesbar ist'), box,
+    el('div', {class:'slider'}, el('span', {class:'lab'}, 'links'), range, el('span', {class:'lab'}, 'rechts')),
+    el('div', {class:'inrow'}, el('label', {for:'grilleWord'}, 'Wie heißt das letzte Wort des Tipps?'), el('div', {class:'field'}, inp)),
+    el('div', {class:'row'}, el('button', {class:'btn', onclick:check}, 'Prüfen')), fb);
+  setTimeout(apply, 50);
+  return wrap;
+}
+
+/* ---------- Widget: Flächenpuzzle (Zottenwand) ---------- */
+function zottenwand(onAllMarked){
+  const wrap = el('div', {class:'widget'});
+  const u = 52; // px pro Meter
+  const W = 6, H0 = 2, fw = 1, fh = 4, gap = 0.4;
+  const sv = S('svg', {viewBox:`-40 -20 ${W*u+90} ${(H0+fh)*u+60}`, class:'figure', role:'img', 'aria-label':'Zottenwand'});
+  const regs = [];
+  const mk = (x,y,w,h,label) => { const r = S('rect', {x:x*u, y:y*u, width:w*u, height:h*u, class:'reg', tabindex:0, role:'button', 'aria-label':label}); regs.push(r); return r; };
+  const top = (H0+fh); // y der Basis-Oberkante im umgedrehten Koordinatensystem: wir zeichnen Zotten oben, Basis unten
+  sv.append(mk(0, fh, W, H0, 'Grundstreifen'));
+  for (let i=0;i<4;i++){ const x = gap + i*(fw+gap); sv.append(mk(x, 0, fw, fh, `Zotte ${i+1}`)); }
+  // Maße
+  sv.append(S('text', {x:W*u/2, y:(fh+H0)*u+28, 'text-anchor':'middle', class:'dim'}, '6 m'));
+  sv.append(S('text', {x:W*u+12, y:(fh+H0/2)*u+5, class:'dim'}, '2 m'));
+  sv.append(S('text', {x:-10, y:fh*u/2+5, 'text-anchor':'end', class:'dim'}, '4 m'));
+  sv.append(S('text', {x:(gap+fw/2)*u, y:-6, 'text-anchor':'middle', class:'dim'}, '1 m'));
+  sv.append(S('line', {x1:(gap)*u, x2:(gap+fw)*u, y1:-2, y2:-2, stroke:'#FF9A3D', 'stroke-width':2}));
+  let on = 0;
+  regs.forEach(r => { const t = () => { if (r.classList.contains('on')) return; r.classList.add('on'); on++; sfx.click(); if (on === regs.length) onAllMarked(); }; r.addEventListener('click', t); r.addEventListener('keydown', e=>{ if (e.key==='Enter'||e.key===' '){ e.preventDefault(); t(); } }); });
+  wrap.append(el('div', {class:'w-title'}, 'Zottenwand · Tippt jedes Rechteck an, in das sich die Figur zerlegen lässt'), sv,
+    el('p', {class:'muted', style:'font-size:.95rem;text-align:center'}, 'Unten der Grundstreifen der Darmwand, oben vier Zotten. Alle Maße in Metern (Modell).'));
+  return wrap;
+}
+
+/* ---------- Widget: Tresor-Drehrad ---------- */
+function tresor(values, targets, onOpen){
+  const wrap = el('div', {class:'widget'});
+  let k = 0; const picked = [];
+  const n = values.length;
+  const sv = S('svg', {viewBox:'0 0 300 300', class:'dial', role:'img', 'aria-label':'Tresor-Drehrad'});
+  sv.append(S('circle', {cx:150, cy:150, r:140, fill:'#121B33', stroke:'#A98A4A', 'stroke-width':6}));
+  const g = S('g', {style:'transition:transform .3s; transform-origin:150px 150px'});
+  g.append(S('circle', {cx:150, cy:150, r:118, fill:'#0D1426', stroke:'#3A4C7E', 'stroke-width':2}));
+  values.forEach((v,i) => { const a = (i*360/n - 90)*Math.PI/180; const t = S('text', {x:150+Math.cos(a)*95, y:150+Math.sin(a)*95+6, 'text-anchor':'middle', 'font-size':18, fill:'#EAF0FF'}, fmtNum(v)); t.setAttribute('transform', `rotate(${-0} ${150+Math.cos(a)*95} ${150+Math.sin(a)*95})`); g.append(t); });
+  g.append(S('circle', {cx:150, cy:150, r:38, fill:'#070B16', stroke:'#A98A4A', 'stroke-width':3}));
+  sv.append(g);
+  sv.append(S('path', {d:'M150 6 L140 24 L160 24 Z', fill:'#FF9A3D'}));
+  const cur = el('div', {class:'chip'}, el('span', {class:'lab'}, 'Am Zeiger'), el('b', {}, fmtNum(values[0])));
+  const slots = el('div', {class:'slots'}, ...targets.map((_,i)=>el('div', {class:'slot'+(i===0?' cur':'')}, `Zahl ${i+1}`)));
+  const fb = fbEl();
+  const upd = () => { g.style.transform = `rotate(${-k*360/n}deg)`; g.querySelectorAll('text').forEach((t,i)=>{ const a=(i*360/n-90)*Math.PI/180; t.setAttribute('transform', `rotate(${k*360/n} ${150+Math.cos(a)*95} ${150+Math.sin(a)*95})`); }); cur.lastChild.textContent = fmtNum(values[k]); };
+  const rot = d => { k = (k + d + n) % n; upd(); sfx.click(); };
+  const einrasten = el('button', {class:'btn', onclick:()=>{
+    const i = picked.length; if (i >= targets.length) return;
+    if (Math.abs(values[k] - targets[i]) < 1e-9){ picked.push(values[k]); const s = slots.children[i]; s.textContent = fmtNum(values[k]); s.className = 'slot ok'; if (slots.children[i+1]) slots.children[i+1].className = 'slot cur'; sfx.ok();
+      if (picked.length === targets.length){ setFb(fb,'good','Alle drei Zahlen eingerastet. Der Tresor öffnet sich.'); einrasten.disabled = true; onOpen(); } else setFb(fb,'good',`Zahl ${i+1} eingerastet.`); }
+    else { setFb(fb,'bad',`Zahl ${i+1} passt nicht. Macht einen Überschlag: Ist das Ergebnis ungefähr so groß?`); sfx.bad(); }
+  }}, 'Einrasten');
+  wrap.append(el('div', {class:'w-title'}, 'Tresor-Drehrad · Drei Zahlen nacheinander eindrehen'), sv,
+    el('div', {class:'row'}, el('button', {class:'btn ghost', onclick:()=>rot(-1), 'aria-label':'links drehen'}, '◄'), cur, el('button', {class:'btn ghost', onclick:()=>rot(1), 'aria-label':'rechts drehen'}, '►')),
+    slots, el('div', {class:'row'}, einrasten), fb);
+  upd();
+  return wrap;
+}
+
+/* ========= Moduldefinitionen ========= */
+const MODULES = [
+/* ---------- 1 Sauerstoff ---------- */
+{
+  name:'Sauerstoffsystem', short:'Sauerstoff', system:'Lebenserhaltung · Atmung', icon:'lunge', code:'5,04',
+  story:'Die Luftfilter stehen still. NOVA will wissen, wie viel Sauerstoff ich für die nächsten Tage brauche, sonst gibt er das System nicht frei. Die Zahlen sind verschlüsselt, den Schlüsselbuchstaben verrät euch das Lungenmodell.',
+  vorOrt:'Lungenmodell (Flaschenmodell) aus der Sammlung. Daneben die Kopie „Die Lunge“ zum Nachschauen.',
+  hints:['Beim Einatmen zieht sich das Zwerchfell nach unten. Die Lunge wird größer, Luft strömt ein. Welche Antwort beschreibt das?',
+         'Drehscheibe: Stellt den Buchstaben aus der richtigen Antwort ein. Dann steht unter jedem Zeichen die Ziffer. Lest Stelle für Stelle.',
+         '0,84 · 6: Rechnet erst ohne Komma 84 · 6 = 504. Die Dezimalzahl hat zwei Stellen nach dem Komma, also hat das Ergebnis auch zwei: 5,04. Und 1 m² = 100 dm².'],
+  merke:'Beim Einatmen zieht sich das Zwerchfell zusammen, der Brustraum wird größer und Luft strömt in die Lunge. Mathe: Dezimalzahl · natürliche Zahl rechnet man erst ohne Komma, dann setzt man das Komma (so viele Stellen wie die Dezimalzahl). Flächen: 1 m² = 100 dm².',
+  steps:[
+    mc('Am Lungenmodell beobachten', 'Zieht die Gummihaut (das Zwerchfell) unten am Modell langsam nach unten. Was passiert mit den Ballons (den Lungenflügeln)?', [
+      {t:'Die Ballons werden größer, Luft strömt hinein.', ok:true, note:'Richtig, das ist das Einatmen. Schlüsselbuchstabe für die Drehscheibe: D'},
+      {t:'Die Ballons werden kleiner.', fb:'Das passiert erst beim Loslassen, also beim Ausatmen.'},
+      {t:'Nichts passiert.', fb:'Schaut genau hin und zieht noch einmal kräftig.'}
+    ], {summary:'Einatmen: Zwerchfell nach unten, Lunge wird größer. Schlüsselbuchstabe D'}),
+    custom('Nachricht entschlüsseln', (box, api) => {
+      box.append(drehscheibe());
+      box.append(el('p', {class:'q'}, 'Verschlüsselte Nachricht der Kommandantin:'));
+      box.append(cipherLine(['Sauerstoff pro Tag: ', 0, ',', 8, 4, ' kg']));
+      box.append(cipherLine(['Vorrat soll reichen für: ', 6, ' Tage']));
+      box.append(cipherLine(['Oberfläche der Lunge: ', 1, 0, 0, ' m²']));
+      num('', 'Was steht in der Nachricht?', [
+        {label:'Sauerstoff pro Tag', unit:'kg', answer:0.84, id:'m1_o2'},
+        {label:'Tage', unit:'', answer:6, id:'m1_tage'},
+        {label:'Lungenoberfläche', unit:'m²', answer:100, id:'m1_lunge'}
+      ], {bad:'Mindestens eine Zahl stimmt nicht. Steht die Drehscheibe auf dem richtigen Buchstaben?'}).render(box, api);
+    }),
+    num('Sauerstoffvorrat berechnen', 'NOVA braucht zwei Zahlen für die Freigabe.', [
+      {label:'Sauerstoff für alle Tage zusammen', unit:'kg', answer:5.04, id:'m1_gesamt'},
+      {label:'Lungenoberfläche in Quadratdezimeter', unit:'dm²', answer:10000, id:'m1_dm'}
+    ], {calc:'<b>0,84 kg · 6</b> = ? kg &nbsp;&nbsp;|&nbsp;&nbsp; <b>100 m²</b> = ? dm²', tipp:'Rechnet erst ohne Komma: 84 · 6. Dann das Komma setzen. Für die Fläche: 1 m² = 100 dm², die Umrechnungszahl ist 100.', tipp2:'84 · 6 = 504. Zwei Stellen nach dem Komma. Und 100 · 100 = ?'})
+  ]
+},
+/* ---------- 2 Kühlkreislauf ---------- */
+{
+  name:'Kühlkreislauf', short:'Kühlung', system:'Pumpstation · Herz und Blutkreislauf', icon:'herz', code:'4,9 – 132',
+  story:'Die Pumpe des Kühlkreislaufs arbeitet wie ein Herz. NOVA vergleicht sie mit meinen Herzdaten aus dem Astronauten-Check. Die Daten sind in Rot und Blau übereinander gedruckt, ein Filter macht sie lesbar.',
+  vorOrt:'Herzmodell aus der Sammlung (Vorderwand abnehmen), Stoppuhr. Kopie „Der Blutkreislauf“.',
+  hints:['Puls fühlen: Zwei Finger innen ans Handgelenk unter den Daumen legen. 15 Sekunden zählen, dann mal 4.',
+         'Komma setzen mit Überschlag: 0,07 ist etwa 0,1. Und 0,1 · 70 = 7. Das Ergebnis muss also in der Nähe von 7 liegen.',
+         'Säulendiagramm: Die höchste Säule hat den größten Wert. Lest den Wert an der Achse links ab oder über der Säule.'],
+  merke:'Das Herz pumpt Blut durch den Körper. Rote Gefäße führen sauerstoffreiches, blaue sauerstoffarmes Blut. Bei Anstrengung schlägt das Herz schneller. Mathe: Beim Multiplizieren zweier Dezimalzahlen zählt man die Nachkommastellen beider Faktoren zusammen. Ein Überschlag zeigt, ob das Komma richtig sitzt.',
+  steps:[
+    mc('Am Herzmodell nachsehen', 'Nehmt die Vorderwand des Herzmodells ab. Welche Farbe haben die Gefäße, in denen sauerstoffreiches Blut fließt?', [
+      {t:'Rot', ok:true, note:'Richtig. Sauerstoffreiches Blut ist hellrot. Blau markiert sauerstoffarmes Blut.'},
+      {t:'Blau', fb:'Blau steht im Modell für sauerstoffarmes Blut, das zurück zum Herzen fließt.'},
+      {t:'Gelb', fb:'Gelb kommt im Herzmodell für Blutgefäße nicht vor.'}
+    ], {summary:'Rot = sauerstoffreich, Blau = sauerstoffarm'}),
+    custom('Vitalcheck: Puls messen', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Ein Teammitglied legt zwei Finger innen ans Handgelenk. Startet die Stoppuhr und zählt die Schläge in 15 Sekunden. Rechnet mal 4: Das ist der Puls pro Minute.'));
+      const a = el('input', {type:'text', inputmode:'numeric', id:'m2_s15', placeholder:'…'});
+      const b = el('input', {type:'text', inputmode:'numeric', id:'m2_puls', placeholder:'…'});
+      const fa = el('div', {class:'field'}, a, el('span', {class:'u'}, 'Schläge in 15 s'));
+      const fbx = el('div', {class:'field'}, b, el('span', {class:'u'}, 'pro Minute'));
+      const fb = fbEl();
+      const check = () => {
+        const x = parseNum(a.value), y = parseNum(b.value);
+        const okA = x >= 8 && x <= 55, okB = Math.abs(y - 4*x) < 0.5;
+        fa.classList.toggle('wrong', !okA); fa.classList.toggle('right', okA);
+        fbx.classList.toggle('wrong', !okB); fbx.classList.toggle('right', okB && okA);
+        if (okA && okB){ setFb(fb,'good',`Vitalcheck gespeichert: ${y} Schläge pro Minute.`); a.disabled=b.disabled=true; api.done(`Puls ${y} pro Minute`); }
+        else if (!okA){ setFb(fb,'bad','Diese Zahl passt nicht zu 15 Sekunden. Zählt noch einmal mit der Stoppuhr.'); api.fail(); }
+        else { setFb(fb,'bad','Pro Minute = Schläge in 15 Sekunden mal 4.'); api.fail(); }
+      };
+      box.append(el('div', {class:'inrow'}, fa), el('div', {class:'inrow'}, fbx), el('div', {class:'row'}, el('button', {class:'btn', onclick:check}, 'Prüfen')), fb);
+    }),
+    custom('Herzdaten lesen', (box, api) => {
+      box.append(farbfilter('PRO SCHLAG PUMPT DAS HERZ 0,07 LITER BLUT. IN RUHE SCHLÄGT ES 70 MAL PRO MINUTE.'));
+      num('', 'Welche Zahlen stehen in der blauen Nachricht?', [
+        {label:'Liter pro Schlag', unit:'l', answer:0.07, id:'m2_l'},
+        {label:'Schläge pro Minute', unit:'', answer:70, id:'m2_70'}
+      ], {bad:'Schiebt den Filter ganz nach rechts und lest die blaue Schrift.'}).render(box, api);
+    }),
+    mc('Komma setzen', 'NOVA hat gerechnet: 0,07 · 70 = 49. Aber das Komma ist verloren. Überschlag: 0,07 ist ungefähr 0,1 und 0,1 · 70 = 7. Wie viel Blut pumpt das Herz pro Minute?', [
+      {t:'49 Liter', fb:'Viel zu viel. Der Überschlag sagt: ungefähr 7.'},
+      {t:'4,9 Liter', ok:true, note:'Richtig. 0,07 hat zwei Nachkommastellen, also auch das Ergebnis: 4,90 = 4,9 Liter.'},
+      {t:'0,49 Liter', fb:'Zu wenig. Der Überschlag sagt: ungefähr 7.'},
+      {t:'490 Liter', fb:'Viel zu viel. Der Überschlag sagt: ungefähr 7.'}
+    ], {summary:'0,07 · 70 = 4,9 Liter pro Minute'}),
+    custom('Maras Puls im Diagramm', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Maras Astronauten-Check: Tippt die Säule mit dem höchsten Puls an und tragt den Wert ein.'));
+      let picked = null;
+      const data = [{label:'Ruhe', sub:'vor dem Training', v:68, col:'#55D6F0'},{label:'Training', sub:'nach 1 min Hampelmann', v:132, col:'#FF9A3D'},{label:'Erholung', sub:'nach 5 min Pause', v:84, col:'#5FE3A1'}];
+      const fb = fbEl();
+      const inp = el('input', {type:'text', inputmode:'numeric', id:'m2_max', placeholder:'…'});
+      const field = el('div', {class:'field'}, inp, el('span', {class:'u'}, 'Schläge/min'));
+      const chart = pulsChart(data, (d, r) => { chart.querySelectorAll('rect').forEach(x=>x.setAttribute('stroke','none')); r.setAttribute('stroke','#EAF0FF'); r.setAttribute('stroke-width','3'); picked = d; setFb(fb,'info',`Ausgewählt: ${d.label}. Lest jetzt den Wert ab.`); });
+      box.append(el('div', {class:'widget'}, el('div', {class:'w-title'}, 'Säulendiagramm · Puls von Kommandantin Steen'), chart));
+      const check = () => {
+        const v = parseNum(inp.value);
+        if (!picked || picked.v !== 132){ setFb(fb,'bad','Welche Säule ist die höchste? Tippt sie zuerst an.'); api.fail(); return; }
+        if (Math.abs(v-132) < 0.5){ field.classList.add('right'); setFb(fb,'good','Beim Training steigt der Puls am stärksten.'); inp.disabled = true; api.done('Höchster Puls: 132 beim Training'); }
+        else { field.classList.add('wrong'); setTimeout(()=>field.classList.remove('wrong'),500); setFb(fb,'bad','Lest den Wert an der linken Achse ab: Zwischen 120 und 160, näher an 120.'); api.fail(); }
+      };
+      inp.addEventListener('keydown', e=>{ if (e.key==='Enter') check(); });
+      box.append(el('div', {class:'inrow'}, el('label', {for:'m2_max'}, 'Höchster Puls'), field), el('div', {class:'row'}, el('button', {class:'btn', onclick:check}, 'Prüfen')), fb);
+    })
+  ]
+},
+/* ---------- 3 Trainingsmodul ---------- */
+{
+  name:'Trainingsmodul', short:'Training', system:'Fitness · Muskeln als Gegenspieler', icon:'muskel', code:'↑↓↓↑→←',
+  story:'Ohne Schwerkraft schwinden meine Muskeln. Deshalb trainiere ich jeden Tag zwei Stunden. Das Trainingsmodul ist mit einem Richtungsschloss gesichert: Beugen heißt hoch, Strecken heißt runter. Den Rest verraten euch die Aufgaben zum Trainingsraum.',
+  vorOrt:'Kein Gerät nötig: Selbstversuch mit dem eigenen Arm. Kopie „Der Trainingsraum“ mit den Maßen von Matte und Bodenplatte.',
+  hints:['Rand oder Innen? Alles, was rundherum läuft (Klebeband, Leuchtstreifen, Zaun), ist der Rand: Umfang, Pfeil hoch. Alles, was eine Fläche bedeckt (Belag, Farbe, Teppich), ist Innen: Flächeninhalt, Pfeil runter.',
+         'Umfang Quadrat: u = 4 · a. Flächeninhalt Rechteck: A = a · b, erst ohne Komma rechnen: 25 · 9.',
+         'Pfeile für die Rechnungen: Letzte Ziffer des Ergebnisses gerade (0, 2, 4, 6, 8) → Pfeil rechts. Ungerade → Pfeil links. Reihenfolge: erst die vier Entscheidungen, dann Umfang, dann Flächeninhalt.'],
+  merke:'Muskeln können nur ziehen. Deshalb arbeiten sie als Gegenspieler: Der Bizeps beugt den Arm, der Trizeps streckt ihn. Mathe: Umfang ist der Weg rundherum (Rand, in m), Flächeninhalt ist das Innere (in m²). u = 4 · a beim Quadrat, A = a · b beim Rechteck.',
+  steps:[
+    mc('Selbstversuch am Arm', 'Legt eine Hand auf den Oberarm des anderen Arms. Beugt diesen Arm langsam. Welcher Muskel wird dabei dick und hart?', [
+      {t:'Der Bizeps (vorne am Oberarm)', ok:true, note:'Richtig. Der Bizeps beugt. Sein Gegenspieler, der Trizeps hinten, streckt den Arm. Im Schloss: Beugen = ↑, Strecken = ↓.'},
+      {t:'Der Trizeps (hinten am Oberarm)', fb:'Der Trizeps wird hart, wenn ihr den Arm streckt. Fühlt noch einmal beim Beugen.'},
+      {t:'Beide gleich', fb:'Fühlt genauer: Vorne oder hinten?'}
+    ], {summary:'Bizeps beugt (↑), Trizeps streckt (↓)'}),
+    custom('Rand oder Innen?', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Vier Reparaturen im Trainingsraum. Entscheidet: Geht es um den Rand (Umfang) oder um das Innere (Flächeninhalt)? Rand = Bizeps = ↑, Innen = Trizeps = ↓.'));
+      const items = [
+        {t:'Klebeband rund um die Trainingsmatte', rand:true},
+        {t:'Neuer Gummibelag auf dem Laufband', rand:false},
+        {t:'Farbe für die Bodenplatte unter dem Fahrrad', rand:false},
+        {t:'Leuchtstreifen rund um die Luke des Trainingsraums', rand:true}
+      ];
+      let solved = 0; const fb = fbEl();
+      const seq = el('div', {class:'seq'}, '· · · ·');
+      const arrows = items.map(()=>null);
+      const list = el('div', {class:'stack'});
+      items.forEach((it, i) => {
+        const res = el('span', {class:'chip', style:'min-width:3em;justify-content:center'}, '?');
+        const row = el('div', {class:'opts', style:'grid-template-columns:1fr auto auto auto;align-items:center'}, el('span', {class:'q', style:'font-size:1rem'}, it.t));
+        const mkBtn = (label, isRand) => el('button', {class:'opt', style:'min-height:48px', onclick:(e)=>{
+          if (arrows[i]) return;
+          if (isRand === it.rand){ e.currentTarget.classList.add('right'); arrows[i] = it.rand ? '↑' : '↓'; res.textContent = arrows[i]; res.classList.add('ok'); solved++; sfx.click();
+            seq.textContent = arrows.map(a=>a||'·').join(' ');
+            if (solved === items.length){ setFb(fb,'good','Alle vier Pfeile stehen fest: ↑ ↓ ↓ ↑. Merkt sie euch für das Schloss.'); api.done('Pfeile 1–4: ↑ ↓ ↓ ↑'); } }
+          else { e.currentTarget.classList.add('wrong'); setTimeout(()=>e.currentTarget.classList.remove('wrong'),500); setFb(fb,'bad', it.rand ? 'Das läuft rundherum, also Rand.' : 'Das bedeckt eine ganze Fläche, also Innen.'); api.fail(); }
+        }}, label);
+        row.append(mkBtn('Rand (Umfang)', true), mkBtn('Innen (Flächeninhalt)', false), res);
+        list.append(row);
+      });
+      box.append(list, el('div', {class:'row'}, el('span', {class:'muted'}, 'Pfeile 1 bis 4:'), seq), fb);
+    }),
+    num('Zwei Rechnungen für die letzten Pfeile', 'Aus der Kopie „Der Trainingsraum“: Die Bodenplatte ist ein Quadrat mit a = 1,5 m. Die Matte ist ein Rechteck mit a = 2,5 m und b = 0,9 m.', [
+      {label:'Umfang der Bodenplatte', unit:'m', answer:6, id:'m3_u'},
+      {label:'Flächeninhalt der Matte', unit:'m²', answer:2.25, id:'m3_a'}
+    ], {calc:'u = 4 · <b>1,5 m</b> = ? &nbsp;&nbsp;|&nbsp;&nbsp; A = <b>2,5 m · 0,9 m</b> = ?', tipp:'Pfeil 5 und 6: Letzte Ziffer gerade → Pfeil rechts →, ungerade → Pfeil links ←.', tipp2:'4 · 1,5 = 6. Und 25 · 9 = 225, dann zwei Nachkommastellen (eine von 2,5 und eine von 0,9).', good:'Passt. Pfeil 5: 6 ist gerade → rechts. Pfeil 6: 2,25 endet auf 5, ungerade → links.', summary:()=>'u = 6 m (→), A = 2,25 m² (←)'}),
+    custom('Richtungsschloss öffnen', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Gebt die sechs Richtungen in der richtigen Reihenfolge ein: erst die vier Entscheidungen, dann Umfang, dann Flächeninhalt.'));
+      box.append(richtungsschloss('↑↓↓↑→←', ()=>api.done('Schloss geöffnet: ↑ ↓ ↓ ↑ → ←')));
+    })
+  ]
+},
+/* ---------- 4 Luken-Mechanik ---------- */
+{
+  name:'Luken-Mechanik', short:'Luke', system:'Mechanik · Kraft, Hebel und Skelett', icon:'hebel', code:'KURS',
+  story:'Die Luke zum Rettungsmodul klemmt. Ich brauche einen Hebel, und NOVA will die Goldene Regel der Mechanik bestätigt sehen. Der Freigabecode steckt in einem Cryptex. Der Knochen-Code dafür erscheint erst, wenn eure Messung stimmt.',
+  vorOrt:'Hebelstange mit Gewichtsstücken, Kraftmesser, Skelettmodell. Kopie „Das Skelett“ mit nummerierten Knochen.',
+  hints:['Messung: Hängt das Gewichtsstück links ein. Hakt den Kraftmesser rechts an einer Marke ein, die doppelt so weit vom Drehpunkt entfernt ist. Zieht, bis die Stange waagerecht steht, und lest ab. Die Kraft sollte etwa halb so groß sein wie die Gewichtskraft.',
+         'Goldene Regel: Kraft · Hebelarm ist auf beiden Seiten gleich. 2 N · 0,3 m = 0,6. Welche Kraft mal 0,6 ergibt wieder 0,6?',
+         'Knochen-Code: Sucht die Nummern auf der Kopie „Das Skelett“. Die Anfangsbuchstaben der vier Knochen ergeben das Wort für das Cryptex.'],
+  merke:'Je länger der Hebelarm, desto kleiner die nötige Kraft. Goldene Regel der Mechanik: Was man an Kraft spart, muss man an Weg zugeben. Kraft · Hebelarm bleibt gleich. Unser Unterarm ist auch ein Hebel. Mathe: Dezimalzahl · Dezimalzahl, Komma mit Überschlag prüfen.',
+  steps:[
+    custom('Messung an der Hebelstange', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Hängt ein Gewichtsstück links an die Hebelstange (zum Beispiel 100 g, das sind 1 N). Hakt den Kraftmesser rechts an einer Marke ein, die doppelt so weit vom Drehpunkt entfernt ist wie das Gewichtsstück. Zieht nach unten, bis die Stange waagerecht steht. Lest die Kraft ab.'));
+      const a = el('input', {type:'text', inputmode:'decimal', id:'m4_gew', placeholder:'…'});
+      const b = el('input', {type:'text', inputmode:'decimal', id:'m4_kraft', placeholder:'…'});
+      const fa = el('div', {class:'field'}, a, el('span', {class:'u'}, 'N'));
+      const fbx = el('div', {class:'field'}, b, el('span', {class:'u'}, 'N'));
+      const fb = fbEl();
+      const check = () => {
+        const g = parseNum(a.value), k = parseNum(b.value);
+        if (isNaN(g) || isNaN(k) || g <= 0){ setFb(fb,'info','Bitte beide Werte in Newton eintragen (1 N entspricht 100 g).'); return; }
+        const ratio = k / g;
+        const ok = ratio >= 0.35 && ratio <= 0.7;
+        fa.classList.toggle('right', ok); fbx.classList.toggle('right', ok); fbx.classList.toggle('wrong', !ok);
+        if (ok){ setFb(fb,'good',`Passt zur Goldenen Regel: doppelter Hebelarm, etwa halbe Kraft (${fmtNum(k)} N statt ${fmtNum(g)} N).`); a.disabled=b.disabled=true; api.done(`Gewichtskraft ${fmtNum(g)} N, gemessen ${fmtNum(k)} N`); }
+        else { setFb(fb,'bad','Mit doppeltem Hebelarm sollte etwa die halbe Kraft reichen. Steht die Stange waagerecht? Hängt der Kraftmesser an der richtigen Marke?'); api.fail(); }
+      };
+      box.append(el('div', {class:'inrow'}, el('label', {for:'m4_gew'}, 'Gewichtskraft des Gewichtsstücks'), fa), el('div', {class:'inrow'}, el('label', {for:'m4_kraft'}, 'Gemessene Kraft am Kraftmesser'), fbx),
+        el('div', {class:'row'}, el('button', {class:'btn', onclick:check}, 'Prüfen')), fb,
+        el('div', {class:'tipp'}, svg('tipp','ico'), el('div', {}, '100 g ziehen mit etwa 1 N nach unten. 50 g mit 0,5 N.')));
+    }),
+    mc('Je-desto-Satz', 'Was habt ihr an der Hebelstange beobachtet?', [
+      {t:'Je länger der Hebelarm, desto kleiner die nötige Kraft.', ok:true, note:'Richtig. Darum ist eine lange Brechstange so stark.'},
+      {t:'Je länger der Hebelarm, desto größer die nötige Kraft.', fb:'Andersherum. Vergleicht eure Messung: doppelter Hebelarm, halbe Kraft.'},
+      {t:'Der Hebelarm spielt keine Rolle.', fb:'Doch. Eure Messung zeigt den Unterschied.'}
+    ], {summary:'Je länger der Hebelarm, desto kleiner die Kraft'}),
+    num('Goldene Regel für Maras Luke', 'Die Luke drückt mit einer Last von 2 N bei einem Hebelarm von 0,3 m. Mara zieht am anderen Ende mit einem Hebelarm von 0,6 m.', [
+      {label:'Last · Hebelarm', unit:'', answer:0.6, id:'m4_prod'},
+      {label:'Kraft, die Mara braucht', unit:'N', answer:1, id:'m4_f'}
+    ], {calc:'<b>2 N · 0,3 m</b> = ? &nbsp;&nbsp;|&nbsp;&nbsp; Kraft · <b>0,6 m</b> muss dasselbe ergeben', tipp:'Kraft · Hebelarm ist auf beiden Seiten gleich.', tipp2:'2 · 0,3 = 0,6. Welche Zahl mal 0,6 ergibt 0,6?'}),
+    mc('Komma mit Überschlag', 'NOVA berechnet den Weg des Hebels: 1,2 · 4,8 = 576 ohne Komma. Überschlag: 1 · 5 = 5. Wo gehört das Komma hin?', [
+      {t:'57,6', fb:'Zu groß. Der Überschlag sagt: ungefähr 5.'},
+      {t:'5,76', ok:true, note:'Richtig. Eine Nachkommastelle von 1,2 plus eine von 4,8 ergibt zwei Nachkommastellen.'},
+      {t:'0,576', fb:'Zu klein. Der Überschlag sagt: ungefähr 5.'}
+    ], {summary:'1,2 · 4,8 = 5,76'}),
+    custom('Cryptex öffnen', (box, api) => {
+      box.append(el('div', {class:'nova'}, el('b', {}, 'NOVA: '), 'Messung bestätigt. Knochen-Code für das Cryptex: ', el('b', {class:'mono', style:'font-size:1.3rem'}, '10 – 2 – 4 – 1'), '\nSucht diese Nummern auf der Kopie „Das Skelett“ oder am Skelettmodell. Die Anfangsbuchstaben der vier Knochen ergeben das Wort.'));
+      box.append(cryptex('KURS', ()=>api.done('Cryptex geöffnet: KURS')));
+    })
+  ]
+},
+/* ---------- 5 Wassertank ---------- */
+{
+  name:'Wassertank', short:'Wasser', system:'Versorgung · Messen, Volumen und Dichte', icon:'tank', code:'4 m',
+  story:'Der Wassertank meldet unmögliche Werte. Das Messprotokoll ist durch den Sonnensturm gestört, und drei Einheiten darin sind falsch. Außerdem muss ein Probekörper neu vermessen werden, damit NOVA den Tank wieder vertraut.',
+  vorOrt:'Waage, Messzylinder mit Wasser, Probekörper, Maßband. Kopie „Messprotokoll Wassertank“ zum Mitschreiben.',
+  hints:['Störsignal: Die Knoten blinken. Tippt sie in der Reihenfolge 1, 2, 3, 4, 5 an. Bei einem Fehler beginnt es von vorn.',
+         'Einheiten: Masse misst man in g oder kg, Länge in cm oder m, Volumen in ml oder l, Fläche in m². Welche drei Zeilen passen nicht?',
+         'Umfang Rechteck: u = 2 · a + 2 · b. Flächeninhalt: A = a · b. Mit a = 1,2 m und b = 0,8 m.'],
+  merke:'Messwerte brauchen immer eine Einheit: Masse in g, Länge in cm, Volumen in ml (1 ml = 1 cm³), Fläche in m². Das Volumen eines Körpers findet man durch Wasserverdrängung. Hat ein Körper mehr Gramm als Milliliter, ist er dichter als Wasser und sinkt. Mathe: u = 2 · a + 2 · b, A = a · b.',
+  steps:[
+    custom('Störsignal entstören', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Das Messprotokoll flackert. Stabilisiert zuerst das Signal.'));
+      const proto = el('div', {class:'proto noisy'});
+      const lines = [
+        {t:'Länge des Tanks', v:'1,2 m', bad:false},
+        {t:'Breite des Tanks', v:'0,8 m', bad:false},
+        {t:'Masse des Wasserfilters', v:'250 ml', bad:true, fix:'g'},
+        {t:'Trinkwasser-Vorrat', v:'2,5 l', bad:false},
+        {t:'Höhe des Tanks', v:'90 g', bad:true, fix:'cm'},
+        {t:'Fläche des Tankdeckels', v:'0,96 m', bad:true, fix:'m²'}
+      ];
+      lines.forEach(l => proto.append(el('div', {class:'pline'}, el('span', {}, l.t), el('span', {class:'v'}, l.v))));
+      box.append(stoersignal(()=>{ proto.classList.remove('noisy'); api.done('Signal stabilisiert'); }));
+      box.append(el('div', {class:'widget'}, el('div', {class:'w-title'}, 'Messprotokoll der Kommandantin'), proto));
+    }),
+    custom('Drei falsche Einheiten finden', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Im Protokoll stehen drei Zeilen mit einer falschen Einheit. Tippt genau diese drei Zeilen an und prüft.'));
+      const lines = [
+        {t:'Länge des Tanks', v:'1,2 m', bad:false},
+        {t:'Breite des Tanks', v:'0,8 m', bad:false},
+        {t:'Masse des Wasserfilters', v:'250 ml', bad:true, fix:'g'},
+        {t:'Trinkwasser-Vorrat', v:'2,5 l', bad:false},
+        {t:'Höhe des Tanks', v:'90 g', bad:true, fix:'cm'},
+        {t:'Fläche des Tankdeckels', v:'0,96 m', bad:true, fix:'m²'}
+      ];
+      const proto = el('div', {class:'proto'});
+      const btns = lines.map(l => { const b = el('button', {class:'pline', onclick:()=>{ b.classList.toggle('sel'); sfx.click(); }}, el('span', {}, l.t), el('span', {class:'v'}, l.v)); proto.append(b); return b; });
+      const fb = fbEl();
+      const check = () => {
+        const sel = btns.map(b=>b.classList.contains('sel'));
+        if (sel.filter(Boolean).length !== 3){ setFb(fb,'info','Es sind genau drei Zeilen falsch.'); return; }
+        const ok = lines.every((l,i)=> l.bad === sel[i]);
+        if (ok){ btns.forEach((b,i)=>{ b.disabled = true; if (lines[i].bad){ b.className = 'pline ok'; b.lastChild.textContent = lines[i].v.replace(/[a-z²]+$/, lines[i].fix); } }); setFb(fb,'good','Korrigiert: 250 g, 90 cm, 0,96 m².'); api.done('Einheiten korrigiert: g, cm, m²'); }
+        else { btns.forEach(b=>b.classList.remove('sel')); setFb(fb,'bad','Mindestens eine Zeile stimmt nicht. Masse → g, Länge → cm oder m, Volumen → ml oder l, Fläche → m².'); api.fail(); }
+      };
+      box.append(el('div', {class:'widget'}, el('div', {class:'w-title'}, 'Messprotokoll · Falsche Einheiten antippen'), proto), el('div', {class:'row'}, el('button', {class:'btn', onclick:check}, 'Prüfen')), fb);
+    }),
+    custom('Probekörper vermessen', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Legt den Probekörper auf die Waage und lest die Masse ab. Füllt den Messzylinder mit Wasser, lest den Wasserstand ab, taucht den Körper ganz ein und lest noch einmal ab. Der Anstieg ist das Volumen.'));
+      const mk = (id, unit) => { const i = el('input', {type:'text', inputmode:'decimal', id, placeholder:'…'}); return {i, f: el('div', {class:'field'}, i, el('span', {class:'u'}, unit))}; };
+      const m = mk('m5_masse','g'), v1 = mk('m5_v1','ml'), v2 = mk('m5_v2','ml'), vol = mk('m5_vol','ml');
+      const fb = fbEl();
+      const pick = el('div', {class:'opts'});
+      const check = () => {
+        const M = parseNum(m.i.value), A = parseNum(v1.i.value), B = parseNum(v2.i.value), V = parseNum(vol.i.value);
+        if ([M,A,B,V].some(isNaN)){ setFb(fb,'info','Bitte alle vier Werte eintragen.'); return; }
+        const okM = M > 0 && M < 5000, okV = B > A && Math.abs((B-A) - V) < 0.6 && V > 0;
+        m.f.classList.toggle('wrong', !okM); vol.f.classList.toggle('wrong', !okV); m.f.classList.toggle('right', okM); vol.f.classList.toggle('right', okV);
+        if (!okM){ setFb(fb,'bad','Die Masse passt nicht. Lest die Waage in Gramm ab.'); api.fail(); return; }
+        if (!okV){ setFb(fb,'bad','Volumen = Wasserstand nachher minus Wasserstand vorher.'); api.fail(); return; }
+        setFb(fb,'good',`Masse ${fmtNum(M)} g, Volumen ${fmtNum(V)} ml. Jetzt die Dichtefrage:`);
+        [m,v1,v2,vol].forEach(x=>x.i.disabled=true); btn.disabled = true;
+        const sinkt = M > V;
+        pick.replaceChildren(
+          el('p', {class:'q', style:'grid-column:1/-1'}, `Euer Körper hat ${fmtNum(M)} g und ${fmtNum(V)} ml. Hat er mehr Gramm als Milliliter, ist er dichter als Wasser. Was passiert, wenn ihr ihn ins Wasser legt?`),
+          el('button', {class:'opt', onclick:(e)=>{ if (sinkt){ e.currentTarget.classList.add('right'); api.done(`Masse ${fmtNum(M)} g, Volumen ${fmtNum(V)} ml, dichter als Wasser → sinkt`); } else { e.currentTarget.classList.add('wrong'); setFb(fb,'bad','Vergleicht noch einmal: Gramm und Milliliter.'); api.fail(); } }}, el('span', {class:'k'}, 'A'), 'Er sinkt.'),
+          el('button', {class:'opt', onclick:(e)=>{ if (!sinkt){ e.currentTarget.classList.add('right'); api.done(`Masse ${fmtNum(M)} g, Volumen ${fmtNum(V)} ml, weniger dicht als Wasser → schwimmt`); } else { e.currentTarget.classList.add('wrong'); setFb(fb,'bad','Vergleicht noch einmal: Gramm und Milliliter.'); api.fail(); } }}, el('span', {class:'k'}, 'B'), 'Er schwimmt.')
+        );
+      };
+      const btn = el('button', {class:'btn', onclick:check}, 'Prüfen');
+      box.append(el('div', {class:'inrow'}, el('label', {for:'m5_masse'}, 'Masse'), m.f), el('div', {class:'inrow'}, el('label', {for:'m5_v1'}, 'Wasserstand vorher'), v1.f), el('div', {class:'inrow'}, el('label', {for:'m5_v2'}, 'Wasserstand nachher'), v2.f), el('div', {class:'inrow'}, el('label', {for:'m5_vol'}, 'Volumen des Körpers'), vol.f), el('div', {class:'row'}, btn), fb, pick);
+    }),
+    num('Tankdeckel berechnen', 'Der Tankdeckel ist ein Rechteck: 1,2 m lang und 0,8 m breit (siehe Protokoll).', [
+      {label:'Umfang des Tankdeckels', unit:'m', answer:4, id:'m5_u'},
+      {label:'Flächeninhalt des Tankdeckels', unit:'m²', answer:0.96, id:'m5_a'}
+    ], {calc:'u = 2 · <b>1,2 m</b> + 2 · <b>0,8 m</b> = ? &nbsp;&nbsp;|&nbsp;&nbsp; A = <b>1,2 m · 0,8 m</b> = ?', tipp2:'2 · 1,2 = 2,4 und 2 · 0,8 = 1,6. Zusammen? Für A: 12 · 8 = 96, dann zwei Nachkommastellen.'})
+  ]
+},
+/* ---------- 6 Nahrungsversorgung ---------- */
+{
+  name:'Nahrungsversorgung', short:'Nahrung', system:'Versorgung · Verdauung und Darmzotten', icon:'verdauung', code:'28 m²',
+  story:'Die Nahrungsversorgung ist nach dem Vorbild meines Verdauungssystems gebaut. NOVA prüft zuerst, ob ihr den Weg der Nahrung kennt. Dann will er wissen, wie viel Fläche die Zotten im Darm zum Aufnehmen der Nährstoffe liefern. Mein Logbuch enthält einen Tipp, aber nur mit der Lochschablone.',
+  vorOrt:'Torso-Modell aus der Sammlung: Verdauungsorgane herausnehmen und auf die Kopie „Weg der Nahrung“ legen. Kopie „Zottenwand“ mit allen Maßen.',
+  hints:['Weg der Nahrung: Mund, Speiseröhre, Magen, Dünndarm, Dickdarm, Enddarm. Der Dünndarm kommt vor dem Dickdarm.',
+         'Lochschablone: Schiebt sie Stück für Stück nach rechts. Bei der richtigen Stellung erscheinen in den Löchern Wörter. Lest Zeile für Zeile.',
+         'Zottenwand: Grundstreifen 6 m · 2 m = 12 m². Jede Zotte 1 m · 4 m = 4 m². Vier Zotten dazu.'],
+  merke:'Der Weg der Nahrung: Mund, Speiseröhre, Magen, Dünndarm, Dickdarm, Enddarm. Im Dünndarm nehmen Millionen Darmzotten die Nährstoffe auf. Die Zotten vergrößern die Oberfläche stark, so wie die Lungenbläschen in der Lunge. Mathe: Zusammengesetzte Flächen zerlegt man in Rechtecke und addiert die Teilflächen.',
+  steps:[
+    custom('Weg der Nahrung ordnen', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Nehmt die Verdauungsorgane aus dem Torso-Modell und legt sie auf die nummerierten Felder der Kopie. Bringt dann die Liste hier in die richtige Reihenfolge (▲ ▼) und prüft.'));
+      const correct = ['Mund','Speiseröhre','Magen','Dünndarm','Dickdarm','Enddarm'];
+      let order = shuffle(correct); while (order.join() === correct.join()) order = shuffle(correct);
+      const list = el('div', {class:'sortlist'});
+      const fb = fbEl();
+      const draw = () => { list.replaceChildren(...order.map((o,i)=>el('div', {class:'sortitem'}, el('span', {class:'pos'}, String(i+1)), el('span', {class:'nm'}, o),
+        el('button', {'aria-label':`${o} nach oben`, disabled:i===0, onclick:()=>{ [order[i-1],order[i]]=[order[i],order[i-1]]; draw(); sfx.click(); }}, '▲'),
+        el('button', {'aria-label':`${o} nach unten`, disabled:i===order.length-1, onclick:()=>{ [order[i+1],order[i]]=[order[i],order[i+1]]; draw(); sfx.click(); }}, '▼')))); };
+      draw();
+      const check = () => {
+        const items = [...list.children]; let ok = true;
+        items.forEach((it,i)=>{ const good = order[i] === correct[i]; it.classList.toggle('ok', good); it.classList.toggle('bad', !good); if (!good) ok = false; });
+        if (ok){ setFb(fb,'good','Richtig. Die Nahrung wandert vom Mund bis zum Enddarm.'); list.querySelectorAll('button').forEach(b=>b.disabled=true); api.done('Mund → Speiseröhre → Magen → Dünndarm → Dickdarm → Enddarm'); }
+        else { setFb(fb,'bad','Rot markierte Organe sitzen noch an der falschen Stelle.'); api.fail(); }
+      };
+      box.append(list, el('div', {class:'row'}, el('button', {class:'btn', onclick:check}, 'Prüfen')), fb);
+    }),
+    custom('Logbuch mit der Lochschablone lesen', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Maras Logbuch sieht aus wie Buchstabensalat. Schiebt die Lochschablone, bis in den Löchern Wörter zu lesen sind.'));
+      box.append(lochschablone(()=>api.done('Tipp gelesen: Zerlege die Figur in Rechtecke')));
+    }),
+    custom('Zottenwand zerlegen', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Die Innenwand des Darms im Modell: unten der glatte Grundstreifen, oben vier Zotten. Zerlegt die Figur in Rechtecke, indem ihr jedes Rechteck antippt.'));
+      box.append(zottenwand(()=>{ sfx.ok(); window.A6.toast('Alle fünf Rechtecke markiert. Jetzt rechnen.'); }));
+      num('', 'Berechnet die Teilflächen und die ganze Zottenwand.', [
+        {label:'Grundstreifen (6 m · 2 m)', unit:'m²', answer:12, id:'m6_g'},
+        {label:'Eine Zotte (1 m · 4 m)', unit:'m²', answer:4, id:'m6_z'},
+        {label:'Ganze Zottenwand', unit:'m²', answer:28, id:'m6_ges'}
+      ], {calc:'A = 6 · 2 + 4 · (1 · 4) = ?', tipp:'Ohne Zotten hätte die glatte Wand nur 12 m². Mit Zotten ist viel mehr Fläche da, um Nährstoffe aufzunehmen.', tipp2:'12 + 4 + 4 + 4 + 4 = ?', good:'Richtig. 28 m² statt 12 m²: Die Zotten vergrößern die Oberfläche auf mehr als das Doppelte.'}).render(box, api);
+    })
+  ]
+},
+/* ---------- 7 Solarflügel ---------- */
+{
+  name:'Solarflügel', short:'Energie', system:'Energie · Messen, Flächen und Umfang', icon:'solar', code:'6 – 7,4 – 1,2',
+  story:'Ohne die Solarflügel hat die Station keinen Strom. NOVA braucht die Maße der Flügel und die Energie, die sie liefern. Die Zahlen schließen den Tresor mit dem letzten Freigabecode auf. Vor jeder Zahl: Überschlag machen, NOVA merkt, wenn ihr ratet.',
+  vorOrt:'Kopie „Bauplan Solarflügel“ und ein Lineal oder Maßband zum Nachmessen.',
+  hints:['Messen: Legt das Lineal an die dick umrandete Solarzelle auf dem Bauplan. Länge und Breite in Zentimetern, auf eine Stelle nach dem Komma genau.',
+         'Ein Flügel: A = 2,5 m · 1,2 m. Rechnet 25 · 12 = 300, dann zwei Nachkommastellen: 3,00 m². Umfang: 2 · 2,5 + 2 · 1,2.',
+         'Energie: Jeder Quadratmeter liefert 0,2 kW. Also 0,2 · 6 (beide Flügel zusammen).'],
+  merke:'Flächeninhalt eines Rechtecks: A = a · b, Umfang: u = 2 · a + 2 · b. Beide Seiten müssen in derselben Einheit sein. Eine Größe „pro m²“ (hier Energie, sonst oft Preis) rechnet man mal die Fläche. Der Überschlag mit gerundeten Zahlen zeigt, ob das Ergebnis passen kann.',
+  steps:[
+    num('Solarzelle auf dem Bauplan messen', 'Messt auf der Kopie „Bauplan Solarflügel“ die dick umrandete Solarzelle mit dem Lineal.', [
+      {label:'Länge', unit:'cm', answer:12.5, tol:0.35, id:'m7_l'},
+      {label:'Breite', unit:'cm', answer:8, tol:0.35, id:'m7_b'}
+    ], {bad:'Das passt nicht zum Bauplan. Legt das Lineal genau an die dicke Umrandung an und lest auf Millimeter genau ab.', good:'NOVA bestätigt: Die Zelle ist 12,5 cm lang und 8 cm breit.', summary:()=>'Solarzelle 12,5 cm · 8 cm'}),
+    num('Flächeninhalt und Umfang der Zelle', 'Rechnet mit den genauen Maßen 12,5 cm und 8 cm.', [
+      {label:'Flächeninhalt der Zelle', unit:'cm²', answer:100, id:'m7_az'},
+      {label:'Umfang der Zelle', unit:'cm', answer:41, id:'m7_uz'}
+    ], {calc:'A = <b>12,5 cm · 8 cm</b> = ? &nbsp;&nbsp;|&nbsp;&nbsp; u = 2 · 12,5 cm + 2 · 8 cm = ?', tipp2:'125 · 8 = 1000, eine Nachkommastelle: 100,0. Umfang: 25 + 16.'}),
+    num('Die großen Flügel', 'Jeder der beiden Solarflügel ist ein Rechteck: 2,5 m lang und 1,2 m breit. Um jeden Flügel läuft eine Dichtung.', [
+      {label:'Flächeninhalt eines Flügels', unit:'m²', answer:3, id:'m7_a1'},
+      {label:'Flächeninhalt beider Flügel', unit:'m²', answer:6, id:'m7_a2'},
+      {label:'Dichtung um einen Flügel (Umfang)', unit:'m', answer:7.4, id:'m7_u'}
+    ], {calc:'A = <b>2,5 m · 1,2 m</b> &nbsp;·&nbsp; beide Flügel = 2 · A &nbsp;·&nbsp; u = 2 · 2,5 m + 2 · 1,2 m', tipp:'Überschlag zuerst: 2,5 · 1,2 ist ungefähr 3 · 1 = 3.', tipp2:'25 · 12 = 300, zwei Nachkommastellen: 3,00. Umfang: 5 + 2,4.'}),
+    num('Energie der Flügel', 'Jeder Quadratmeter Solarfläche liefert 0,2 kW. Wie viel liefern beide Flügel zusammen (6 m²)?', [
+      {label:'Energie beider Flügel', unit:'kW', answer:1.2, id:'m7_kw'}
+    ], {calc:'<b>0,2 kW · 6</b> = ?', tipp2:'2 · 6 = 12, eine Nachkommastelle: 1,2.'}),
+    custom('Tresor öffnen', (box, api) => {
+      box.append(el('p', {class:'q'}, 'Dreht nacheinander drei Zahlen ein: 1. Flächeninhalt beider Flügel, 2. Dichtung um einen Flügel, 3. Energie beider Flügel.'));
+      box.append(tresor([3, 6, 7.4, 8.4, 1.2, 12, 0.6, 4.9, 2.5, 60, 74, 5], [6, 7.4, 1.2], ()=>api.done('Tresor geöffnet: 6 – 7,4 – 1,2')));
+    })
+  ]
+}
+];
+window.MODULES = MODULES;
+window.A6.boot();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mathe-Apps LK</title>
+<link rel="stylesheet" href="../fonts/caladea.css">
+<link rel="stylesheet" href="../fonts/carlito.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: navy Kopfband wie in den Web-Apps, darunter „So übst du“, Checklisten-Filter und je Reihe ein aufklappbarer Block mit Erklärvideo (Kapitelliste) und App-Karten in Stundenreihenfolge. */
+:root{
+  --bg:#F6F7FB; --card:#FFFFFF; --ink:#26314A; --navy:#1E2761; --band:#1E2761; --band-ink:#FFFFFF; --band-sub:#CADCFC;
+  --acc:#B85042; --acc-soft:#FBF3EE; --light:#EDEFF7; --cream:#F3EAD9; --grey:#5F6678; --line:#BFC5D2;
+  --ok:#2F7D4F; --ok-soft:#E7F3EC; --hi:#FFF4D6; --hi-line:#D9A21B;
+  --font-display:Cambria,Caladea,Georgia,serif; --font-body:Calibri,Carlito,"Segoe UI",Roboto,Arial,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1326; --card:#181D38; --ink:#E4E7F2; --navy:#C9D3FF; --band:#1A2147; --band-ink:#FFFFFF; --band-sub:#B8C6F5;
+    --acc:#E59484; --acc-soft:#2E1E22; --light:#232A4D; --cream:#2B2618; --grey:#A3ABBF; --line:#3A4266;
+    --ok:#6FCF97; --ok-soft:#16321F; --hi:#3A3016; --hi-line:#E0B54A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1326; --card:#181D38; --ink:#E4E7F2; --navy:#C9D3FF; --band:#1A2147; --band-ink:#FFFFFF; --band-sub:#B8C6F5;
+  --acc:#E59484; --acc-soft:#2E1E22; --light:#232A4D; --cream:#2B2618; --grey:#A3ABBF; --line:#3A4266;
+  --ok:#6FCF97; --ok-soft:#16321F; --hi:#3A3016; --hi-line:#E0B54A; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 var(--font-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--band)}
+header{background:var(--band);color:var(--band-ink);padding-block:24px 20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header .in,main{max-width:860px;margin:0 auto}
+.k{color:var(--band-sub);font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+h1{font:700 clamp(28px,5vw,34px)/1.15 var(--font-display);margin:6px 0 4px;text-wrap:balance}
+.u{color:var(--band-sub);font-style:italic;margin:0}
+main{display:flex;flex-direction:column;gap:16px;padding-block:18px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h2{font:700 21px/1.25 var(--font-display);color:var(--navy);margin:0;text-wrap:balance}
+.how{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.how ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+.lv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px}
+.lv div{border-radius:8px;padding:8px 12px;font-size:15px;background:var(--light)}
+.lv b{display:block;color:var(--navy);font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+details.reihe{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+details.reihe>summary{cursor:pointer;list-style:none;padding:14px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+details.reihe>summary::-webkit-details-marker{display:none}
+details.reihe>summary::before{content:"▸";color:var(--acc);font-weight:700;transition:transform .15s}
+details.reihe[open]>summary::before{transform:rotate(90deg)}
+summary .meta{color:var(--grey);font-size:15px}
+.body{padding:0 18px 18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.filter{display:flex;flex-direction:column;gap:6px}
+.filter .lab,.video .lab{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:700 15px var(--font-body);min-width:40px;min-height:40px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.chips button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:var(--card)}
+.hint{margin:0;font-size:15px;color:var(--grey);min-height:1.5em}
+.video{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--acc-soft);min-width:0}
+.video .name{font:700 20px/1.2 var(--font-display);color:var(--navy)}
+.video p{margin:0}
+.video .wo{font-size:15px;color:var(--grey)}
+.video ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.video li{display:grid;grid-template-columns:3.2em 1fr;gap:2px 10px;padding:6px 10px;border-radius:8px;border:1.5px solid transparent;font-size:15px}
+.video li .t{font-variant-numeric:tabular-nums;color:var(--grey);font-weight:700}
+.video li .bsp{grid-column:2;color:var(--grey)}
+.video li.match{border-color:var(--hi-line);background:var(--hi)}
+.video details>summary{cursor:pointer;font-weight:700;color:var(--navy);min-height:40px;display:flex;align-items:center;gap:8px;list-style:none}
+.video details>summary::-webkit-details-marker{display:none}
+.video details>summary::before{content:"▸";color:var(--acc);transition:transform .15s}
+.video details[open]>summary::before{transform:rotate(90deg)}
+.video details>summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.abschnitt{display:flex;flex-direction:column;gap:8px}
+.abschnitt h3{margin:4px 0 0;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--grey)}
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:10px}
+.app{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--card);color:inherit;text-decoration:none;min-width:0;transition:border-color .15s}
+a.app:hover{border-color:var(--navy)}
+a.app:focus-visible,.chips button:focus-visible,summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.app .name{font:700 20px/1.2 var(--font-display);color:var(--navy)}
+.app p{margin:0}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:4px}
+.tag{font-size:13px;padding:2px 10px;border-radius:999px;background:var(--light)}
+.tag.cl{background:var(--cream)}
+.tag.fm{background:transparent;border:1px solid var(--line);color:var(--grey)}
+.app.soon{border-style:dashed;opacity:.72}
+.app.soon .name{color:var(--grey)}
+.soonlab{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--acc)}
+.app.match{border-color:var(--hi-line);background:var(--hi);opacity:1}
+.note{font-size:15px;color:var(--grey);margin:0}
+footer{text-align:center;font-size:14px;color:var(--grey)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <div class="in">
+    <div class="k">Mathematik LK · Qualifikationsphase</div>
+    <h1>Mathe-Apps LK</h1>
+    <p class="u">Alle Web-Apps und Erklärvideos der Reihen an einem Ort – für die Stunde und zum Üben zu Hause</p>
+  </div>
+</header>
+
+<main>
+  <section class="how" aria-labelledby="howT">
+    <h2 id="howT">So übst du</h2>
+    <ol>
+      <li>Nimm deine Checkliste zur Reihe. Tippe unten die Nummern an, bei denen du „teilweise“ oder „unsicher“ angekreuzt hast – die passenden Videokapitel und Apps werden markiert.</li>
+      <li>Schau dir zuerst das markierte Kapitel im Erklärvideo an. Das Video findest du in Teams; über die Kapitelmarken springst du direkt an die Stelle.</li>
+      <li>Tippe dann auf eine App. Sie öffnet sich in einem neuen Tab und merkt sich deinen Stand auf diesem Gerät.</li>
+      <li>Nutze die Hilfen. Die Lösung erscheint nach zwei Fehlversuchen.</li>
+    </ol>
+    <div class="lv" aria-label="Wo fange ich an?">
+      <div><b>unsicher</b>Erst das Videokapitel, dann Abschnitt 1 der App mit jeder Hilfe.</div>
+      <div><b>teilweise</b>Bearbeite den Hauptteil ohne Hilfen. Erst bei Fehlern nachsehen.</div>
+      <div><b>sicher</b>Nimm die ★-Abschnitte und „Weiter üben“.</div>
+    </div>
+  </section>
+
+  <div id="reihen"></div>
+
+  <p class="note">Die Apps sind nur zur Selbstkontrolle. Nichts wird übertragen – du kannst so oft üben, wie du willst.</p>
+  <footer>Erstellt mit KI von Christoph Kansy</footer>
+</main>
+
+<script>
+/* ===== Inhalte =====
+   Neue Reihe: ein Objekt OBEN in REIHEN einfügen (die neueste Reihe steht zuerst und ist aufgeklappt).
+   Neue App: in der passenden Reihe bei „apps“ ergänzen; ohne link erscheint sie als „folgt“.
+   checkliste = Nummern der Checkliste zur Reihe, die die App bzw. das Videokapitel abdeckt.
+   video (optional): Erklärvideo der Reihe – liegt in Teams (Claude-Seiten hosten keine Videos), hier nur Kapitelliste. */
+const REIHEN = [
+  {
+    nr: 2, titel: "Steckbriefaufgaben", stufe: "Q1", stunden: "15 Stunden", checklistePunkte: 19,
+    video: {titel: "Steckbriefaufgaben – die Reihe in zehn Minuten", dauer: "11:45", wo: "in Teams, Kanal der Reihe",
+      kapitel: [
+        {zeit: "0:00", titel: "1 · Vom Steckbrief zum Gleichungssystem", bsp: "Pumptrack-Welle (Std. 1)", checkliste: [1, 2, 4]},
+        {zeit: "1:28", titel: "2 · Geschickt ansetzen", bsp: "Brückenbogen (Std. 2)", checkliste: [2, 3, 4]},
+        {zeit: "2:34", titel: "3 · Der Gauß-Algorithmus", bsp: "Parabel durch A(1 | 2), B(2 | 3), C(−1 | 6) (Std. 3–4)", checkliste: [5, 6, 7]},
+        {zeit: "3:36", titel: "4 · Was die Stufenform verrät", bsp: "die drei „merkwürdigen“ Ausgaben (Std. 3 und 6)", checkliste: [9]},
+        {zeit: "4:56", titel: "5 · Knickfreie und ruckfreie Übergänge", bsp: "Radweg auf die Bahntrasse (Std. 7–8)", checkliste: [10, 11]},
+        {zeit: "6:23", titel: "6 · Modellieren mit realen Daten", bsp: "Meeresspiegel (Std. 9)", checkliste: [12]},
+        {zeit: "7:18", titel: "7 · Unterbestimmte Steckbriefe: Funktionenscharen", bsp: "Grad 3, punktsymmetrisch, durch P(1 | 2) (Std. 10)", checkliste: [13, 14]},
+        {zeit: "8:20", titel: "8 · Bedingungen mit Parameter", bsp: "Skaterrampe mit Länge L (Std. 11)", checkliste: [15]},
+        {zeit: "9:20", titel: "9 · Sinusfunktion und Sinusmodelle", bsp: "Tageslänge in Essen (Std. 12–14)", checkliste: [16, 17, 18, 19]},
+        {zeit: "10:50", titel: "Typische Fehler", bsp: "sechs Fehler aus der ganzen Reihe", checkliste: [8]},
+        {zeit: "11:18", titel: "Das kannst du jetzt", bsp: "die Checkliste in fünf Zeilen", checkliste: []}
+      ]},
+    abschnitte: [
+      {titel: "Vom Steckbrief zum Gleichungssystem", apps: [
+        {stunde: 2, name: "Steckbrief-Übersetzer", link: "steckbrief-uebersetzer.html",
+         was: "Eigenschaften in Bedingungen übersetzen, zuerst die Stelle 0 auswerten, Steckbriefe Schritt für Schritt lösen.",
+         formate: ["Zuordnen", "Üben", "Entdecken ★"], checkliste: [1, 2, 3, 4]}]},
+      {titel: "Gauß-Algorithmus und Lösungsmengen", apps: [
+        {stunde: 5, name: "Gauß-Werkstatt", link: "gauss-werkstatt.html",
+         was: "Gauß Schritt für Schritt, Steckbriefe mit drei Unbekannten und Fehlersuche in Schülerlösungen.",
+         formate: ["Üben", "Reihenfolge", "Fehlersuche"], checkliste: [6, 7, 8, 9]}]},
+      {titel: "Modellieren im Sachkontext", apps: [
+        {stunde: 8, name: "Trassierungs-Labor", link: "trassierungs-labor.html",
+         was: "Knickfreie und ruckfreie Übergänge vergleichen: f, f′ und f″ nebeneinander sehen.",
+         formate: ["Entdecken", "Üben", "Zuordnen"], checkliste: [10, 11]}]},
+      {titel: "Steckbriefaufgaben mit Parameter", apps: [
+        {stunde: 10, name: "Scharen-Labor", link: "scharen-labor.html",
+         was: "Funktionenscharen mit dem Schieberegler erkunden, gemeinsame Punkte berechnen, ein Scharmitglied auswählen.",
+         formate: ["Entdecken", "Üben"], checkliste: [13, 14]}]},
+      {titel: "Sinusfunktion und Sinusmodelle", apps: [
+        {stunde: 13, name: "Sinusparameter", link: "sinusparameter.html",
+         was: "Wirkung von a, b, c und d entdecken, Sinusmodelle aufstellen, Blitzrunde.",
+         formate: ["Entdecken", "Üben", "Quiz"], checkliste: [18]}]},
+      {titel: "Klausurtraining", apps: [
+        {stunde: 15, name: "Abschluss-Quiz", link: "abschluss-quiz.html",
+         was: "Quiz zur ganzen Reihe – als Wettbewerb in der Stunde oder allein zur Klausurvorbereitung.",
+         formate: ["Quiz", "5 Runden"], checkliste: "alle"}]}
+    ]
+  }
+];
+
+/* ===== Darstellung ===== */
+const $ = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[ch]));
+const root = document.getElementById("reihen");
+root.style.cssText = "display:flex;flex-direction:column;gap:16px";
+
+REIHEN.forEach((r, ri) => {
+  const all = r.abschnitte.flatMap(a => a.apps);
+  const fertig = all.filter(a => a.link).length;
+  const d = $("details", "reihe"); if (ri === 0) d.open = true;
+  const s = $("summary");
+  s.append($("h2", null, `Reihe ${r.nr}: ${esc(r.titel)}`),
+           $("span", "meta", `${esc(r.stufe)} · ${esc(r.stunden)} · ${fertig} von ${all.length} Apps online${r.video ? " · Erklärvideo" : ""}`));
+  d.append(s);
+  const body = $("div", "body"); d.append(body);
+
+  // Checklisten-Filter
+  const f = $("div", "filter");
+  f.append($("span", "lab", "Checkliste – Nummern antippen"));
+  const chips = $("div", "chips"); const hint = $("p", "hint"); hint.setAttribute("aria-live", "polite");
+  const sel = new Set();
+  const cards = [], kapZeilen = []; let kapBox = null;
+  const update = () => {
+    let hits = 0, kHits = 0, missing = [];
+    cards.forEach(({el, app}) => {
+      const m = sel.size > 0 && [...sel].some(n => app.checkliste === "alle" || app.checkliste.includes(n));
+      el.classList.toggle("match", m); if (m && app.link) hits++;
+    });
+    kapZeilen.forEach(({el, kap}) => {
+      const m = sel.size > 0 && [...sel].some(n => kap.checkliste.includes(n));
+      el.classList.toggle("match", m); if (m) kHits++;
+    });
+    if (kapBox && kHits) kapBox.open = true;
+    sel.forEach(n => { if (!all.some(a => a.link && a.checkliste !== "alle" && a.checkliste.includes(n))) missing.push(n); });
+    hint.textContent = sel.size === 0 ? "" :
+      (kHits ? `${kHits} Videokapitel markiert. ` : "") +
+      (hits ? `${hits} App${hits > 1 ? "s" : ""} markiert. ` : "") +
+      (missing.length ? `Für Nr. ${missing.join(", ")} gibt es (noch) keine App – nutze das Video und „Hier üben“ auf der Checkliste.` : "");
+  };
+  for (let n = 1; n <= r.checklistePunkte; n++) {
+    const b = $("button", null, String(n)); b.type = "button"; b.id = `cl-${r.nr}-${n}`; b.setAttribute("aria-pressed", "false");
+    b.onclick = () => { sel.has(n) ? sel.delete(n) : sel.add(n); b.setAttribute("aria-pressed", sel.has(n)); update(); };
+    chips.append(b);
+  }
+  f.append(chips, hint); body.append(f);
+
+  // Erklärvideo (nur Kapitelliste – das Video selbst liegt in Teams)
+  if (r.video) {
+    const v = $("section", "video"); v.setAttribute("aria-label", "Erklärvideo zur Reihe");
+    v.append($("span", "lab", "Erklärvideo · Video über Teams"),
+             $("span", "name", esc(r.video.titel)),
+             $("p", "wo", `${esc(r.video.dauer)} Minuten, ${esc(r.video.wo)}. Jedes Kapitel erklärt einen Inhalt an einem Beispiel aus dem Unterricht.`));
+    const ol = $("ol");
+    r.video.kapitel.forEach(kap => {
+      const li = $("li");
+      li.append($("span", "t", esc(kap.zeit)), $("span", null, esc(kap.titel)), $("span", "bsp", esc(kap.bsp)));
+      ol.append(li); kapZeilen.push({el: li, kap});
+    });
+    kapBox = $("details"); kapBox.append($("summary", null, `Kapitelliste (${r.video.kapitel.length} Kapitel)`), ol);
+    v.append(kapBox); body.append(v);
+  }
+
+  r.abschnitte.forEach(a => {
+    const sec = $("div", "abschnitt"); sec.append($("h3", null, esc(a.titel)));
+    const grid = $("div", "apps");
+    a.apps.forEach(app => {
+      const el = app.link ? $("a", "app") : $("div", "app soon");
+      if (app.link) { el.href = app.link; el.target = "_blank"; el.rel = "noopener"; }
+      if (!app.link) el.append($("span", "soonlab", "folgt"));
+      el.append($("span", "name", esc(app.name)), $("p", null, esc(app.was)));
+      const tags = $("span", "tags");
+      tags.append($("span", "tag", `Stunde ${app.stunde}`));
+      tags.append($("span", "tag cl", app.checkliste === "alle" ? "Checkliste: alle" : `Checkliste ${app.checkliste.join(", ")}`));
+      app.formate.forEach(fm => tags.append($("span", "tag fm", esc(fm))));
+      el.append(tags); grid.append(el); cards.push({el, app});
+    });
+    sec.append(grid); body.append(sec);
+  });
+  root.append(d);
+});
+</script>
+</body>
+</html>

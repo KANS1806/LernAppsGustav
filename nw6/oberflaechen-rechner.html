@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Oberflächen-Rechner</title>
+<link rel="stylesheet" href="../fonts/baloo-2.css">
+<link rel="stylesheet" href="../fonts/nunito.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+:root { --bg:#FBFAF7; --surface:#FFFFFF; --fg:#2B2B2B; --muted:#6B6480; --primary:#3A2560; --primary-soft:#F1ECF9; --accent:#E07B26; --accent-soft:#FDF3E8; --sand:#EFE9DC; --ok:#2E7D4F; --ok-soft:#E3F3E8; --err:#C0392B; --err-soft:#FBE7E4; --line:#C9BCE4; --font-display:'Baloo 2','Nunito',system-ui,sans-serif; --font-body:'Nunito',system-ui,sans-serif; --cube-top:#DCCFF4; --cube-left:#BFA9E6; --cube-right:#9F85D0; --o2:#2B6CB0; --o2-soft:#E3EEFB; --dust:#8A6FC4; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#1B1626; --surface:#272036; --fg:#F2EEF8; --muted:#B3A9C9; --primary:#CDB9F2; --primary-soft:#342A4A; --accent:#F0A05A; --accent-soft:#3F2E22; --sand:#3A3327; --ok:#7BD3A0; --ok-soft:#1F3A2B; --err:#F08C80; --err-soft:#45231F; --line:#4D4166; --cube-top:#7A66A8; --cube-left:#5C4A88; --cube-right:#43346A; --o2:#8BBCF2; --o2-soft:#243654; --dust:#B9A3E8; color-scheme: dark } }
+:root[data-theme="dark"] { --bg:#1B1626; --surface:#272036; --fg:#F2EEF8; --muted:#B3A9C9; --primary:#CDB9F2; --primary-soft:#342A4A; --accent:#F0A05A; --accent-soft:#3F2E22; --sand:#3A3327; --ok:#7BD3A0; --ok-soft:#1F3A2B; --err:#F08C80; --err-soft:#45231F; --line:#4D4166; --cube-top:#7A66A8; --cube-left:#5C4A88; --cube-right:#43346A; --o2:#8BBCF2; --o2-soft:#243654; --dust:#B9A3E8; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); }
+
+*{box-sizing:border-box}
+body{margin:0;font-size:18px;line-height:1.45;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+.wrap{max-width:920px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 48px}
+h1{font-family:var(--font-display);color:var(--primary);font-size:34px;line-height:1.1;margin:0}
+h2{font-family:var(--font-display);color:var(--primary);font-size:26px;line-height:1.2;margin:0 0 6px}
+h3{font-family:var(--font-display);font-size:21px;margin:0 0 6px;color:var(--primary)}
+p{margin:8px 0}
+.sub{color:var(--muted);font-size:16px;margin:4px 0 14px}
+.levels{display:flex;gap:8px;flex-wrap:wrap}
+.levels button{flex:1 1 110px;min-width:0;min-height:52px;border:1px solid var(--line);background:var(--surface);color:var(--primary);font:700 18px/1.1 var(--font-display);border-radius:12px;padding:8px 10px;cursor:pointer}
+.levels button[aria-current="true"]{background:var(--primary);color:#fff;border-color:var(--primary)}
+.levels button .tick{display:none}
+.levels button.done .tick{display:inline}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px;min-width:0}
+.box{border-radius:12px;padding:12px 14px;margin-top:12px;min-width:0}
+.box.p{background:var(--primary-soft)}
+.box.a{background:var(--accent-soft)}
+.box.s{background:var(--sand)}
+.box.g{background:var(--ok-soft)}
+.fb{border-radius:12px;padding:12px 14px;margin-top:12px;font-weight:700;font-size:19px}
+.fb.ok{background:var(--ok-soft);color:var(--ok)}
+.fb.err{background:var(--err-soft);color:var(--err)}
+.fb.info{background:var(--primary-soft);color:var(--fg)}
+.intro{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.intro p{flex:1 1 240px;min-width:0;margin:0}
+.progress{flex:0 0 auto;font-weight:700;color:var(--muted);font-size:16px}
+.bar{height:10px;background:var(--sand);border-radius:6px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:6px;transition:width .4s}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:8px 18px;border-radius:12px;border:2px solid transparent;font:700 18px var(--font-display);cursor:pointer;color:var(--primary);background:var(--surface);text-align:center}
+.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn.accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.ghost{border-color:var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.row>*{min-width:0}
+
+/* Level 1 */
+.stage{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:12px}
+.stage .vis{flex:1 1 280px;min-width:0;text-align:center}
+.stage .io{flex:1 1 280px;min-width:0}
+svg.cube{width:100%;max-width:400px;height:auto;display:block;margin:0 auto}
+svg.cube polygon{stroke:var(--primary);stroke-width:1.2;stroke-linejoin:round}
+svg.cube .top{fill:var(--cube-top)}
+svg.cube .left{fill:var(--cube-left)}
+svg.cube .right{fill:var(--cube-right)}
+svg.cube g.c{transition:transform .9s ease-in-out}
+svg.cube text{font:800 22px var(--font-display);fill:var(--fg);text-anchor:middle;dominant-baseline:middle;paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}
+.caption{color:var(--muted);font-size:16px;margin:6px 0 0}
+.question{font-size:21px;font-weight:700;margin:0 0 8px}
+.answer{width:100%;max-width:320px;height:60px;font:800 32px var(--font-display);text-align:center;border:2px solid var(--line);border-radius:12px;background:var(--surface);color:var(--fg);margin-top:8px;letter-spacing:2px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:320px;margin-top:10px}
+.keypad button{min-height:56px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--fg);font:800 24px var(--font-display);cursor:pointer}
+.keypad button.del{font-size:18px;color:var(--err)}
+.keypad button.check{background:var(--primary);color:#fff;border-color:var(--primary);font-size:20px}
+.keypad button:disabled{opacity:.45}
+
+/* Level 2 */
+.split{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;margin-top:12px}
+.split>*{flex:1 1 280px;min-width:0}
+.slider-label{font:800 28px/1.2 var(--font-display);color:var(--primary);text-align:center;margin:4px 0}
+input[type=range]{width:100%;height:48px;margin:0;accent-color:var(--accent);cursor:pointer}
+.ticks{display:flex;justify-content:space-between;color:var(--muted);font-size:14px;margin-top:-4px}
+canvas.balls{width:100%;max-width:360px;height:auto;display:block;margin:0 auto;border-radius:12px;background:var(--surface)}
+.canvasbox{background:var(--sand);border-radius:12px;padding:8px}
+.big{font:800 28px/1.2 var(--font-display);color:var(--primary)}
+.sbar{height:34px;background:var(--sand);border-radius:8px;overflow:hidden;margin-top:8px}
+.sbar i{display:block;height:100%;background:var(--accent);border-radius:8px;transition:width .4s;min-width:12px}
+.gap{display:inline-flex;gap:6px;vertical-align:middle;margin:3px 2px}
+.chip{min-height:48px;padding:6px 14px;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--fg);font:700 18px var(--font-body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--primary);color:#fff;border-color:var(--primary)}
+.chip:disabled{opacity:.6;cursor:default}
+.sentence{font-size:20px;line-height:2.2}
+.opts{display:grid;gap:10px;margin-top:10px}
+.opts .btn{justify-content:flex-start;text-align:left;border-color:var(--line);font-family:var(--font-body);font-weight:700;padding:10px 16px}
+.opts .btn.right{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.opts .btn.wrong{background:var(--err-soft);border-color:var(--err);color:var(--err)}
+
+/* Level 3 */
+.compare{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.compare .cmp{flex:1 1 260px;min-width:0;text-align:left;border:2px solid var(--line);border-radius:14px;padding:14px;background:var(--surface);color:var(--fg);cursor:pointer;font:inherit}
+.compare .cmp[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.cmp h3{margin-bottom:4px}
+.cmp .num{font:800 30px/1.1 var(--font-display);color:var(--primary);margin:4px 0}
+.cmp .cmpnote{color:var(--muted);font-size:16px}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;margin-top:12px;max-width:100%}
+.seg button{min-height:48px;padding:6px 14px;border:0;background:var(--surface);color:var(--primary);font:700 17px var(--font-display);cursor:pointer;min-width:0}
+.seg button[aria-pressed="true"]{background:var(--primary);color:#fff}
+svg.area{width:100%;max-width:560px;height:auto;display:block;margin:8px auto 0}
+svg.area rect{stroke-width:1.5}
+svg.area text{font:700 10px var(--font-body);fill:var(--fg)}
+svg.area .lab{font-size:11px}
+svg.area .tiny{font-size:9px}
+svg.area .f-tennis{fill:var(--ok-soft);stroke:var(--ok)}
+svg.area .f-lunge{fill:var(--accent-soft);stroke:var(--accent)}
+svg.area .f-klasse{fill:var(--primary-soft);stroke:var(--primary)}
+svg.area .f-tisch{fill:var(--sand);stroke:var(--muted)}
+svg.area .f-saecke{fill:var(--primary-soft);stroke:var(--primary)}
+svg.area .f-blatt{fill:var(--surface);stroke:var(--fg)}
+svg.area .hl{stroke-width:4;stroke:var(--accent)}
+svg.area line{stroke:var(--muted);stroke-width:1.2}
+svg.gas{width:100%;max-width:340px;height:auto;display:block;margin:8px auto}
+svg.gas text{font:700 13px var(--font-body);fill:var(--fg)}
+svg.gas .alv{fill:var(--primary-soft);stroke:var(--primary);stroke-width:2}
+svg.gas .blood{fill:none;stroke:var(--err);stroke-width:20;stroke-linecap:round}
+svg.gas .o2{stroke:var(--o2);fill:var(--o2)}
+svg.gas .co2{stroke:var(--muted);fill:var(--muted)}
+svg.gas line{stroke-width:3}
+.gasrow{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.gasrow>*{flex:1 1 240px;min-width:0}
+
+.result{text-align:center}
+.result .score{font:800 36px/1.1 var(--font-display);color:var(--ok);margin:8px 0}
+.copybox{font:700 20px/1.6 var(--font-display);background:var(--sand);border-radius:12px;padding:14px;margin-top:10px}
+ul.clean{list-style:none;padding:0;margin:8px 0}
+ul.clean li{padding:6px 0;border-bottom:1px solid var(--line)}
+.foot{margin-top:28px;text-align:center}
+.foot .confirm{display:inline-flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.small{font-size:16px;color:var(--muted)}
+
+@media (max-width:480px){ svg.cube{max-width:300px} }
+@media (prefers-reduced-motion: reduce){
+  svg.cube g.c,.bar i,.sbar i{transition:none}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Oberflächen-Rechner</h1>
+    <p class="sub">Naturwissenschaften · Jahrgang 6 · Stunde 17</p>
+    <div class="box a" style="margin-top:0">
+      <strong>Forschungsfrage:</strong> Warum besteht die Lunge aus 300 Millionen winzigen Bläschen und nicht aus zwei großen Säcken?
+    </div>
+    <nav class="levels" style="margin-top:14px" aria-label="Level wählen">
+      <button type="button" data-level="l1" aria-current="true"><span class="tick">✔ </span>Level 1: Würfel</button>
+      <button type="button" data-level="l2"><span class="tick">✔ </span>Level 2: Teilen</button>
+      <button type="button" data-level="l3"><span class="tick">✔ </span>Level 3: Lunge</button>
+      <button type="button" data-level="fin">Fertig</button>
+    </nav>
+  </header>
+
+  <!-- ================= LEVEL 1 ================= -->
+  <section id="l1" class="card" aria-labelledby="l1h">
+    <div class="intro">
+      <div style="flex:1 1 240px;min-width:0">
+        <h2 id="l1h">Level 1: Würfel zerlegen</h2>
+        <p>Zähle die Außenflächen. Tippe die Zahl ein und drücke „Prüfen“.</p>
+      </div>
+      <div class="progress" id="l1prog">Aufgabe 1 von 4</div>
+    </div>
+    <div class="bar"><i id="l1bar" style="width:0%"></i></div>
+
+    <div id="l1play">
+      <div class="stage">
+        <div class="vis">
+          <svg class="cube" id="cubeSvg" viewBox="0 0 100 100" role="img" aria-label="Großer Würfel aus kleinen Würfeln"></svg>
+          <p class="caption" id="cubeCap">Ein großer Würfel aus 8 kleinen Würfeln (2 · 2 · 2)</p>
+        </div>
+        <div class="io">
+          <p class="question" id="l1q">Zähle die Außenflächen (kleine Quadrate) des großen Würfels.</p>
+          <button type="button" class="btn ghost" id="l1hintBtn">Zählhilfe</button>
+          <div class="box p" id="l1hint" hidden></div>
+          <input class="answer" id="l1ans" type="text" inputmode="none" readonly value="" aria-label="Deine Zahl" placeholder="?">
+          <div class="keypad" id="keypad">
+            <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+            <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+            <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+            <button type="button" class="del" data-k="del">Löschen</button><button type="button" data-k="0">0</button><button type="button" class="check" data-k="ok">Prüfen</button>
+          </div>
+          <div class="fb" id="l1fb" hidden></div>
+          <div class="box g" id="l1result" hidden></div>
+          <div class="row">
+            <button type="button" class="btn accent" id="l1split" hidden>Zerlegen!</button>
+            <button type="button" class="btn primary" id="l1next" hidden>Weiter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="l1end" class="result" hidden>
+      <h3>Geschafft!</h3>
+      <div class="score" id="l1score"></div>
+      <div class="copybox">24 → 48 (doppelt so viel)<br>54 → 162 (dreimal so viel)</div>
+      <p>Gleiches Material – aber viel mehr Oberfläche, wenn man es in kleine Teile zerlegt.</p>
+      <div class="row" style="justify-content:center">
+        <button type="button" class="btn primary" data-go="l2">Nächstes Level</button>
+        <button type="button" class="btn ghost" data-restart="l1">Nochmal</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LEVEL 2 ================= -->
+  <section id="l2" class="card" aria-labelledby="l2h" hidden>
+    <div class="intro">
+      <div style="flex:1 1 240px;min-width:0">
+        <h2 id="l2h">Level 2: Immer kleiner teilen</h2>
+        <p>Schiebe den Regler. Die Knetkugel wird in immer mehr kleine Kugeln geteilt. Schau, was mit der Oberfläche passiert.</p>
+      </div>
+      <div class="progress" id="l2prog">Aufgabe 1 von 2</div>
+    </div>
+    <div class="bar"><i id="l2bar" style="width:0%"></i></div>
+
+    <div id="l2play">
+      <div class="split">
+        <div>
+          <div class="slider-label" id="sliderLabel">1 Kugel</div>
+          <input type="range" id="slider" min="0" max="6" step="1" value="0" aria-label="Anzahl der Kugeln">
+          <div class="ticks"><span>1 Kugel</span><span>300 Millionen</span></div>
+          <div class="canvasbox" style="margin-top:10px">
+            <canvas class="balls" id="balls" width="360" height="240" aria-label="Kugeln"></canvas>
+            <p class="caption" id="ballCap" style="text-align:center">Eine Knetkugel</p>
+          </div>
+        </div>
+        <div>
+          <div class="box p">
+            <div class="small">Oberfläche aller Kugeln zusammen:</div>
+            <div class="big" id="surfText">1-mal so groß wie bei einer Kugel</div>
+            <div class="sbar"><i id="sbar" style="width:3%"></i></div>
+            <div class="small" id="sbarNote" hidden>Balken verkürzt dargestellt (sonst wäre er zu lang).</div>
+          </div>
+          <div class="box s">
+            <strong>Zum Mitlesen:</strong> Es ist immer gleich viel Knete. Nur die Oberfläche (alle Außenflächen zusammen) ändert sich.
+          </div>
+        </div>
+      </div>
+
+      <div id="l2t1" class="box a">
+        <p class="question">Aufgabe 1: Tippe die richtigen Wörter an.</p>
+        <p class="sentence">Je
+          <span class="gap" data-gap="0"><button type="button" class="chip" aria-pressed="false" data-v="mehr">mehr</button><button type="button" class="chip" aria-pressed="false" data-v="weniger">weniger</button></span>
+          und je
+          <span class="gap" data-gap="1"><button type="button" class="chip" aria-pressed="false" data-v="kleiner">kleiner</button><button type="button" class="chip" aria-pressed="false" data-v="größer">größer</button></span>
+          die Teile, desto
+          <span class="gap" data-gap="2"><button type="button" class="chip" aria-pressed="false" data-v="größer">größer</button><button type="button" class="chip" aria-pressed="false" data-v="kleiner">kleiner</button></span>
+          ist die Oberfläche zusammen.
+        </p>
+        <div class="row"><button type="button" class="btn primary" id="l2check">Prüfen</button></div>
+        <div class="fb" id="l2fb" hidden></div>
+        <div class="row"><button type="button" class="btn primary" id="l2next1" hidden>Weiter</button></div>
+      </div>
+
+      <div id="l2t2" class="box a" hidden>
+        <p class="question">Aufgabe 2: Schiebe den Regler ganz nach rechts (300 Millionen Kugeln). Wie viel mal so groß ist die Oberfläche jetzt?</p>
+        <div class="opts" id="l2opts">
+          <button type="button" class="btn" data-v="3">etwa 3-mal so groß</button>
+          <button type="button" class="btn" data-v="67">etwa 67-mal so groß</button>
+          <button type="button" class="btn" data-v="670">etwa 670-mal so groß</button>
+        </div>
+        <div class="fb" id="l2fb2" hidden></div>
+        <div class="row"><button type="button" class="btn primary" id="l2next2" hidden>Level abschließen</button></div>
+      </div>
+    </div>
+
+    <div id="l2end" class="result" hidden>
+      <h3>Geschafft!</h3>
+      <div class="score" id="l2score"></div>
+      <div class="copybox">Je mehr und je kleiner die Teile,<br>desto größer ist die Oberfläche zusammen.</div>
+      <div class="row" style="justify-content:center">
+        <button type="button" class="btn primary" data-go="l3">Nächstes Level</button>
+        <button type="button" class="btn ghost" data-restart="l2">Nochmal</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LEVEL 3 ================= -->
+  <section id="l3" class="card" aria-labelledby="l3h" hidden>
+    <div class="intro">
+      <div style="flex:1 1 240px;min-width:0">
+        <h2 id="l3h">Level 3: Die Lunge</h2>
+        <p>Vergleiche die beiden Lungen. Lies die Erklärung. Dann beantworte 4 Fragen.</p>
+      </div>
+      <div class="progress" id="l3prog">Frage 1 von 4</div>
+    </div>
+    <div class="bar"><i id="l3bar" style="width:0%"></i></div>
+
+    <div id="l3play">
+      <div class="compare" role="group" aria-label="Vergleich">
+        <button type="button" class="cmp" id="cmpA" aria-pressed="false" data-view="small">
+          <h3>Zwei große Säcke</h3>
+          <div class="num">etwa 0,2 m²</div>
+          <div class="cmpnote">Oberfläche so groß wie 3 Blatt Papier.</div>
+        </button>
+        <button type="button" class="cmp" id="cmpB" aria-pressed="true" data-view="big">
+          <h3>300 Millionen Lungenbläschen</h3>
+          <div class="num">etwa 100 m²</div>
+          <div class="cmpnote">Oberfläche größer als unser Klassenraum – fast ein halbes Tennisfeld!</div>
+        </button>
+      </div>
+      <p class="caption">Tippe auf eine Karte. Die Fläche wird im Bild markiert.</p>
+
+      <div class="seg" role="group" aria-label="Zoom">
+        <button type="button" id="zoomBig" aria-pressed="true">Große Flächen</button>
+        <button type="button" id="zoomSmall" aria-pressed="false">Zoom: kleine Flächen (20-mal vergrößert)</button>
+      </div>
+
+      <svg class="area" viewBox="0 0 340 200" role="img" aria-label="Flächenvergleich">
+        <g id="viewBig">
+          <text x="10" y="16" class="lab">Tennisfeld 260 m²</text>
+          <rect class="f-tennis" id="rTennis" x="10" y="24" width="286" height="131" rx="2"/>
+          <rect class="f-lunge" id="rLunge" x="16" y="30" width="120" height="120" rx="2"/>
+          <text x="76" y="80" text-anchor="middle" class="lab">Lunge</text>
+          <text x="76" y="94" text-anchor="middle" class="tiny">(alle Bläschen)</text>
+          <text x="76" y="110" text-anchor="middle" class="lab">100 m²</text>
+          <rect class="f-klasse" id="rKlasse" x="146" y="78" width="120" height="72" rx="2"/>
+          <text x="206" y="110" text-anchor="middle" class="lab">Klassenraum</text>
+          <text x="206" y="126" text-anchor="middle" class="lab">60 m²</text>
+          <rect class="f-tisch" x="276" y="144" width="12" height="6"/>
+          <rect class="f-saecke" id="rSaeckeBig" x="277" y="144.6" width="6" height="4.8"/>
+          <text x="290" y="46" text-anchor="end" class="tiny">Schultisch · 2 Säcke · Blatt:</text>
+          <text x="290" y="60" text-anchor="end" class="tiny">winzig! (siehe Zoom)</text>
+          <line x1="284" y1="64" x2="282" y2="142"/>
+          <text x="170" y="178" text-anchor="middle" class="lab">Alle Flächen im gleichen Maßstab.</text>
+        </g>
+        <g id="viewSmall" hidden>
+          <text x="10" y="16" class="lab">Schultisch 0,5 m²</text>
+          <rect class="f-tisch" id="rTisch" x="10" y="24" width="240" height="120" rx="2"/>
+          <rect class="f-saecke" id="rSaecke" x="16" y="30" width="120" height="96" rx="2"/>
+          <text x="76" y="74" text-anchor="middle" class="lab">2 große Säcke</text>
+          <text x="76" y="90" text-anchor="middle" class="lab">0,2 m²</text>
+          <rect class="f-blatt" id="rBlatt" x="150" y="30" width="50" height="71" rx="1"/>
+          <text x="175" y="62" text-anchor="middle" class="lab">Blatt</text>
+          <text x="175" y="78" text-anchor="middle" class="lab">0,06 m²</text>
+          <text x="10" y="166" class="lab">Die Lunge (100 m²) passt hier nicht aufs Bild:</text>
+          <text x="10" y="182" class="lab">Sie ist so groß wie 200 Schultische!</text>
+        </g>
+      </svg>
+
+      <div class="box p" style="margin-top:16px">
+        <h3>Gasaustausch</h3>
+        <div class="gasrow">
+          <svg class="gas" viewBox="0 0 300 200" role="img" aria-label="Lungenbläschen mit Blutgefäß">
+            <path class="blood" d="M 170 20 C 240 40 240 160 170 180"/>
+            <text x="262" y="104" text-anchor="middle">Blut</text>
+            <circle class="alv" cx="90" cy="100" r="60"/>
+            <text x="90" y="62" text-anchor="middle">Luft</text>
+            <text x="90" y="96" text-anchor="middle">Lungen-</text>
+            <text x="90" y="112" text-anchor="middle">bläschen</text>
+            <!-- O2 arrow: alveolus -> blood -->
+            <g class="o2">
+              <line x1="135" y1="80" x2="190" y2="80"/>
+              <polygon points="190,73 204,80 190,87"/>
+              <text x="166" y="70" text-anchor="middle">O₂</text>
+            </g>
+            <!-- CO2 arrow: blood -> alveolus -->
+            <g class="co2">
+              <line x1="190" y1="124" x2="140" y2="124"/>
+              <polygon points="140,117 126,124 140,131"/>
+              <text x="166" y="144" text-anchor="middle">CO₂</text>
+            </g>
+            <text x="34" y="188" text-anchor="start">Wand: hauchdünn</text>
+            <line x1="70" y1="176" x2="62" y2="154" style="stroke:var(--muted);stroke-width:1.5"/>
+          </svg>
+          <div>
+            <p>Der Sauerstoff (O₂) geht aus dem Lungenbläschen ins Blut. Das Blut gibt Kohlenstoffdioxid (CO₂) ins Lungenbläschen ab.</p>
+            <p><strong>Die Wand ist hauchdünn. Je größer die Oberfläche, desto mehr Sauerstoff kann gleichzeitig ins Blut.</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box a" id="quizBox">
+        <p class="question" id="qText"></p>
+        <div class="opts" id="qOpts"></div>
+        <div class="fb" id="qfb" hidden></div>
+        <div class="row"><button type="button" class="btn primary" id="qNext" hidden>Weiter</button></div>
+      </div>
+    </div>
+
+    <div id="l3end" class="result" hidden>
+      <h3>Geschafft!</h3>
+      <div class="score" id="l3score"></div>
+      <div class="copybox">2 Säcke ≈ 0,2 m²<br>300 Millionen Bläschen ≈ 100 m²</div>
+      <div class="row" style="justify-content:center">
+        <button type="button" class="btn primary" data-go="fin">Zur Abschluss-Karte</button>
+        <button type="button" class="btn ghost" data-restart="l3">Nochmal</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FERTIG ================= -->
+  <section id="fin" class="card result" aria-labelledby="finh" hidden>
+    <h2 id="finh">Fertig!</h2>
+    <p>Zeig deiner Lehrkraft dein Ergebnis.</p>
+    <ul class="clean" id="finList"></ul>
+    <h3 style="margin-top:14px">Zahlen zum Abschreiben in M 2</h3>
+    <div class="copybox">24 → 48 · 54 → 162<br>Lunge: 2 Säcke ≈ 0,2 m²<br>300 Millionen Bläschen ≈ 100 m²</div>
+    <div class="box p" style="text-align:left">
+      <strong>Antwort auf die Forschungsfrage:</strong> Viele winzige Bläschen haben zusammen eine riesige Oberfläche. So kann viel Sauerstoff gleichzeitig ins Blut.
+    </div>
+  </section>
+
+  <div class="foot">
+    <button type="button" class="btn ghost" id="resetBtn">Alles zurücksetzen</button>
+    <div class="confirm" id="resetConfirm" hidden>
+      <span>Wirklich?</span>
+      <button type="button" class="btn accent" id="resetYes">Ja</button>
+      <button type="button" class="btn ghost" id="resetNo">Nein</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(s){ return document.querySelector(s); };
+  var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  function svgHide(e, on){ if (on) e.setAttribute('hidden',''); else e.removeAttribute('hidden'); }
+  var reduced = false;
+  try { reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+
+  /* ---------- Speicher ---------- */
+  var STORE = 'nw6-oberflaechen-rechner';
+  var progress = {};
+  try { progress = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch(e){ progress = {}; }
+  function save(){ try { localStorage.setItem(STORE, JSON.stringify(progress)); } catch(e){} }
+  function setDone(level, score, total){
+    progress[level] = { score: score, total: total };
+    save(); updateNav(); renderFin();
+  }
+
+  /* ---------- Navigation ---------- */
+  var LEVELS = ['l1','l2','l3','fin'];
+  function showLevel(id){
+    LEVELS.forEach(function(l){
+      $('#'+l).hidden = (l !== id);
+    });
+    $$('.levels button').forEach(function(b){
+      b.setAttribute('aria-current', b.dataset.level === id ? 'true' : 'false');
+    });
+    if (id === 'l2') drawBalls();
+    if (id === 'fin') renderFin();
+    try { window.scrollTo({top:0, behavior: reduced ? 'auto' : 'smooth'}); } catch(e){}
+  }
+  function updateNav(){
+    $$('.levels button').forEach(function(b){
+      var p = progress[b.dataset.level];
+      b.classList.toggle('done', !!p);
+    });
+  }
+  $$('.levels button').forEach(function(b){
+    b.addEventListener('click', function(){ showLevel(b.dataset.level); });
+  });
+  $$('[data-go]').forEach(function(b){
+    b.addEventListener('click', function(){ showLevel(b.dataset.go); });
+  });
+  $$('[data-restart]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var l = b.dataset.restart;
+      if (l === 'l1') startL1();
+      if (l === 'l2') startL2();
+      if (l === 'l3') startL3();
+    });
+  });
+
+  function setBar(barEl, done, total){ barEl.style.width = Math.round(100*done/total) + '%'; }
+
+  /* ================= LEVEL 1 ================= */
+  var cubeSvg = $('#cubeSvg');
+  var cube = null; // { n, groups:[{g,i,j,k}], labels, shift(dx,dy) }
+  var SVGNS = 'http://www.w3.org/2000/svg';
+
+  function el(name, attrs){
+    var e = document.createElementNS(SVGNS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function makeCube(n){
+    while (cubeSvg.firstChild) cubeSvg.removeChild(cubeSvg.firstChild);
+    var s = n === 2 ? 46 : 34;
+    // leicht schräge (dimetrische) Ansicht, damit sich die Würfel auf der Raumdiagonale nicht verdecken
+    var ax = 0.92 * s, ay = 0.40 * s, bx = 0.62 * s, by = 0.30 * s, h = s;
+    var gap = 0.8;
+    var c = (n - 1) / 2;
+    var P = function(x,y,z){ return [ x * ax - y * bx, x * ay + y * by - z * h ]; };
+    var lo = -c * gap, hi = n + c * gap;
+    var xs = [], ys = [];
+    [[lo,lo,lo],[hi,lo,lo],[lo,hi,lo],[hi,hi,lo],[lo,lo,hi],[hi,lo,hi],[lo,hi,hi],[hi,hi,hi]].forEach(function(q){
+      var p = P(q[0],q[1],q[2]); xs.push(p[0]); ys.push(p[1]);
+    });
+    var pad = 6;
+    var minx = Math.min.apply(null, xs) - pad, maxx = Math.max.apply(null, xs) + pad;
+    var miny = Math.min.apply(null, ys) - pad, maxy = Math.max.apply(null, ys) + pad;
+    cubeSvg.setAttribute('viewBox', minx + ' ' + miny + ' ' + (maxx - minx) + ' ' + (maxy - miny));
+
+    var cubes = [];
+    for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) for (var k = 0; k < n; k++) cubes.push({i:i,j:j,k:k});
+    cubes.sort(function(a,b){ return (a.i+a.j+a.k) - (b.i+b.j+b.k); });
+    var groups = [];
+    var pts = function(list){ return list.map(function(q){ var p = P(q[0],q[1],q[2]); return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' '); };
+    cubes.forEach(function(q){
+      var i = q.i, j = q.j, k = q.k;
+      var g = el('g', {'class':'c'});
+      g.appendChild(el('polygon', {'class':'top', points: pts([[i,j,k+1],[i+1,j,k+1],[i+1,j+1,k+1],[i,j+1,k+1]])}));
+      g.appendChild(el('polygon', {'class':'left', points: pts([[i,j+1,k],[i+1,j+1,k],[i+1,j+1,k+1],[i,j+1,k+1]])}));
+      g.appendChild(el('polygon', {'class':'right', points: pts([[i+1,j,k],[i+1,j+1,k],[i+1,j+1,k+1],[i+1,j,k+1]])}));
+      var d = P((i - c) * gap, (j - c) * gap, (k - c) * gap);
+      g.dataset.dx = d[0].toFixed(2); g.dataset.dy = d[1].toFixed(2);
+      cubeSvg.appendChild(g);
+      groups.push(g);
+    });
+    // Beschriftung der drei sichtbaren Seiten (Zählhilfe)
+    var labels = el('g', {'class':'labels'});
+    var per = n * n;
+    var t1 = P(n/2, n/2, n), t2 = P(n, n/2, n/2), t3 = P(n/2, n, n/2);
+    [t1,t2,t3].forEach(function(p){
+      var t = el('text', {x: p[0], y: p[1]});
+      t.textContent = per;
+      labels.appendChild(t);
+    });
+    svgHide(labels, true);
+    cubeSvg.appendChild(labels);
+    cube = { n: n, groups: groups, labels: labels, exploded: false };
+  }
+  function explodeCube(on){
+    if (!cube) return;
+    cube.exploded = on;
+    cube.groups.forEach(function(g){
+      g.style.transform = on ? 'translate(' + g.dataset.dx + 'px,' + g.dataset.dy + 'px)' : 'none';
+    });
+    if (on) svgHide(cube.labels, true);
+  }
+
+  var L1 = {
+    tasks: [
+      { n:2, split:false, answer:24, hint:'Der große Würfel hat <strong>6 Seiten</strong>. Auf jeder Seite siehst du <strong>4 Quadrate</strong>.', solution:'6 Seiten · 4 Quadrate = 24 Außenflächen.',
+        q:'Zähle die Außenflächen (kleine Quadrate) des großen Würfels.', cap:'Ein großer Würfel aus 8 kleinen Würfeln (2 · 2 · 2)' },
+      { n:2, split:true, answer:48, hint:'Es sind <strong>8 Würfel</strong>. Jeder Würfel hat <strong>6 Seiten</strong>.', solution:'8 Würfel · 6 Seiten = 48 Außenflächen.',
+        q:'Wie viele Außenflächen haben alle 8 kleinen Würfel zusammen?', cap:'Die 8 kleinen Würfel liegen jetzt einzeln.', result:'Gleiches Material – <strong>doppelt so viel</strong> Oberfläche! 24 → 48' },
+      { n:3, split:false, answer:54, hint:'Der große Würfel hat <strong>6 Seiten</strong>. Auf jeder Seite siehst du <strong>9 Quadrate</strong>.', solution:'6 Seiten · 9 Quadrate = 54 Außenflächen.',
+        q:'Jetzt ein größerer Würfel. Zähle die Außenflächen (kleine Quadrate) des großen Würfels.', cap:'Ein großer Würfel aus 27 kleinen Würfeln (3 · 3 · 3)' },
+      { n:3, split:true, answer:162, hint:'Es sind <strong>27 Würfel</strong>. Jeder Würfel hat <strong>6 Seiten</strong>.', solution:'27 Würfel · 6 Seiten = 162 Außenflächen.',
+        q:'Wie viele Außenflächen haben alle 27 kleinen Würfel zusammen?', cap:'Die 27 kleinen Würfel liegen jetzt einzeln.', result:'Gleiches Material – <strong>dreimal so viel</strong> Oberfläche! 54 → 162' }
+    ],
+    i:0, attempts:0, score:0, locked:false
+  };
+  var l1ans = $('#l1ans'), l1fb = $('#l1fb'), l1hint = $('#l1hint'), l1result = $('#l1result');
+  var l1split = $('#l1split'), l1next = $('#l1next'), keypad = $('#keypad');
+
+  function startL1(){
+    L1.i = 0; L1.score = 0;
+    $('#l1play').hidden = false; $('#l1end').hidden = true;
+    makeCube(2);
+    loadL1Task();
+  }
+  function loadL1Task(){
+    var t = L1.tasks[L1.i];
+    L1.attempts = 0; L1.locked = false;
+    $('#l1prog').textContent = 'Aufgabe ' + (L1.i + 1) + ' von 4';
+    setBar($('#l1bar'), L1.i, 4);
+    $('#l1q').textContent = t.q;
+    $('#cubeCap').textContent = t.cap;
+    l1hint.innerHTML = t.hint; l1hint.hidden = true;
+    if (cube) svgHide(cube.labels, true);
+    l1ans.value = '';
+    l1fb.hidden = true; l1result.hidden = true; l1split.hidden = true; l1next.hidden = true;
+    setKeypad(true);
+  }
+  function setKeypad(on){ $$('#keypad button').forEach(function(b){ b.disabled = !on; }); $('#l1hintBtn').disabled = !on; }
+  $('#l1hintBtn').addEventListener('click', function(){
+    l1hint.hidden = !l1hint.hidden;
+    if (cube && !cube.exploded) svgHide(cube.labels, l1hint.hidden);
+  });
+  keypad.addEventListener('click', function(ev){
+    var b = ev.target.closest('button'); if (!b || L1.locked) return;
+    var k = b.dataset.k;
+    if (k === 'del') { l1ans.value = l1ans.value.slice(0, -1); return; }
+    if (k === 'ok') { checkL1(); return; }
+    if (l1ans.value.length < 3) l1ans.value += k;
+  });
+  function checkL1(){
+    var t = L1.tasks[L1.i];
+    if (l1ans.value === '') { showFb(l1fb, 'info', 'Tippe zuerst eine Zahl ein.'); return; }
+    var v = parseInt(l1ans.value, 10);
+    if (v === t.answer) {
+      L1.score++;
+      showFb(l1fb, 'ok', 'Richtig! ' + t.answer + ' Außenflächen.');
+      afterL1();
+    } else {
+      L1.attempts++;
+      if (L1.attempts < 2) {
+        showFb(l1fb, 'err', 'Noch nicht richtig. Schau in die Zählhilfe und zähle nochmal.');
+        l1hint.hidden = false;
+        if (cube && !cube.exploded) svgHide(cube.labels, false);
+        l1ans.value = '';
+      } else {
+        showFb(l1fb, 'err', 'Die Lösung ist ' + t.answer + '. ' + t.solution);
+        l1ans.value = String(t.answer);
+        afterL1();
+      }
+    }
+  }
+  function afterL1(){
+    var t = L1.tasks[L1.i];
+    L1.locked = true; setKeypad(false);
+    if (!t.split) { l1split.hidden = false; }
+    else {
+      l1result.innerHTML = t.result; l1result.hidden = false;
+      l1next.textContent = (L1.i === 3) ? 'Level abschließen' : 'Weiter zum 3 · 3 · 3-Würfel';
+      l1next.hidden = false;
+    }
+  }
+  l1split.addEventListener('click', function(){
+    explodeCube(true);
+    L1.i++;
+    loadL1Task();
+  });
+  l1next.addEventListener('click', function(){
+    if (L1.i === 3) { endL1(); return; }
+    L1.i++;
+    makeCube(3);
+    loadL1Task();
+  });
+  function endL1(){
+    $('#l1play').hidden = true; $('#l1end').hidden = false;
+    $('#l1score').textContent = L1.score + ' von 4 richtig';
+    setBar($('#l1bar'), 4, 4); $('#l1prog').textContent = 'Aufgabe 4 von 4';
+    setDone('l1', L1.score, 4);
+  }
+
+  function showFb(box, kind, html){
+    box.className = 'fb ' + kind; box.innerHTML = html; box.hidden = false;
+  }
+
+  /* ================= LEVEL 2 ================= */
+  var STEPS = [
+    { n:1, label:'1 Kugel', x:1, cap:'Eine Knetkugel' },
+    { n:8, label:'8 Kugeln', x:2, cap:'8 kleine Kugeln' },
+    { n:27, label:'27 Kugeln', x:3, cap:'27 kleine Kugeln' },
+    { n:64, label:'64 Kugeln', x:4, cap:'64 kleine Kugeln' },
+    { n:1000, label:'1 000 Kugeln', x:10, cap:'1 000 winzige Kugeln' },
+    { n:1000000, label:'1 000 000 Kugeln', x:100, cap:'1 Million Kugeln – zu viele zum Zeichnen!' },
+    { n:300000000, label:'300 000 000 Kugeln', x:670, approx:true, cap:'300 Millionen Kugeln – zu viele zum Zeichnen!' }
+  ];
+  var slider = $('#slider'), canvas = $('#balls');
+  var L2 = { score:0, attempts:0, attempts2:0, task:1 };
+
+  function cssVar(name){
+    try { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888'; } catch(e){ return '#888'; }
+  }
+  function drawBalls(){
+    var step = STEPS[parseInt(slider.value, 10)];
+    var ctx = canvas.getContext('2d');
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W = 360, H = 240;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    var fill = cssVar('--dust'), line = cssVar('--primary');
+    var N = step.n;
+    if (N >= 1000000) {
+      // "Staub": sehr viele winzige Punkte in einer Fläche
+      ctx.fillStyle = fill;
+      var seed = 12345;
+      var rnd = function(){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+      var count = N === 1000000 ? 2500 : 7000;
+      ctx.globalAlpha = 0.8;
+      for (var q = 0; q < count; q++) {
+        ctx.fillRect(20 + rnd() * (W - 40), 20 + rnd() * (H - 60), 1.3, 1.3);
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = line;
+      ctx.font = '700 16px Nunito, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('zu viele zum Zeichnen – wie feiner Staub', W/2, H - 14);
+      return;
+    }
+    var cols, rows;
+    if (N === 1) { cols = 1; rows = 1; }
+    else if (N === 8) { cols = 4; rows = 2; }
+    else if (N === 27) { cols = 9; rows = 3; }
+    else if (N === 64) { cols = 8; rows = 8; }
+    else { cols = 40; rows = 25; }
+    var cellW = (W - 20) / cols, cellH = (H - 20) / rows;
+    var cell = Math.min(cellW, cellH);
+    var rBig = 100;
+    var r = Math.min(rBig / Math.cbrt(N), cell * 0.44);
+    if (N === 1) r = rBig;
+    var gridW = cols * cell, gridH = rows * cell;
+    var ox = (W - gridW) / 2, oy = (H - gridH) / 2;
+    ctx.fillStyle = fill; ctx.strokeStyle = line; ctx.lineWidth = N > 64 ? 0.5 : 1.5;
+    var drawn = 0;
+    for (var rr = 0; rr < rows && drawn < N; rr++) {
+      for (var cc = 0; cc < cols && drawn < N; cc++) {
+        var x = ox + cc * cell + cell / 2, y = oy + rr * cell + cell / 2;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        if (r > 2) ctx.stroke();
+        drawn++;
+      }
+    }
+  }
+  function updateL2(){
+    var idx = parseInt(slider.value, 10), step = STEPS[idx];
+    $('#sliderLabel').textContent = step.label;
+    $('#ballCap').textContent = step.cap;
+    var xt = (step.approx ? 'etwa ' : '') + step.x + '-mal so groß wie bei einer Kugel';
+    $('#surfText').textContent = xt;
+    // Balken logarithmisch
+    var pct = (Math.log10(step.x) + 0.12) / (Math.log10(670) + 0.12) * 100;
+    $('#sbar').style.width = Math.max(3, pct) + '%';
+    $('#sbarNote').hidden = step.x < 100;
+    drawBalls();
+  }
+  slider.addEventListener('input', updateL2);
+  slider.addEventListener('change', updateL2);
+  try {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq && mq.addEventListener) mq.addEventListener('change', function(){ if (!$('#l2').hidden) drawBalls(); });
+  } catch(e){}
+
+  var gapsSel = ['', '', ''];
+  $$('#l2t1 .chip').forEach(function(ch){
+    ch.addEventListener('click', function(){
+      var gap = ch.parentElement.dataset.gap;
+      $$('#l2t1 .gap[data-gap="' + gap + '"] .chip').forEach(function(o){ o.setAttribute('aria-pressed', 'false'); });
+      ch.setAttribute('aria-pressed', 'true');
+      gapsSel[gap] = ch.dataset.v;
+    });
+  });
+  function setChips(on){ $$('#l2t1 .chip').forEach(function(c){ c.disabled = !on; }); $('#l2check').disabled = !on; }
+  function markSolution(){
+    gapsSel = ['mehr','kleiner','größer'];
+    $$('#l2t1 .chip').forEach(function(c){
+      var gap = c.parentElement.dataset.gap;
+      c.setAttribute('aria-pressed', c.dataset.v === gapsSel[gap] ? 'true' : 'false');
+    });
+  }
+  $('#l2check').addEventListener('click', function(){
+    var fb = $('#l2fb');
+    if (gapsSel.some(function(v){ return !v; })) { showFb(fb, 'info', 'Tippe in jeder Lücke ein Wort an.'); return; }
+    var ok = gapsSel[0] === 'mehr' && gapsSel[1] === 'kleiner' && gapsSel[2] === 'größer';
+    if (ok) {
+      L2.score++;
+      showFb(fb, 'ok', 'Richtig! Viele kleine Teile haben zusammen eine große Oberfläche.');
+      finishL2T1();
+    } else {
+      L2.attempts++;
+      if (L2.attempts < 2) {
+        showFb(fb, 'err', 'Noch nicht richtig. Schiebe den Regler nach rechts: Die Kugeln werden mehr und kleiner. Was macht der Balken? Nochmal!');
+      } else {
+        markSolution();
+        showFb(fb, 'err', 'Lösung: Je <strong>mehr</strong> und je <strong>kleiner</strong> die Teile, desto <strong>größer</strong> ist die Oberfläche zusammen. Der Balken wird länger, wenn du nach rechts schiebst.');
+        finishL2T1();
+      }
+    }
+  });
+  function finishL2T1(){ setChips(false); $('#l2next1').hidden = false; }
+  $('#l2next1').addEventListener('click', function(){
+    L2.task = 2;
+    $('#l2t1').hidden = true; $('#l2t2').hidden = false;
+    $('#l2prog').textContent = 'Aufgabe 2 von 2'; setBar($('#l2bar'), 1, 2);
+  });
+  $('#l2opts').addEventListener('click', function(ev){
+    var b = ev.target.closest('button'); if (!b || b.disabled) return;
+    var fb = $('#l2fb2');
+    if (b.dataset.v === '670') {
+      L2.score++;
+      b.classList.add('right');
+      showFb(fb, 'ok', 'Richtig! Die Oberfläche ist etwa 670-mal so groß wie bei einer Kugel.');
+      $$('#l2opts button').forEach(function(o){ o.disabled = true; });
+      $('#l2next2').hidden = false;
+    } else {
+      L2.attempts2++;
+      b.classList.add('wrong'); b.disabled = true;
+      if (L2.attempts2 < 2) {
+        showFb(fb, 'err', 'Noch nicht richtig. Schiebe den Regler ganz nach rechts und lies die Zahl in der Box ab. Nochmal!');
+      } else {
+        showFb(fb, 'err', 'Lösung: etwa 670-mal so groß. Steht in der Box, wenn der Regler ganz rechts ist.');
+        $$('#l2opts button').forEach(function(o){ o.disabled = true; if (o.dataset.v === '670') o.classList.add('right'); });
+        $('#l2next2').hidden = false;
+      }
+    }
+  });
+  $('#l2next2').addEventListener('click', function(){
+    $('#l2play').hidden = true; $('#l2end').hidden = false;
+    $('#l2score').textContent = L2.score + ' von 2 richtig';
+    $('#l2prog').textContent = 'Aufgabe 2 von 2'; setBar($('#l2bar'), 2, 2);
+    setDone('l2', L2.score, 2);
+  });
+  function startL2(){
+    L2.score = 0; L2.attempts = 0; L2.attempts2 = 0; L2.task = 1;
+    gapsSel = ['', '', ''];
+    $$('#l2t1 .chip').forEach(function(c){ c.setAttribute('aria-pressed', 'false'); c.disabled = false; });
+    $('#l2check').disabled = false;
+    $('#l2fb').hidden = true; $('#l2fb2').hidden = true;
+    $('#l2next1').hidden = true; $('#l2next2').hidden = true;
+    $$('#l2opts button').forEach(function(o){ o.disabled = false; o.classList.remove('right','wrong'); });
+    $('#l2t1').hidden = false; $('#l2t2').hidden = true;
+    $('#l2play').hidden = false; $('#l2end').hidden = true;
+    $('#l2prog').textContent = 'Aufgabe 1 von 2'; setBar($('#l2bar'), 0, 2);
+    slider.value = 0; updateL2();
+  }
+
+  /* ================= LEVEL 3 ================= */
+  function setZoom(view){
+    svgHide($('#viewBig'), view !== 'big');
+    svgHide($('#viewSmall'), view !== 'small');
+    $('#zoomBig').setAttribute('aria-pressed', view === 'big' ? 'true' : 'false');
+    $('#zoomSmall').setAttribute('aria-pressed', view === 'small' ? 'true' : 'false');
+  }
+  $('#zoomBig').addEventListener('click', function(){ setZoom('big'); });
+  $('#zoomSmall').addEventListener('click', function(){ setZoom('small'); });
+  function selectCmp(which){
+    $('#cmpA').setAttribute('aria-pressed', which === 'A' ? 'true' : 'false');
+    $('#cmpB').setAttribute('aria-pressed', which === 'B' ? 'true' : 'false');
+    $$('svg.area rect').forEach(function(r){ r.classList.remove('hl'); });
+    if (which === 'A') { setZoom('small'); $('#rSaecke').classList.add('hl'); $('#rSaeckeBig').classList.add('hl'); }
+    else { setZoom('big'); $('#rLunge').classList.add('hl'); }
+  }
+  $('#cmpA').addEventListener('click', function(){ selectCmp('A'); });
+  $('#cmpB').addEventListener('click', function(){ selectCmp('B'); });
+
+  var QUIZ = [
+    { q:'Warum hat die Lunge so viele winzige Bläschen?', opts:['damit sie leichter ist','damit die Oberfläche riesig wird','damit sie weniger Luft braucht'], a:1,
+      ex:'Viele kleine Bläschen haben zusammen eine riesige Oberfläche (etwa 100 m²). So kann viel Sauerstoff gleichzeitig ins Blut.' },
+    { q:'Wo gelangt der Sauerstoff ins Blut?', opts:['in der Luftröhre','in den Bronchien','in den Lungenbläschen'], a:2,
+      ex:'Nur in den Lungenbläschen ist die Wand hauchdünn. Dort geht der Sauerstoff ins Blut.' },
+    { q:'Was gibt das Blut in den Lungenbläschen ab?', opts:['Sauerstoff','Kohlenstoffdioxid','Wasser'], a:1,
+      ex:'Das Blut gibt Kohlenstoffdioxid (CO₂) ab. Wir atmen es aus. Sauerstoff nimmt das Blut auf.' },
+    { q:'Wie groß ist die Oberfläche aller Lungenbläschen ungefähr?', opts:['so groß wie ein Blatt Papier','so groß wie ein Schultisch','größer als ein Klassenraum'], a:2,
+      ex:'Etwa 100 m² – das ist größer als unser Klassenraum, fast ein halbes Tennisfeld.' }
+  ];
+  var L3 = { i:0, score:0, attempts:0 };
+  function loadQ(){
+    var q = QUIZ[L3.i];
+    L3.attempts = 0;
+    $('#l3prog').textContent = 'Frage ' + (L3.i + 1) + ' von 4';
+    setBar($('#l3bar'), L3.i, 4);
+    $('#qText').textContent = 'Frage ' + (L3.i + 1) + ': ' + q.q;
+    var box = $('#qOpts'); box.innerHTML = '';
+    var letters = ['a','b','c'];
+    q.opts.forEach(function(o, idx){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn'; b.dataset.i = idx;
+      b.textContent = letters[idx] + ') ' + o;
+      box.appendChild(b);
+    });
+    $('#qfb').hidden = true; $('#qNext').hidden = true;
+  }
+  $('#qOpts').addEventListener('click', function(ev){
+    var b = ev.target.closest('button'); if (!b || b.disabled) return;
+    var q = QUIZ[L3.i], idx = parseInt(b.dataset.i, 10), fb = $('#qfb');
+    if (idx === q.a) {
+      L3.score++;
+      b.classList.add('right');
+      showFb(fb, 'ok', 'Richtig! ' + q.ex);
+      finishQ();
+    } else {
+      L3.attempts++;
+      b.classList.add('wrong'); b.disabled = true;
+      if (L3.attempts < 2) {
+        showFb(fb, 'err', 'Noch nicht richtig. Lies die Erklärung oben nochmal. Nochmal!');
+      } else {
+        showFb(fb, 'err', 'Lösung: ' + q.opts[q.a] + '. ' + q.ex);
+        finishQ();
+      }
+    }
+  });
+  function finishQ(){
+    var q = QUIZ[L3.i];
+    $$('#qOpts button').forEach(function(o){ o.disabled = true; if (parseInt(o.dataset.i, 10) === q.a) o.classList.add('right'); });
+    $('#qNext').textContent = (L3.i === 3) ? 'Level abschließen' : 'Weiter';
+    $('#qNext').hidden = false;
+  }
+  $('#qNext').addEventListener('click', function(){
+    if (L3.i === 3) {
+      $('#l3play').hidden = true; $('#l3end').hidden = false;
+      $('#l3score').textContent = L3.score + ' von 4 richtig';
+      $('#l3prog').textContent = 'Frage 4 von 4'; setBar($('#l3bar'), 4, 4);
+      setDone('l3', L3.score, 4);
+      return;
+    }
+    L3.i++; loadQ();
+  });
+  function startL3(){
+    L3.i = 0; L3.score = 0;
+    $('#l3play').hidden = false; $('#l3end').hidden = true;
+    selectCmp('B');
+    loadQ();
+  }
+
+  /* ================= FERTIG ================= */
+  function renderFin(){
+    var names = { l1:'Level 1 – Würfel zerlegen', l2:'Level 2 – Immer kleiner teilen', l3:'Level 3 – Die Lunge' };
+    var ul = $('#finList'); ul.innerHTML = '';
+    ['l1','l2','l3'].forEach(function(l){
+      var li = document.createElement('li');
+      var p = progress[l];
+      li.textContent = names[l] + ': ' + (p ? ('✔ ' + p.score + ' von ' + p.total + ' richtig') : 'noch nicht gemacht');
+      ul.appendChild(li);
+    });
+  }
+
+  /* ---------- Zurücksetzen ---------- */
+  $('#resetBtn').addEventListener('click', function(){ $('#resetConfirm').hidden = false; $('#resetBtn').hidden = true; });
+  $('#resetNo').addEventListener('click', function(){ $('#resetConfirm').hidden = true; $('#resetBtn').hidden = false; });
+  $('#resetYes').addEventListener('click', function(){
+    progress = {};
+    try { localStorage.removeItem(STORE); } catch(e){}
+    $('#resetConfirm').hidden = true; $('#resetBtn').hidden = false;
+    updateNav(); renderFin();
+    startL1(); startL2(); startL3();
+    showLevel('l1');
+  });
+
+  /* ---------- Start ---------- */
+  startL1(); startL2(); startL3();
+  updateNav(); renderFin();
+  showLevel('l1');
+})();
+</script>
+</body>
+</html>

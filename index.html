@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Unterrichts-Apps</title>
+<link rel="stylesheet" href="fonts/lexend.css">
+<link rel="stylesheet" href="fonts/atkinson-hyperlegible.css">
+<style>
+:root{
+  --paper:#F6F8FC; --grid:rgba(43,79,168,.085); --surface:#FFFFFF; --line:#D3DBEA;
+  --ink:#1B2540; --muted:#56627C; --accent:#2B4FA8; --accent-soft:#E5EBFA; --est:#6B3FA0; --est-soft:#EFE7F8;
+  --good:#22814F; --good-soft:#DDF3E7;
+  --font-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; --r:14px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+    --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-soft:#222E4E; --est:#C9A6F5; --est-soft:#33274A;
+    --good:#5BCB8F; --good-soft:#173A2A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+  --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-soft:#222E4E; --est:#C9A6F5; --est-soft:#33274A;
+  --good:#5BCB8F; --good-soft:#173A2A; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;color:var(--ink);font-family:var(--font-body);font-size:18px;line-height:1.45}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:18px;
+  padding-block:22px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(1.6rem,5vw,2.2rem);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 .ap{color:var(--est)}
+.lead{margin:4px 0 0;color:var(--muted)}
+h2{font-family:var(--font-display);font-size:1.2rem;font-weight:600;margin:0}
+.sub{margin:0;color:var(--muted);font-size:.95rem}
+section.grp{display:flex;flex-direction:column;gap:10px}
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px}
+a.app{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:inherit;background:var(--surface);
+  border:2px solid var(--line);border-radius:var(--r);padding:12px 16px;transition:border-color .15s}
+a.app:hover{border-color:var(--accent)}
+a.app.ov{border-color:var(--accent);background:var(--accent-soft)}
+.app .name{font-family:var(--font-display);font-weight:600;font-size:1.05rem;color:var(--accent)}
+.app .what{margin:0;font-size:.95rem;color:var(--muted)}
+.badge{align-self:flex-start;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--est)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.credit{margin-top:12px;text-align:center;font-size:.85rem;color:var(--muted)}
+.credit a{color:inherit}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>Unterrichts-<span class="ap">Apps</span></h1><p class="lead">Alle Übungs-Apps nach Fach und Kurs. Tippe auf eine App – sie öffnet sich in einem neuen Tab.</p></header>
+<section class="grp" aria-labelledby="g-mathe6"><div><h2 id="g-mathe6">Mathematik Klasse 6</h2><p class="sub">Dezimalzahlen multiplizieren, Figuren und Flächen</p></div><div class="apps">
+<a class="app ov" href="mathe6/index.html" target="_blank" rel="noopener"><span class=badge>Übersicht</span><span class="name">Mathe-Apps Klasse 6</span><p class="what">Übersichtsseite für die Schülerinnen und Schüler</p></a>
+<a class="app" href="mathe6/zehnerzahlen-trainer.html" target="_blank" rel="noopener"><span class="name">Zehnerzahlen-Trainer</span><p class="what">Mit 10, 100, 1 000 multiplizieren und dividieren</p></a>
+<a class="app" href="mathe6/kommastellen-trainer.html" target="_blank" rel="noopener"><span class="name">Kommastellen-Trainer</span><p class="what">Komma beim Multiplizieren richtig setzen</p></a>
+<a class="app" href="mathe6/ueberschlag-detektiv.html" target="_blank" rel="noopener"><span class="name">Überschlag-Detektiv</span><p class="what">Runden, überschlagen, Ergebnis prüfen</p></a>
+<a class="app" href="mathe6/figuren-und-umfang.html" target="_blank" rel="noopener"><span class="name">Figuren &amp; Umfang</span><p class="what">Figuren erkennen, Umfang berechnen</p></a>
+<a class="app" href="mathe6/einheiten-umrechner.html" target="_blank" rel="noopener"><span class="name">Einheiten-Umrechner</span><p class="what">Flächeneinheiten wählen und umrechnen</p></a>
+<a class="app" href="mathe6/flaechen-werkstatt.html" target="_blank" rel="noopener"><span class="name">Flächen-Werkstatt</span><p class="what">Flächeninhalt, zusammengesetzte Flächen</p></a>
+</div></section>
+<section class="grp" aria-labelledby="g-nw6"><div><h2 id="g-nw6">Naturwissenschaften Jahrgang 6</h2><p class="sub">Messen, Puls, Atmung, Verdauung</p></div><div class="apps">
+<a class="app" href="nw6/einheiten-trainer.html" target="_blank" rel="noopener"><span class="name">Einheiten-Trainer</span><p class="what">Länge, Masse, Volumen – Stunde 11</p></a>
+<a class="app" href="nw6/puls-mess-leiter.html" target="_blank" rel="noopener"><span class="name">Puls-Mess-Leiter</span><p class="what">Puls messen mit Beamer-Ansicht – Stunde 14</p></a>
+<a class="app" href="nw6/weg-der-atemluft.html" target="_blank" rel="noopener"><span class="name">Weg der Atemluft</span><p class="what">Atemwege ordnen und beschriften – Stunde 16</p></a>
+<a class="app" href="nw6/oberflaechen-rechner.html" target="_blank" rel="noopener"><span class="name">Oberflächen-Rechner</span><p class="what">Oberfläche und Verdauung – Stunde 17</p></a>
+<a class="app" href="nw6/verdauungs-torso.html" target="_blank" rel="noopener"><span class="name">Verdauungs-Torso</span><p class="what">Verdauungsorgane einsortieren – Stunde 18/19</p></a>
+<a class="app" href="nw6/aurora-6.html" target="_blank" rel="noopener"><span class="name">AURORA-6 Bodenstation</span><p class="what">Escape Room mit Beamer- und Team-Ansicht</p></a>
+</div></section>
+<section class="grp" aria-labelledby="g-mathe-ef"><div><h2 id="g-mathe-ef">Mathematik EF</h2><p class="sub">Transformationen und Eigenschaften von Funktionen</p></div><div class="apps">
+<a class="app" href="mathe-ef/transformationen-labor.html" target="_blank" rel="noopener"><span class="name">Transformationen-Labor</span><p class="what">Verschieben, Strecken, Spiegeln</p></a>
+<a class="app" href="mathe-ef/sinus-werkstatt.html" target="_blank" rel="noopener"><span class="name">Sinus-Werkstatt</span><p class="what">Tageslänge, Parameter, Fünf-Punkte-Methode</p></a>
+<a class="app" href="mathe-ef/extrempunkte.html" target="_blank" rel="noopener"><span class="name">Extrempunkte Stunde 11</span><p class="what">Lokale Extrempunkte entdecken und üben</p></a>
+<a class="app" href="mathe-ef/vielfachheit.html" target="_blank" rel="noopener"><span class="name">Vielfachheit Stunde 13</span><p class="what">Vielfachheit von Nullstellen</p></a>
+</div></section>
+<section class="grp" aria-labelledby="g-mathe-lk"><div><h2 id="g-mathe-lk">Mathematik LK Q1</h2><p class="sub">Steckbriefaufgaben</p></div><div class="apps">
+<a class="app ov" href="mathe-lk/index.html" target="_blank" rel="noopener"><span class=badge>Übersicht</span><span class="name">Mathe-Apps LK</span><p class="what">Übersichtsseite mit Checklisten-Filter</p></a>
+<a class="app" href="mathe-lk/steckbrief-uebersetzer.html" target="_blank" rel="noopener"><span class="name">Steckbrief-Übersetzer Stunde 2</span><p class="what">Bedingungen aufstellen</p></a>
+<a class="app" href="mathe-lk/gauss-werkstatt.html" target="_blank" rel="noopener"><span class="name">Gauß-Werkstatt Stunde 5</span><p class="what">Gauß-Algorithmus und Fehlersuche</p></a>
+<a class="app" href="mathe-lk/trassierungs-labor.html" target="_blank" rel="noopener"><span class="name">Trassierungs-Labor Stunde 8</span><p class="what">Knickfrei oder ruckfrei?</p></a>
+<a class="app" href="mathe-lk/scharen-labor.html" target="_blank" rel="noopener"><span class="name">Scharen-Labor Stunde 10</span><p class="what">Funktionenscharen erkunden</p></a>
+<a class="app" href="mathe-lk/sinusparameter.html" target="_blank" rel="noopener"><span class="name">Sinusparameter Stunde 13</span><p class="what">Sinusmodelle aufstellen</p></a>
+<a class="app" href="mathe-lk/abschluss-quiz.html" target="_blank" rel="noopener"><span class="name">Abschluss-Quiz Stunde 15</span><p class="what">Quiz zur ganzen Reihe</p></a>
+</div></section>
+<section class="grp" aria-labelledby="g-mathe-q2"><div><h2 id="g-mathe-q2">Mathematik GK Q2</h2><p class="sub">Zusammengesetzte Funktionen und Ableitungsregeln</p></div><div class="apps">
+<a class="app" href="mathe-q2/ableitungstraining.html" target="_blank" rel="noopener"><span class="name">Ableitungstraining Stunde 1</span><p class="what">Produkt- und Kettenregel</p></a>
+<a class="app" href="mathe-q2/wendepunkte.html" target="_blank" rel="noopener"><span class="name">Wendepunkte Stunde 5</span><p class="what">Wendepunkte und Krümmung</p></a>
+<a class="app" href="mathe-q2/groesstes-rechteck.html" target="_blank" rel="noopener"><span class="name">Größtes Rechteck Stunde 7</span><p class="what">Extremwertproblem entdecken</p></a>
+</div></section>
+<section class="grp" aria-labelledby="g-physik-q1"><div><h2 id="g-physik-q1">Physik GK Q1</h2><p class="sub">Wellenoptik</p></div><div class="apps">
+<a class="app" href="physik-q1/doppelspalt-zum-gitter.html" target="_blank" rel="noopener"><span class="name">Vom Doppelspalt zum Gitter</span><p class="what">Mehrfachspalt und Gitter – Stunde 5</p></a>
+<a class="app" href="physik-q1/weisslicht-am-gitter.html" target="_blank" rel="noopener"><span class="name">Weißlicht am Gitter</span><p class="what">Spektren am Gitter – Stunde 6</p></a>
+<a class="app" href="physik-q1/polarisation.html" target="_blank" rel="noopener"><span class="name">Polarisation</span><p class="what">Polarisation – Stunde 7</p></a>
+<a class="app" href="physik-q1/stationenlernen.html" target="_blank" rel="noopener"><span class="name">Stationenlernen Wellenoptik</span><p class="what">Lösungskarten – Stunde 8</p></a>
+<a class="app" href="physik-q1/escape-room.html" target="_blank" rel="noopener"><span class="name">Chronoskop Escape Room</span><p class="what">Escape Room – Stunde 9</p></a>
+<a class="app" href="physik-q1/klausurtraining.html" target="_blank" rel="noopener"><span class="name">Klausurtraining Wellenoptik</span><p class="what">Freiwilliges Übungsangebot</p></a>
+</div></section>
+<footer class="credit">Erstellt mit KI von Christoph Kansy · <a href="links.html">Für Lehrkräfte: Links und QR-Codes</a></footer>
+</div>
+</body>
+</html>

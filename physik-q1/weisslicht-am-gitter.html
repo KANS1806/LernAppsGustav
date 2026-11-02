@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Weißlicht am Gitter</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/bricolage-grotesque.css">
+<link rel="stylesheet" href="../fonts/jetbrains-mono.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: wie „Vom Doppelspalt zum Gitter“ – Kopf mit Reitern; je Reiter links Regler und Aufträge, rechts Draufsicht, Schirm und Tabellen; schmal: gestapelt */
+:root{
+  --bg:#edf0f3;
+  --panel:#ffffff;
+  --line:#d3d9e1;
+  --fg:#15202b;
+  --muted:#556272;
+  --accent:#2b4ea8;
+  --accent-soft:#e2e8f8;
+  --ok:#1b7443;
+  --warn:#9a5208;
+  --warn-soft:#fbe9d6;
+  --bad:#b0271f;
+  --wl-shade:0.85;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1319;--panel:#161d26;--line:#2a3542;--fg:#e4e9ef;--muted:#97a4b3;
+    --accent:#93acff;--accent-soft:#1f2a44;--ok:#5fd08e;--warn:#f0b35c;--warn-soft:#3a2a14;--bad:#ff8a80;--wl-shade:1;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1319;--panel:#161d26;--line:#2a3542;--fg:#e4e9ef;--muted:#97a4b3;
+  --accent:#93acff;--accent-soft:#1f2a44;--ok:#5fd08e;--warn:#f0b35c;--warn-soft:#3a2a14;--bad:#ff8a80;--wl-shade:1;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font-family:var(--f-display);font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-0.01em}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:700;border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.work{display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.work{grid-template-columns:1fr}}
+.side,.main{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{font-family:var(--f-display);font-size:1.12rem;margin:0}
+h3{font-size:.8rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+.ctrl{display:flex;flex-direction:column;gap:4px}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctrl label{font-weight:700}
+.headrow{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+output,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:.92rem}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select,input[type=number]{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button,.btn{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:6px;padding:4px 10px;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:700}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel);font-weight:700}
+.btn:disabled{opacity:.5;cursor:default}
+.check{display:flex;gap:8px;align-items:center}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.checks{display:flex;flex-wrap:wrap;gap:6px 16px}
+canvas{display:block;width:100%;touch-action:pan-y}
+#diag1{height:340px}
+#strip1{height:200px;cursor:crosshair}
+#spec2{height:230px}
+#strip2{height:130px}
+#cv3{height:160px;cursor:ew-resize}
+@media (max-width:520px){#diag1{height:250px}#spec2{height:200px}}
+.caption{font-size:.85rem;color:var(--muted);margin:0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 18px;margin:0}
+.facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.facts dt{font-size:.85rem;color:var(--muted)}
+.facts dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:1rem}
+ol.tasks{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:8px}
+details{border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-weight:700;color:var(--accent)}
+details ul{margin:8px 0 0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem}
+th,td{text-align:right;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:center}
+th{font-weight:700;color:var(--muted);font-size:.82rem}
+td{font-family:var(--f-mono)}
+td.txt{font-family:var(--f-body);text-align:left;white-space:normal}
+.formula{font-family:var(--f-mono);background:var(--accent-soft);color:var(--fg);padding:8px 10px;border-radius:6px;font-size:.95rem}
+.probe{display:flex;flex-direction:column;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.probe .hit{display:flex;gap:8px;align-items:center;font-family:var(--f-mono);font-size:.95rem}
+.sw{width:22px;height:14px;border-radius:3px;border:1px solid var(--line);flex:none}
+ul.overlap{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+ul.overlap li{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;font-family:var(--f-mono);font-size:.93rem}
+.pill{font-family:var(--f-body);font-size:.8rem;font-weight:700;padding:1px 8px;border-radius:999px;border:1px solid currentColor}
+.pill.yes{color:var(--warn);background:var(--warn-soft)}
+.pill.no{color:var(--ok)}
+.answer{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.answer input{width:120px}
+.fb{font-weight:700;min-height:1.5em;margin:0}
+.fb.ok{color:var(--ok)}.fb.warn{color:var(--warn)}.fb.bad{color:var(--bad)}
+ol.hints{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+.marker{font-family:var(--f-mono);font-size:1.05rem}
+.linkrow{display:flex;flex-wrap:wrap;gap:6px 18px}
+.linkrow a{color:var(--accent);font-weight:700}
+footer{font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+sub,sup{line-height:0}
+/* Spalt-Modus: Tablet als Lichtquelle (bewusst immer schwarz) */
+#slit{position:fixed;inset:0;z-index:50;background:#000;color:#cfd6de;display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+#slit .bar{width:3px;flex:1;margin:18px 0;background:#fff}
+#slit .ctrls{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+#slit button{font:inherit;font-size:.95rem;border:1px solid #4a5563;background:#11161c;color:#e6ebf0;border-radius:6px;padding:6px 12px;cursor:pointer}
+#slit button[aria-pressed="true"]{border-color:#fff;font-weight:700}
+#slit p{margin:0;font-size:.9rem;text-align:center;max-width:46ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Physik GK Q1 · Wellenoptik · Stunde 6</p>
+      <h1>Weißlicht am Gitter</h1>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Bereiche">
+      <button id="tab-spektren" role="tab" aria-selected="true" data-tab="spektren">1 · Spektren</button>
+      <button id="tab-lichtquellen" role="tab" aria-selected="false" data-tab="lichtquellen">2 · Lichtquellen</button>
+      <button id="tab-uebung" role="tab" aria-selected="false" data-tab="uebung">3 · Übung</button>
+    </nav>
+  </header>
+
+  <!-- ===================== Reiter 1: Spektren ===================== -->
+  <section id="view-spektren" class="work" role="tabpanel" aria-labelledby="tab-spektren">
+    <div class="side">
+      <div class="card">
+        <h2>Einstellungen</h2>
+        <div class="ctrl">
+          <div class="row"><label for="L1">Linien pro mm</label><output id="L1-out">300</output></div>
+          <input id="L1" type="range" min="50" max="1000" step="10" value="300">
+          <div class="chips" id="L1-chips"><button data-l="100">100</button><button data-l="300">300</button><button data-l="600">600</button></div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><label for="e1">Schirmabstand e</label><output id="e1-out">1,00 m</output></div>
+          <input id="e1" type="range" min="0.5" max="2" step="0.05" value="1">
+        </div>
+        <div class="ctrl">
+          <label for="bounds">Grenzen des sichtbaren Lichts</label>
+          <select id="bounds">
+            <option value="400-750" selected>400 nm bis 750 nm (Unterricht)</option>
+            <option value="380-780">380 nm bis 780 nm (Literatur)</option>
+          </select>
+        </div>
+        <div class="ctrl">
+          <span style="font-weight:700">Ordnungen anzeigen</span>
+          <div class="checks">
+            <label class="check"><input id="k1" type="checkbox" checked> 1.</label>
+            <label class="check"><input id="k2" type="checkbox" checked> 2.</label>
+            <label class="check"><input id="k3" type="checkbox" checked> 3.</label>
+          </div>
+        </div>
+        <label class="check"><input id="ov" type="checkbox" checked> Überlappungen markieren</label>
+        <div class="ctrl">
+          <label for="filt">Farbfilter vor der Lampe</label>
+          <select id="filt">
+            <option value="none" selected>kein Filter (weißes Licht)</option>
+            <option value="red">Rotfilter</option>
+            <option value="green">Grünfilter</option>
+            <option value="blue">Blaufilter</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Arbeitsaufträge</h2>
+        <ol class="tasks">
+          <li>Stelle 300 Linien/mm und e = 1,00 m ein. Beschreibe das Schirmbild: Farbe der 0. Ordnung, Farbreihenfolge in der 1. Ordnung, Breite der höheren Ordnungen.</li>
+          <li>Zwischen welchen Ordnungen überlappen sich die Spektren? Tippe mit der <b>Sonde</b> in den markierten Bereich: Welche Wellenlängen treffen dort zusammen?</li>
+          <li>Zeige mit k · λ<sub>rot</sub> und (k + 1) · λ<sub>violett</sub>, dass sich die 1. und 2. Ordnung nicht überlappen, die 2. und 3. aber schon.</li>
+          <li>Verändere die Linienzahl. Ändert sich etwas daran, <i>ob</i> sich die Ordnungen überlappen? Begründe.</li>
+          <li>Setze den Rotfilter ein. Wo erscheint jetzt Licht – und was zeigt das über Farbe und Wellenlänge?</li>
+        </ol>
+        <details>
+          <summary>Ergebnisse prüfen</summary>
+          <ul>
+            <li>0. Ordnung: weiß, denn für k = 0 ist α = 0 für alle Wellenlängen. In jeder höheren Ordnung entsteht ein Spektrum: Violett innen, Rot außen (größeres λ → größeres sin α).</li>
+            <li>300/mm, e = 1,00 m: 1. Ordnung von 12,1 cm bis 23,1 cm, 2. Ordnung von 24,7 cm bis 50,4 cm, 3. Ordnung von 38,6 cm bis 91,5 cm. Die 2. und 3. Ordnung überlappen von 38,6 cm bis 50,4 cm.</li>
+            <li>1 · 750 nm = 750 nm &lt; 2 · 400 nm = 800 nm → Lücke. 2 · 750 nm = 1500 nm &gt; 3 · 400 nm = 1200 nm → Überlappung.</li>
+            <li>Die Bedingung k · λ<sub>rot</sub> &gt; (k + 1) · λ<sub>violett</sub> enthält g nicht. Das Gitter verschiebt nur die Lage auf dem Schirm, nicht die Überlappung.</li>
+            <li>Mit Rotfilter bleibt in jeder Ordnung nur der äußere Teil hell: Jeder Farbe ist eine Wellenlänge zugeordnet.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+    <div class="main">
+      <div class="card">
+        <h2>Strahlengang von oben</h2>
+        <canvas id="diag1" aria-label="Draufsicht: Lampe mit Spalt, Gitter und Schirm; farbige Strahlenfächer der Ordnungen 1 bis 3"></canvas>
+        <p class="caption">Obere Hälfte, Winkel und Abstände maßstabsgetreu. Der Schirm reicht 1 m zu jeder Seite. Strahlen, die oben aus dem Bild laufen, gehen am Schirm vorbei. Orange: Bereich, in dem sich 2. und 3. Ordnung überlappen.</p>
+      </div>
+      <div class="card">
+        <div class="headrow"><h2>Blick auf den Schirm</h2><span class="caption">Tippe auf den Schirm, um die Sonde zu setzen.</span></div>
+        <canvas id="strip1" aria-label="Schirm von −1 m bis +1 m mit den Spektren; darunter die Bereiche der Ordnungen und ein Maßband"></canvas>
+        <div class="probe" id="probe1" aria-live="polite"></div>
+      </div>
+      <div class="card">
+        <h3>Lage der Spektren (rechte Seite)</h3>
+        <dl class="facts">
+          <div><dt>Gitterkonstante g = 1 mm / Linienzahl</dt><dd id="s-g">–</dd></div>
+          <div><dt>Höchste Ordnung für Rot (sin α ≤ 1)</dt><dd id="s-kr">–</dd></div>
+          <div><dt>Höchste Ordnung für Violett</dt><dd id="s-kv">–</dd></div>
+        </dl>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>k</th><th>α (violett)</th><th>α (rot)</th><th>a (violett)</th><th>a (rot)</th><th>Breite</th></tr></thead>
+            <tbody id="s-table"></tbody>
+          </table>
+        </div>
+        <h3>Überlappen sich die Ordnungen?</h3>
+        <ul class="overlap" id="s-ov"></ul>
+        <p class="caption">Die Ordnung k reicht mit Rot über die Ordnung k + 1 mit Violett hinaus, wenn k · λ<sub>rot</sub> &gt; (k + 1) · λ<sub>violett</sub>. Das Gitter (g) kommt in dieser Bedingung nicht vor.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Reiter 2: Lichtquellen ===================== -->
+  <section id="view-lichtquellen" class="work" role="tabpanel" aria-labelledby="tab-lichtquellen" hidden>
+    <div class="side">
+      <div class="card">
+        <h2>Lichtquelle</h2>
+        <div class="chips" id="src-chips">
+          <button data-src="halogen">Halogenlampe</button>
+          <button data-src="led">Weiße LED</button>
+          <button data-src="tablet">Tablet-Display</button>
+          <button data-src="hg">Hg-Spektrallampe</button>
+          <button data-src="na">Na-Lampe</button>
+        </div>
+        <p class="caption" id="src-info"></p>
+        <div class="ctrl">
+          <div class="row"><label for="L2">Linien pro mm</label><output id="L2-out">300</output></div>
+          <input id="L2" type="range" min="50" max="1000" step="10" value="300">
+        </div>
+        <div class="ctrl">
+          <div class="row"><label for="e2">Schirmabstand e</label><output id="e2-out">1,00 m</output></div>
+          <input id="e2" type="range" min="0.5" max="2" step="0.05" value="1">
+        </div>
+      </div>
+      <div class="card">
+        <h2>Tablet als Lichtquelle</h2>
+        <p style="margin:0">Der Spalt-Modus zeigt eine dünne weiße Linie auf schwarzem Grund. Schaut aus 1–2 m Abstand durch euer Gitter auf das Tablet eurer Partnerin oder eures Partners.</p>
+        <button class="btn primary" id="slit-open">Spalt-Modus starten</button>
+      </div>
+      <div class="card">
+        <h2>Arbeitsaufträge</h2>
+        <ol class="tasks">
+          <li>Vergleiche die Spektren von Halogenlampe und Hg-Spektrallampe. Beschreibe den Unterschied.</li>
+          <li>Ordne zu: Welche Lichtquellen haben ein <b>kontinuierliches Spektrum</b>, welche ein <b>Linienspektrum</b>?</li>
+          <li>Starte den Spalt-Modus und betrachte die Linie durch das Gitter. Vergleiche mit dem Spektrum „Tablet-Display“.</li>
+          <li>Die Hg-Lampe hat eine grüne Linie bei 546 nm. Berechne, wo sie bei 300 Linien/mm und e = 1,00 m in der 1. Ordnung liegt, und prüfe mit der Tabelle.</li>
+        </ol>
+        <details>
+          <summary>Ergebnisse prüfen</summary>
+          <ul>
+            <li>Halogenlampe: lückenloses Band aller Farben (kontinuierliches Spektrum). Hg-Lampe: nur einzelne farbige Linien (Linienspektrum).</li>
+            <li>Kontinuierlich: Halogenlampe, weiße LED (mit hellem Blau-Anteil). Linienspektrum: Hg- und Na-Lampe. Das Tablet-Display mischt Weiß aus drei Farbbändern (Rot, Grün, Blau).</li>
+            <li>Durch das Gitter zerfällt die weiße Linie in einzelne farbige Linien – je nach Gerät drei Bänder in Rot, Grün und Blau.</li>
+            <li>sin α₁ = 546 nm / 3333 nm = 0,164 → α₁ = 9,4° → a₁ = 1,00 m · tan 9,4° = 16,6 cm.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+    <div class="main">
+      <div class="card">
+        <h2 id="spec2-title">Spektrum der Lichtquelle</h2>
+        <canvas id="spec2" aria-label="Relative Intensität der Lichtquelle über der Wellenlänge von 380 nm bis 780 nm"></canvas>
+        <p class="caption">Relative Intensität über der Wellenlänge (Modell). Linien sind zur Sichtbarkeit verbreitert gezeichnet.</p>
+      </div>
+      <div class="card">
+        <h3>Schirm: 1. Ordnung (rechte Seite)</h3>
+        <canvas id="strip2" aria-label="Schirm mit dem Spektrum der 1. Ordnung und Maßband"></canvas>
+      </div>
+      <div class="card" id="lines-card">
+        <h3>Linien in der 1. Ordnung</h3>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Linie</th><th>λ</th><th>Farbe</th><th>α₁</th><th>a₁ = e · tan α₁</th></tr></thead>
+            <tbody id="l-table"></tbody>
+          </table>
+        </div>
+        <p class="caption">Ausblick (UV VII, Atomphysik): Jedes Element sendet ein eigenes Linienspektrum aus – wie ein Fingerabdruck. Daran erkennt man zum Beispiel, woraus Sterne bestehen.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Reiter 3: Übung ===================== -->
+  <section id="view-uebung" class="work" role="tabpanel" aria-labelledby="tab-uebung" hidden>
+    <div class="side">
+      <div class="card">
+        <h2>Aufgabe</h2>
+        <p id="u-text" style="margin:0"></p>
+        <div class="formula" id="u-data"></div>
+        <button class="btn" id="u-new">Neue Aufgabe</button>
+      </div>
+      <div class="card">
+        <h2>Hilfen</h2>
+        <ol class="hints" id="u-hints"></ol>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="u-hint">Nächste Hilfe</button>
+          <button class="btn" id="u-sol">Lösung zeigen</button>
+        </div>
+        <div id="u-solution" hidden></div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="card">
+        <h2>Schirm mit Maßband</h2>
+        <canvas id="cv3" aria-label="Schirm mit Spektren und Maßband; Messmarke durch Ziehen verschieben"></canvas>
+        <div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between">
+          <span class="marker">Messmarke: <span id="u-mark">0,0 cm</span></span>
+          <span class="caption">Ziehe auf dem Schirm, um die Messmarke zu verschieben. Feinjustierung:</span>
+          <span style="display:flex;gap:6px"><button class="btn" id="u-m1">− 0,1 cm</button><button class="btn" id="u-p1">+ 0,1 cm</button></span>
+        </div>
+        <p class="caption">In der Übung sind die Grenzen des Spektrums scharf gezeichnet. In echt wird das Spektrum zu den Rändern hin allmählich dunkler.</p>
+      </div>
+      <div class="card">
+        <h3>a) Violette Grenze (1. Ordnung)</h3>
+        <div class="answer">
+          <label for="u-lv">λ<sub>violett</sub> =</label><input id="u-lv" type="number" inputmode="decimal" step="1" placeholder="z. B. 400"><span>nm</span>
+          <button class="btn primary" id="u-c1">Prüfen</button>
+        </div>
+        <p class="fb" id="u-fb1" aria-live="polite"></p>
+        <h3>b) Rote Grenze (1. Ordnung)</h3>
+        <div class="answer">
+          <label for="u-lr">λ<sub>rot</sub> =</label><input id="u-lr" type="number" inputmode="decimal" step="1" placeholder="z. B. 750"><span>nm</span>
+          <button class="btn primary" id="u-c2">Prüfen</button>
+        </div>
+        <p class="fb" id="u-fb2" aria-live="polite"></p>
+        <h3>c) Welche Wellenlänge der 2. Ordnung liegt dort, wo die 3. Ordnung beginnt?</h3>
+        <div class="answer">
+          <label for="u-l2">λ =</label><input id="u-l2" type="number" inputmode="decimal" step="1" placeholder="z. B. 600"><span>nm</span>
+          <button class="btn primary" id="u-c3">Prüfen</button>
+        </div>
+        <p class="fb" id="u-fb3" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="linkrow">
+      <a href="https://phet.colorado.edu/sims/html/bending-light/latest/bending-light_de.html" target="_blank" rel="noopener">Prismenvergleich: PhET „Bending Light“ (Bildschirm „Prismen“, weißes Licht)</a>
+      <a href="doppelspalt-zum-gitter.html" target="_blank" rel="noopener">Simulation „Vom Doppelspalt zum Gitter“ (Stunde 5)</a>
+    </div>
+    <span>Modell: senkrechter Lichteinfall, sehr viele schmale Spalte, ebener Schirm. Für jede Wellenlänge gilt g · sin α<sub>k</sub> = k · λ und a<sub>k</sub> = e · tan α<sub>k</sub>. Die Helligkeit nimmt zu höheren Ordnungen hin ab (das Licht verteilt sich auf ein breiteres Spektrum). Farben auf dem Bildschirm sind eine Näherung.</span>
+  </footer>
+</div>
+
+<div id="slit" hidden role="dialog" aria-label="Spalt-Modus">
+  <p>Durch das Gitter auf diese Linie schauen (Abstand 1–2 m, Gitterlinien senkrecht halten).</p>
+  <div class="bar" id="slit-bar"></div>
+  <div class="ctrls">
+    <span>Farbe:</span>
+    <button data-c="#ffffff" aria-pressed="true">Weiß</button>
+    <button data-c="#ff0000" aria-pressed="false">Rot</button>
+    <button data-c="#00ff00" aria-pressed="false">Grün</button>
+    <button data-c="#0000ff" aria-pressed="false">Blau</button>
+    <button id="slit-close">Schließen</button>
+  </div>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const tok=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const de=(x,dig)=>x.toLocaleString('de-DE',{minimumFractionDigits:dig,maximumFractionDigits:dig});
+const deS=(x,dig)=>de(x,dig).replace('-','−');
+const FONT_MONO='12px "JetBrains Mono", ui-monospace, monospace';
+const FONT_BODY='13px "Atkinson Hyperlegible", system-ui, sans-serif';
+const SCREEN_HALF=1.0;            // Schirm von −1 m bis +1 m
+const ETA=[0,1,0.9,0.7,0.55];     // relative Effizienz der Ordnungen (Modell)
+
+/* ---------- Farbe aus Wellenlänge ---------- */
+function wlRGB(w){
+  if(w<380||w>780) return [0,0,0];
+  let r=0,g=0,b=0;
+  if(w<440){r=-(w-440)/60;b=1}
+  else if(w<490){g=(w-440)/50;b=1}
+  else if(w<510){g=1;b=-(w-510)/20}
+  else if(w<580){r=(w-510)/70;g=1}
+  else if(w<645){r=1;g=-(w-645)/65}
+  else {r=1}
+  let f=1; if(w<420)f=0.3+0.7*(w-380)/40; else if(w>700)f=0.3+0.7*(780-w)/80;
+  return [r*f,g*f,b*f];
+}
+function wlCss(w,a,shade){
+  const s=shade==null?1:shade; const [r,g,b]=wlRGB(w);
+  return `rgba(${Math.round(255*r*s)},${Math.round(255*g*s)},${Math.round(255*b*s)},${a})`;
+}
+function colorName(w){
+  if(w<430)return 'violett'; if(w<485)return 'blau'; if(w<505)return 'blaugrün'; if(w<565)return 'grün';
+  if(w<590)return 'gelb'; if(w<625)return 'orange'; return 'rot';
+}
+
+/* ---------- Canvas ---------- */
+function prep(cv){
+  const r=cv.getBoundingClientRect(); const dpr=window.devicePixelRatio||1;
+  const W=Math.max(1,Math.round(r.width*dpr)),H=Math.max(1,Math.round(r.height*dpr));
+  if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;}
+  const c=cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,r.width,r.height);
+  return {c,w:r.width,h:r.height};
+}
+
+/* ---------- Lichtquellen (Modellspektren, relative Intensität 0…1) ---------- */
+const gauss=(x,m,s)=>Math.exp(-0.5*((x-m)/s)**2);
+const FWHM=2.3548;
+function planck(w,T){const l=w*1e-9; return 1/(l**5*(Math.exp(0.014388/(l*T))-1));}
+const P3000=planck(780,3000);
+const SOURCES={
+  white:{name:'Weißes Licht (idealisiert)',lines:null,S:()=>1},
+  halogen:{name:'Halogenlampe',info:'Temperaturstrahler (ca. 3000 K): lückenloses, kontinuierliches Spektrum. Rot ist heller als Blau.',lines:null,
+    S:w=>planck(w,3000)/P3000},
+  led:{name:'Weiße LED',info:'Blaue LED mit gelbem Leuchtstoff: kontinuierliches Spektrum mit einem hellen blauen Bereich bei ca. 450 nm.',lines:null,
+    S:w=>Math.min(1,gauss(w,452,20/FWHM)+0.58*gauss(w,565,115/FWHM))},
+  tablet:{name:'Tablet-Display (weiß)',info:'Weiß aus drei Farbbändern (Blau, Grün, Rot). Lage und Breite sind je nach Gerät verschieden – hier ein typisches LCD.',lines:null,
+    S:w=>Math.min(1,0.95*gauss(w,450,22/FWHM)+0.8*gauss(w,533,38/FWHM)+0.75*gauss(w,630,10/FWHM)+0.35*gauss(w,611,8/FWHM)+0.3*gauss(w,648,8/FWHM))},
+  hg:{name:'Hg-Spektrallampe',info:'Gasentladung in Quecksilberdampf: nur einzelne Wellenlängen – ein Linienspektrum. Die beiden gelben Linien liegen so dicht, dass man sie meist als eine sieht.',
+    lines:[[404.7,0.35,'violett'],[435.8,0.75,'blau'],[546.1,1.0,'grün'],[577.0,0.55,'gelb'],[579.1,0.55,'gelb']]},
+  na:{name:'Na-Lampe (nur Simulation)',info:'Natriumdampflampe (Straßenlaterne): fast nur eine gelbe Doppellinie bei 589,0 nm und 589,6 nm. Nicht in der Sammlung.',
+    lines:[[589.0,1.0,'gelb'],[589.6,0.5,'gelb']]}
+};
+function srcS(src,w,sig){
+  if(src.lines){let s=0; for(const [l,a] of src.lines) s+=a*gauss(w,l,sig); return Math.min(1.2,s);}
+  return src.S(w);
+}
+const FILTERS={none:()=>1,red:w=>1/(1+Math.exp(-(w-605)/8)),green:w=>gauss(w,530,28),blue:w=>gauss(w,455,26)};
+
+/* ---------- Schirmbild: additive Farbmischung aller Ordnungen ---------- */
+function renderSpectrum(c,px0,pw,top,h,xmin,xmax,e,gnm,orders,source,filter,opts){
+  opts=opts||{};
+  const n=Math.max(1,Math.round(pw)); const dx=(xmax-xmin)/n; const SUB=4;
+  const gain=opts.gain||2.2; const lo=opts.lo||380, hi=opts.hi||780;
+  const img=c.createImageData(1,1);
+  for(let i=0;i<n;i++){
+    let R=0,G=0,B=0;
+    for(let j=0;j<SUB;j++){
+      const x=xmin+(i+(j+0.5)/SUB)*dx; const ax=Math.abs(x);
+      const sa=ax/Math.hypot(x,e), ca=e/Math.hypot(x,e);
+      for(const k of orders){
+        const w=gnm*sa/k; if(w<lo||w>hi) continue;
+        const dldx=gnm*ca*ca*ca/(k*e);             // nm pro m
+        const sig=Math.max(0.6,1.3*dx*dldx);        // Linienverbreiterung ≈ 1–2 Pixel
+        const I=srcS(source,w,sig)*filter(w)*ETA[k]*ca*ca*ca/k;
+        if(I<=0) continue; const [r,g,b]=wlRGB(w); R+=r*I; G+=g*I; B+=b*I;
+      }
+      if(opts.zero){ const z=gauss(x,0,opts.zero); if(z>0.01){ let zw=0.85; if(filter!==FILTERS.none){ // gefilterte 0. Ordnung
+            let rr=0,gg=0,bb=0,nn=0; for(let w=390;w<=770;w+=10){const f=filter(w)*srcS(source,w,3); const [r,g,b]=wlRGB(w); rr+=r*f;gg+=g*f;bb+=b*f;nn++;}
+            const m=Math.max(rr,gg,bb)||1; R+=3*z*rr/m; G+=3*z*gg/m; B+=3*z*bb/m; }
+          else { R+=3*z; G+=3*z; B+=3*z*zw; } } }
+    }
+    R/=SUB;G/=SUB;B/=SUB;
+    const tr=v=>Math.round(255*(1-Math.exp(-gain*v)));
+    c.fillStyle=`rgb(${tr(R)},${tr(G)},${tr(B)})`;
+    c.fillRect(px0+i,top,1.05,h);
+  }
+}
+function aOf(gnm,k,w,e){const s=k*w/gnm; if(s>=1) return Infinity; return e*Math.tan(Math.asin(s));}
+function angOf(gnm,k,w){const s=k*w/gnm; if(s>=1) return NaN; return Math.asin(s)*180/Math.PI;}
+
+/* ---------- Reiter ---------- */
+const TABS=['spektren','lichtquellen','uebung'];
+let current='spektren';
+function showTab(name){
+  if(!TABS.includes(name)) name='spektren';
+  current=name;
+  TABS.forEach(t=>{ $('view-'+t).hidden=(t!==name); $('tab-'+t).setAttribute('aria-selected',String(t===name)); });
+  requestDraw();
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  const t=b.dataset.tab; try{ history.replaceState(null,'','#'+t);}catch(e){}
+  showTab(t);
+}));
+window.addEventListener('hashchange',()=>showTab(location.hash.slice(1)));
+let pending=false;
+function requestDraw(){ if(pending) return; pending=true; requestAnimationFrame(()=>{pending=false; if(current==='spektren')draw1(); else if(current==='lichtquellen')draw2(); else draw3();}); }
+window.addEventListener('resize',requestDraw);
+if(window.ResizeObserver){ const ro=new ResizeObserver(requestDraw); ['diag1','strip1','spec2','strip2','cv3'].forEach(id=>ro.observe($(id))); }
+try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',requestDraw);}catch(e){}
+new MutationObserver(requestDraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+function syncChips(container,attr,val){
+  container.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(String(b.dataset[attr])===String(val))));
+}
+function drawTape(c,SX,y,muted,from,to,labelEvery){
+  c.strokeStyle=muted; c.fillStyle=muted; c.lineWidth=1; c.font=FONT_MONO; c.textAlign='center'; c.textBaseline='top';
+  for(let cm=from;cm<=to;cm+=1){
+    const ten=cm%10===0, five=cm%5===0; if(!five) continue;
+    const px=SX(cm/100); c.beginPath(); c.moveTo(px,y); c.lineTo(px,y+(ten?9:5)); c.stroke();
+    if(ten&&cm%labelEvery===0) c.fillText(cm<0?'−'+(-cm):String(cm),px,y+11);
+  }
+}
+
+/* =====================================================
+   Reiter 1: Spektren
+   ===================================================== */
+let probeX=0.44;
+$('L1-chips').addEventListener('click',ev=>{const b=ev.target.closest('button'); if(!b)return; $('L1').value=b.dataset.l; requestDraw();});
+['L1','e1','bounds','k1','k2','k3','ov','filt'].forEach(id=>$(id).addEventListener('input',requestDraw));
+['bounds','filt','k1','k2','k3','ov'].forEach(id=>$(id).addEventListener('change',requestDraw));
+let geom1=null;
+function setProbe(ev){
+  if(!geom1) return; const r=$('strip1').getBoundingClientRect();
+  const x=((ev.clientX-r.left-geom1.sl)/geom1.sw)*2*SCREEN_HALF-SCREEN_HALF;
+  probeX=Math.round(Math.max(-SCREEN_HALF,Math.min(SCREEN_HALF,x))*1000)/1000; requestDraw();
+}
+let drag1=false;
+$('strip1').addEventListener('pointerdown',ev=>{drag1=true; try{$('strip1').setPointerCapture(ev.pointerId);}catch(e){} setProbe(ev);});
+$('strip1').addEventListener('pointermove',ev=>{if(drag1)setProbe(ev);});
+['pointerup','pointercancel'].forEach(t=>$('strip1').addEventListener(t,()=>drag1=false));
+
+function draw1(){
+  const L=+$('L1').value, e=+$('e1').value, gnm=1e6/L;
+  const [lv,lr]=$('bounds').value.split('-').map(Number);
+  const orders=[1,2,3].filter(k=>$('k'+k).checked);
+  const filt=FILTERS[$('filt').value]; const showOv=$('ov').checked;
+  $('L1-out').textContent=L; $('e1-out').textContent=de(e,2)+' m'; syncChips($('L1-chips'),'l',L);
+  const fg=tok('--fg'), muted=tok('--muted'), line=tok('--line'), warn=tok('--warn'), shade=parseFloat(tok('--wl-shade'))||1;
+
+  /* --- Draufsicht (obere Hälfte, maßstabsgetreu) --- */
+  const D=prep($('diag1')); const c=D.c;
+  const yb=D.h-40; const sc=Math.min((D.w-174)/e,(yb-10)/SCREEN_HALF); const x0=Math.max(104,(D.w-e*sc)/2); const xs=x0+e*sc; const ox=x0-104;
+  // Schirm
+  c.strokeStyle=fg; c.lineWidth=4; c.beginPath(); c.moveTo(xs,yb+8); c.lineTo(xs,yb-SCREEN_HALF*sc); c.stroke();
+  // Lampe, Spalt, Linse
+  c.fillStyle=muted; c.fillRect(ox+6,yb-11,26,22); c.fillRect(ox+44,yb-14,4,10); c.fillRect(ox+44,yb+4,4,10);
+  c.strokeStyle=fg; c.globalAlpha=0.5; c.lineWidth=3; c.beginPath(); c.moveTo(ox+32,yb); c.lineTo(x0,yb); c.stroke(); c.globalAlpha=1;
+  c.strokeStyle=muted; c.lineWidth=1.5; c.beginPath(); c.ellipse(ox+68,yb,4,16,0,0,2*Math.PI); c.stroke();
+  c.fillStyle=muted; c.font=FONT_BODY; c.textAlign='left'; c.textBaseline='top'; c.fillText('Lampe + Spalt',ox+4,yb+18);
+  // Strahlenfächer
+  c.lineWidth=1.2;
+  for(const k of orders){ for(let w=lv;w<=lr;w+=10){
+    const s=k*w/gnm; if(s>=1) continue; const a=Math.asin(s), y=e*Math.tan(a);
+    let ex,ey; if(y<=SCREEN_HALF){ex=xs;ey=yb-y*sc;} else {ex=x0+Math.cos(a)*4000; ey=yb-Math.sin(a)*4000;}
+    c.strokeStyle=wlCss(w,0.6*filt(w)+0.03,shade); c.beginPath(); c.moveTo(x0,yb); c.lineTo(ex,ey); c.stroke(); }}
+  // 0. Ordnung
+  c.strokeStyle=fg; c.globalAlpha=0.75; c.lineWidth=2; c.beginPath(); c.moveTo(x0,yb); c.lineTo(xs,yb); c.stroke(); c.globalAlpha=1;
+  // Gitter
+  c.fillStyle=tok('--panel'); c.fillRect(x0-4,yb-26,8,40); c.strokeStyle=fg; c.lineWidth=1.5; c.strokeRect(x0-4,yb-26,8,40);
+  c.lineWidth=1; for(let t=-22;t<=10;t+=6){c.beginPath(); c.moveTo(x0-4,yb+t); c.lineTo(x0+4,yb+t); c.stroke();}
+  c.fillStyle=muted; c.font=FONT_BODY; c.textAlign='center'; c.textBaseline='bottom'; c.fillText('Gitter',x0,yb-30);
+  // Überlappung am Schirm
+  if(showOv && orders.includes(2) && orders.includes(3)){ const lo=aOf(gnm,3,lv,e), hi=Math.min(aOf(gnm,2,lr,e),SCREEN_HALF);
+    if(lo<hi){ c.strokeStyle=warn; c.lineWidth=6; c.globalAlpha=0.8; c.beginPath(); c.moveTo(xs-7,yb-lo*sc); c.lineTo(xs-7,yb-hi*sc); c.stroke(); c.globalAlpha=1; } }
+  // Beschriftung der Ordnungen am Schirm
+  c.font=FONT_MONO; c.textBaseline='middle'; c.textAlign='left';
+  const used=[yb];
+  for(const k of orders){ const a1=aOf(gnm,k,lv,e); if(a1>SCREEN_HALF) continue; const a2=Math.min(aOf(gnm,k,lr,e),SCREEN_HALF);
+    const py=yb-(a1+a2)/2*sc; if(used.every(u=>Math.abs(u-py)>14)){used.push(py); c.fillStyle=fg; c.fillText('k = '+k,xs+8,py);} }
+  c.fillStyle=fg; c.fillText('k = 0',xs+8,yb);
+  // e-Maß
+  const ye=yb+28; c.strokeStyle=muted; c.lineWidth=1; c.beginPath(); c.moveTo(x0,ye); c.lineTo(xs,ye);
+  c.moveTo(x0,ye-5); c.lineTo(x0,ye+5); c.moveTo(xs,ye-5); c.lineTo(xs,ye+5); c.stroke();
+  const lbl='e = '+de(e,2)+' m'; const tw=c.measureText(lbl).width+10; c.fillStyle=tok('--panel'); c.fillRect((x0+xs)/2-tw/2,ye-9,tw,18);
+  c.fillStyle=muted; c.textAlign='center'; c.fillText(lbl,(x0+xs)/2,ye);
+
+  /* --- Schirm --- */
+  const S=prep($('strip1')); const s=S.c; const sl=14,sr=14,bandH=74, sw=S.w-sl-sr; geom1={sl,sw};
+  const SX=x=>sl+(x+SCREEN_HALF)/(2*SCREEN_HALF)*sw;
+  s.fillStyle='#05070a'; s.fillRect(sl,0,sw,bandH);
+  renderSpectrum(s,sl,sw,0,bandH,-SCREEN_HALF,SCREEN_HALF,e,gnm,orders,SOURCES.white,filt,{zero:0.004});
+  // Bereiche der Ordnungen
+  const rowY=k=>bandH+8+(k-1)*13;
+  const ext={};
+  for(const k of orders){ const a1=aOf(gnm,k,lv,e), a2=aOf(gnm,k,lr,e); ext[k]=[a1,a2];
+    if(a1>SCREEN_HALF) continue; const b=Math.min(a2,SCREEN_HALF+0.05);
+    for(const sg of [1,-1]){ const p1=SX(sg*a1), p2=SX(sg*Math.min(b,SCREEN_HALF));
+      s.strokeStyle=muted; s.lineWidth=2; s.beginPath(); s.moveTo(p1,rowY(k)); s.lineTo(p2,rowY(k)); s.stroke();
+      s.beginPath(); s.moveTo(p1,rowY(k)-4); s.lineTo(p1,rowY(k)+4); s.stroke();
+      if(a2<=SCREEN_HALF){ s.beginPath(); s.moveTo(p2,rowY(k)-4); s.lineTo(p2,rowY(k)+4); s.stroke(); } }
+  }
+  s.font=FONT_MONO; s.textBaseline='middle'; s.fillStyle=muted;
+  orders.forEach(k=>{ const a1=ext[k][0]; if(a1>SCREEN_HALF-0.02) return;
+    s.textAlign='right'; s.fillText(k+'.',SX(a1)-5,rowY(k)); s.textAlign='left'; s.fillText(k+'.',SX(-a1)+5,rowY(k)); });
+  // Überlappungen
+  const ovs=[];
+  for(let i=0;i<orders.length;i++) for(let j=i+1;j<orders.length;j++){
+    const k=orders[i], m=orders[j]; const lo=ext[m][0], hi=ext[k][1];
+    if(lo<hi && lo<SCREEN_HALF) ovs.push([k,m,lo,Math.min(hi,SCREEN_HALF)]);
+  }
+  if(showOv){
+    for(const [k,m,lo,hi] of ovs){ for(const sg of [1,-1]){
+      const p1=SX(sg*lo), p2=SX(sg*hi); const L0=Math.min(p1,p2), W0=Math.abs(p2-p1);
+      s.save(); s.strokeStyle='#ffd27a'; s.lineWidth=2; s.setLineDash([5,3]); s.strokeRect(L0,2,W0,bandH-4); s.restore();
+      s.fillStyle=warn; s.globalAlpha=0.22; s.fillRect(L0,rowY(k)-6,W0,rowY(m)-rowY(k)+12); s.globalAlpha=1;
+    }
+      const cx=SX((lo+hi)/2); s.fillStyle=warn; s.font='700 12px "Atkinson Hyperlegible", system-ui, sans-serif'; s.textAlign='center'; s.textBaseline='top';
+      s.fillText('Überlappung '+k+'./'+m+'.',Math.min(Math.max(cx,sl+60),sl+sw-60),bandH+8+3*13);
+    }
+  }
+  // Maßband
+  const tapeY=bandH+8+3*13+18;
+  s.strokeStyle=muted; s.lineWidth=1; s.beginPath(); s.moveTo(sl,tapeY); s.lineTo(sl+sw,tapeY); s.stroke();
+  drawTape(s,SX,tapeY,muted,-100,100,sw>620?10:20);
+  s.font=FONT_BODY; s.textAlign='right'; s.textBaseline='top'; s.fillStyle=muted; s.fillText('cm',sl+sw,tapeY+26);
+  // Sonde
+  const pxp=SX(probeX); s.strokeStyle='#ffffff'; s.lineWidth=1.5; s.setLineDash([4,3]); s.beginPath(); s.moveTo(pxp,0); s.lineTo(pxp,bandH); s.stroke(); s.setLineDash([]);
+  s.fillStyle=tok('--accent'); s.beginPath(); s.moveTo(pxp,bandH+1); s.lineTo(pxp-6,bandH+11); s.lineTo(pxp+6,bandH+11); s.closePath(); s.fill();
+  // Sondenanzeige
+  const ax=Math.abs(probeX), sa=ax/Math.hypot(probeX,e), alpha=Math.asin(sa)*180/Math.PI;
+  let html=`<div><b>Sonde bei x = ${deS(probeX*100,1)} cm</b> · α = ${de(alpha,1)}° · sin α = ${de(sa,3)}</div>`;
+  const hits=[];
+  if(ax<0.004) hits.push('<div class="hit"><span class="sw" style="background:#fff"></span>0. Ordnung: alle Wellenlängen (weiß)</div>');
+  for(const k of orders){ const w=gnm*sa/k; if(w>=380&&w<=780 && ax>=0.004){
+    const inB=w>=lv&&w<=lr; hits.push(`<div class="hit"><span class="sw" style="background:${wlCss(w,1)}"></span>${k}. Ordnung: λ = ${de(w,0)} nm (${colorName(w)})${inB?'':' – außerhalb der gewählten Grenzen'}</div>`);} }
+  if(!hits.length) hits.push('<div>Hier kommt kein sichtbares Licht an.</div>');
+  if(hits.length>1&&ax>=0.004) hits.push('<div class="caption">Hier überlagern sich mehrere Ordnungen: Man sieht eine Mischfarbe.</div>');
+  $('probe1').innerHTML=html+hits.join('');
+
+  /* --- Tabelle --- */
+  $('s-g').textContent=de(gnm/1000,2)+' µm';
+  $('s-kr').textContent='k = '+Math.floor(gnm/lr-1e-9)+' (g / λ = '+de(gnm/lr,2)+')';
+  $('s-kv').textContent='k = '+Math.floor(gnm/lv-1e-9)+' (g / λ = '+de(gnm/lv,2)+')';
+  let t='';
+  for(const k of [1,2,3]){
+    const av=aOf(gnm,k,lv,e), ar=aOf(gnm,k,lr,e), angv=angOf(gnm,k,lv), angr=angOf(gnm,k,lr);
+    const cm=a=>isFinite(a)?de(a*100,1)+' cm'+(a>SCREEN_HALF?' <span style="font-family:var(--f-body);color:var(--warn)">(daneben)</span>':''):'–';
+    if(!isFinite(av)){ t+=`<tr><td>${k}</td><td colspan="5" class="txt" style="color:var(--bad)">Diese Ordnung gibt es nicht (sin α &gt; 1 schon für Violett).</td></tr>`; continue; }
+    if(!isFinite(ar)){ const wmax=gnm/k; t+=`<tr><td>${k}</td><td>${de(angv,1)}°</td><td class="txt" colspan="2">nur bis λ = g / ${k} = ${de(wmax,0)} nm – unvollständig</td><td>${cm(av)}</td><td>–</td></tr>`; continue; }
+    t+=`<tr><td>${k}</td><td>${de(angv,1)}°</td><td>${de(angr,1)}°</td><td>${cm(av)}</td><td>${cm(ar)}</td><td>${de((ar-av)*100,1)} cm</td></tr>`;
+  }
+  $('s-table').innerHTML=t;
+  let o='';
+  for(const k of [1,2]){ const A=k*lr, B=(k+1)*lv; const yes=A>B;
+    o+=`<li><span>${k}. / ${k+1}. Ordnung:</span><span>${k} · ${lr} nm = ${A} nm ${yes?'&gt;':'&lt;'} ${k+1} · ${lv} nm = ${B} nm</span><span class="pill ${yes?'yes':'no'}">${yes?'Überlappung':'keine Überlappung'}</span></li>`; }
+  $('s-ov').innerHTML=o;
+}
+
+/* =====================================================
+   Reiter 2: Lichtquellen
+   ===================================================== */
+let srcKey='hg';
+$('src-chips').addEventListener('click',ev=>{const b=ev.target.closest('button'); if(!b)return; srcKey=b.dataset.src; requestDraw();});
+['L2','e2'].forEach(id=>$(id).addEventListener('input',requestDraw));
+function draw2(){
+  const src=SOURCES[srcKey]; const L=+$('L2').value, e=+$('e2').value, gnm=1e6/L;
+  $('L2-out').textContent=L; $('e2-out').textContent=de(e,2)+' m'; syncChips($('src-chips'),'src',srcKey);
+  $('src-info').textContent=src.info; $('spec2-title').textContent='Spektrum: '+src.name;
+  const fg=tok('--fg'), muted=tok('--muted'), line=tok('--line'), shade=parseFloat(tok('--wl-shade'))||1;
+  // Spektrum über λ
+  const P=prep($('spec2')); const c=P.c; const ml=44,mr=14,mt=24,mb=40; const pw=P.w-ml-mr, ph=P.h-mt-mb;
+  const X=w=>ml+(w-380)/400*pw; const sig=src.lines?Math.max(1.2,400/pw*1.6):3;
+  c.strokeStyle=line; c.lineWidth=1; [0,0.5,1].forEach(t=>{const y=mt+ph*(1-t); c.beginPath(); c.moveTo(ml,y); c.lineTo(ml+pw,y); c.stroke();});
+  c.fillStyle=muted; c.font=FONT_MONO; c.textAlign='right'; c.textBaseline='middle'; [[0,'0'],[0.5,'0,5'],[1,'1']].forEach(([t,s])=>c.fillText(s,ml-6,mt+ph*(1-t)));
+  for(let i=0;i<Math.round(pw);i++){ const w=380+(i+0.5)/pw*400; const v=Math.min(1,srcS(src,w,sig)); if(v<0.003) continue;
+    c.fillStyle=wlCss(w,0.9,shade); c.fillRect(ml+i,mt+ph*(1-v),1.05,ph*v); }
+  c.beginPath(); for(let i=0;i<=Math.round(pw);i++){ const w=380+i/pw*400; const v=Math.min(1,srcS(src,w,sig)); const y=mt+ph*(1-v); if(i===0)c.moveTo(ml+i,y); else c.lineTo(ml+i,y);} c.strokeStyle=fg; c.lineWidth=1.2; c.stroke();
+  if(src.lines){ c.fillStyle=fg; c.font=FONT_MONO; c.textAlign='center'; c.textBaseline='bottom'; const usedX=[];
+    src.lines.slice().sort((a,b)=>b[1]-a[1]).forEach(([l,a])=>{ const px=X(l); if(usedX.some(u=>Math.abs(u-px)<44)) return; usedX.push(px);
+      const lab=(src===SOURCES.hg&&l>570)?'577/579':(src===SOURCES.na?'589,0/589,6':de(l,1)); const pk=Math.min(1,Math.max(srcS(src,l,sig),srcS(src,l+1,sig),srcS(src,l+2,sig))); c.fillText(lab,px,mt+ph*(1-pk)-4); }); }
+  c.strokeStyle=muted; c.beginPath(); c.moveTo(ml,mt+ph); c.lineTo(ml+pw,mt+ph); c.stroke();
+  c.fillStyle=muted; c.textAlign='center'; c.textBaseline='top'; c.font=FONT_MONO;
+  for(let w=400;w<=780;w+=50){ const px=X(w); c.beginPath(); c.moveTo(px,mt+ph); c.lineTo(px,mt+ph+4); c.stroke(); c.fillText(String(w),px,mt+ph+6); }
+  c.font=FONT_BODY; c.textAlign='right'; c.fillText('Wellenlänge λ in nm',ml+pw,mt+ph+22);
+  // Schirm 1. Ordnung
+  const S=prep($('strip2')); const s=S.c; const sl=14,sr=14,bandH=62, sw=S.w-sl-sr;
+  const amax=Math.min(SCREEN_HALF,aOf(gnm,1,790,e)); const xmax=isFinite(amax)?Math.max(0.05,amax*1.08):SCREEN_HALF; const SX=x=>sl+x/xmax*sw;
+  s.fillStyle='#05070a'; s.fillRect(sl,0,sw,bandH);
+  renderSpectrum(s,sl,sw,0,bandH,0,xmax,e,gnm,[1],src,FILTERS.none,{zero:xmax/300,gain:2.6});
+  s.strokeStyle=muted; s.lineWidth=1; s.beginPath(); s.moveTo(sl,bandH); s.lineTo(sl+sw,bandH); s.stroke();
+  const cmMax=Math.floor(xmax*100); const step=cmMax>60?10:(cmMax>25?5:(cmMax>10?2:1)); const lab=step*(sw/(xmax*100)*step<40?2:1);
+  s.fillStyle=muted; s.font=FONT_MONO; s.textAlign='center'; s.textBaseline='top';
+  for(let cm=0;cm<=cmMax;cm+=step){ const px=SX(cm/100); s.beginPath(); s.moveTo(px,bandH); s.lineTo(px,bandH+(cm%lab===0?9:5)); s.stroke(); if(cm%lab===0) s.fillText(String(cm),px,bandH+11); }
+  s.font=FONT_BODY; s.textAlign='right'; s.fillText('Abstand von der 0. Ordnung in cm',sl+sw,bandH+30);
+  s.textAlign='left'; s.fillStyle='#d8dee6'; s.font=FONT_MONO; s.textBaseline='top'; s.fillText('0. Ordnung',sl+8,4);
+  // Tabelle der Linien
+  if(src.lines){ $('lines-card').hidden=false; let t='';
+    src.lines.forEach(([l,a,name],i)=>{ const ang=angOf(gnm,1,l), aa=aOf(gnm,1,l,e);
+      t+=`<tr><td>${i+1}</td><td>${de(l,1)} nm</td><td class="txt"><span class="sw" style="display:inline-block;vertical-align:-2px;background:${wlCss(l,1)}"></span> ${name}</td><td>${isFinite(ang)?de(ang,2)+'°':'–'}</td><td>${isFinite(aa)?de(aa*100,1)+' cm':'–'}</td></tr>`; });
+    $('l-table').innerHTML=t; }
+  else { $('lines-card').hidden=false; $('l-table').innerHTML='<tr><td>–</td><td colspan="4" class="txt">Kontinuierliches Spektrum: keine einzelnen Linien, alle Farben gehen lückenlos ineinander über.</td></tr>'; }
+}
+// Spalt-Modus
+$('slit-open').addEventListener('click',()=>{ $('slit').hidden=false; try{ const el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});}catch(e){} });
+$('slit-close').addEventListener('click',()=>{ $('slit').hidden=true; try{ if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});}catch(e){} });
+$('slit').querySelectorAll('button[data-c]').forEach(b=>b.addEventListener('click',()=>{ $('slit-bar').style.background=b.dataset.c;
+  $('slit').querySelectorAll('button[data-c]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); }));
+document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'&&!$('slit').hidden) $('slit-close').click(); });
+
+/* =====================================================
+   Reiter 3: Übung
+   ===================================================== */
+let task=null, markX=0, hintStep=0;
+const HINTS=[
+  'Lies mit der Messmarke die Lage der violetten Grenze der 1. Ordnung links und rechts ab. 2a = Abstand zwischen beiden, a = 2a / 2. Genauso für die rote Grenze.',
+  'Berechne die Gitterkonstante g = 1 mm / Linienzahl und den Winkel mit tan α = a / e (Taschenrechner auf DEG).',
+  'Gittergleichung mit k = 1: λ = g · sin α. Achte auf Einheiten: a und e in Metern, g in Metern → λ in Metern, dann in nm umrechnen.',
+  'Für c): Die 3. Ordnung beginnt mit Violett. An dieser Stelle gilt für die 2. Ordnung 2 · λ₂ = 3 · λ_violett, also λ₂ = 3 · λ_violett / 2 (das Gitter fällt heraus).'
+];
+function rnd(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function newTask(){
+  task={L:rnd([200,300,400,500,600]), e:rnd([0.8,1.0,1.2,1.5]), lv:390+Math.floor(Math.random()*41), lr:680+Math.floor(Math.random()*91)};
+  markX=0; hintStep=0;
+  ['u-lv','u-lr','u-l2'].forEach(id=>$(id).value=''); ['u-fb1','u-fb2','u-fb3'].forEach(id=>{$(id).textContent='';$(id).className='fb';});
+  $('u-hints').innerHTML=''; $('u-solution').hidden=true; $('u-solution').innerHTML=''; $('u-hint').disabled=false;
+  $('u-text').textContent='Weißes Licht fällt durch einen Spalt senkrecht auf ein Gitter. Auf dem Schirm entstehen die abgebildeten Spektren. Bestimme die Grenzen des Spektrums, die dieser Beobachter sieht.';
+  $('u-data').innerHTML=`Gitter: ${task.L} Linien pro mm<br>Schirmabstand: e = ${de(task.e,2)} m`;
+  requestDraw();
+}
+const taskSrc={lines:null,S:()=>1};
+let geom3=null;
+function draw3(){
+  if(!task) return;
+  const muted=tok('--muted'), fg=tok('--fg');
+  const P=prep($('cv3')); const c=P.c; const sl=12,sr=12,bandH=72,sw=P.w-sl-sr;
+  const SX=y=>sl+(y+SCREEN_HALF)/(2*SCREEN_HALF)*sw; geom3={sl,sw};
+  c.fillStyle='#05070a'; c.fillRect(sl,0,sw,bandH);
+  renderSpectrum(c,sl,sw,0,bandH,-SCREEN_HALF,SCREEN_HALF,task.e,1e6/task.L,[1,2,3],taskSrc,FILTERS.none,{zero:0.004,lo:task.lv,hi:task.lr,gain:2.6});
+  c.strokeStyle=muted; c.lineWidth=1; c.beginPath(); c.moveTo(sl,bandH); c.lineTo(sl+sw,bandH); c.stroke();
+  const pxPerCm=sw/200;
+  c.strokeStyle=muted; c.fillStyle=muted; c.font=FONT_MONO; c.textAlign='center'; c.textBaseline='top';
+  for(let cm=-100;cm<=100;cm++){
+    const ten=cm%10===0, five=cm%5===0;
+    if(!ten&&!five&&pxPerCm<3) continue; if(!ten&&pxPerCm<1.6) continue;
+    const px=SX(cm/100); c.beginPath(); c.moveTo(px,bandH); c.lineTo(px,bandH+(ten?14:five?9:5)); c.stroke();
+    const labelEvery=pxPerCm*10<34?20:10; if(ten&&cm%labelEvery===0) c.fillText(cm<0?'−'+(-cm):String(cm),px,bandH+16);
+  }
+  c.font=FONT_BODY; c.textAlign='right'; c.fillText('cm',sl+sw,bandH+34);
+  const mx=SX(markX); c.strokeStyle='#ffffff'; c.lineWidth=1.5; c.setLineDash([4,3]); c.beginPath(); c.moveTo(mx,0); c.lineTo(mx,bandH); c.stroke(); c.setLineDash([]);
+  c.fillStyle=tok('--accent'); c.beginPath(); c.moveTo(mx,bandH+2); c.lineTo(mx-8,bandH+16); c.lineTo(mx+8,bandH+16); c.closePath(); c.fill();
+  c.fillStyle=fg; c.font=FONT_MONO; c.textAlign='center'; c.textBaseline='top';
+  c.fillText(deS(markX*100,1)+' cm',Math.min(Math.max(mx,sl+34),sl+sw-34),bandH+52);
+  $('u-mark').textContent=deS(markX*100,1)+' cm';
+}
+function setMark(ev){ if(!geom3) return; const r=$('cv3').getBoundingClientRect();
+  const y=((ev.clientX-r.left-geom3.sl)/geom3.sw)*2*SCREEN_HALF-SCREEN_HALF;
+  markX=Math.round(Math.max(-SCREEN_HALF,Math.min(SCREEN_HALF,y))*1000)/1000; requestDraw(); }
+let drag3=false;
+$('cv3').addEventListener('pointerdown',ev=>{drag3=true; try{$('cv3').setPointerCapture(ev.pointerId);}catch(e){} setMark(ev);});
+$('cv3').addEventListener('pointermove',ev=>{if(drag3)setMark(ev);});
+['pointerup','pointercancel'].forEach(t=>$('cv3').addEventListener(t,()=>drag3=false));
+$('u-m1').addEventListener('click',()=>{markX=Math.max(-SCREEN_HALF,Math.round((markX-0.001)*1000)/1000); requestDraw();});
+$('u-p1').addEventListener('click',()=>{markX=Math.min(SCREEN_HALF,Math.round((markX+0.001)*1000)/1000); requestDraw();});
+$('u-new').addEventListener('click',newTask);
+$('u-hint').addEventListener('click',()=>{ if(hintStep<HINTS.length){ const li=document.createElement('li'); li.textContent=HINTS[hintStep++]; $('u-hints').appendChild(li);} if(hintStep>=HINTS.length)$('u-hint').disabled=true; });
+$('u-sol').addEventListener('click',()=>{
+  const gnm=1e6/task.L, av=aOf(gnm,1,task.lv,task.e), ar=aOf(gnm,1,task.lr,task.e);
+  const alv=Math.atan(av/task.e)*180/Math.PI, alr=Math.atan(ar/task.e)*180/Math.PI;
+  $('u-solution').innerHTML=`<div class="formula">g = 1 mm / ${task.L} = ${de(gnm/1000,3)} µm<br>violett: 2a = ${de(2*av*100,1)} cm → a = ${de(av*100,2)} cm → α = ${de(alv,2)}° → λ = g · sin α = ${task.lv} nm<br>rot: 2a = ${de(2*ar*100,1)} cm → a = ${de(ar*100,2)} cm → α = ${de(alr,2)}° → λ = ${task.lr} nm<br>c) λ₂ = 3 · ${task.lv} nm / 2 = ${de(1.5*task.lv,0)} nm</div>`;
+  $('u-solution').hidden=false;
+});
+function parseNum(s){return parseFloat(String(s).replace(',','.'));}
+function check(inputId,fbId,target,tol,okMsg){
+  const v=parseNum($(inputId).value), fb=$(fbId);
+  if(!isFinite(v)){fb.className='fb bad'; fb.textContent='Gib eine Zahl in nm ein.'; return;}
+  if(v<1){fb.className='fb warn'; fb.textContent='Achte auf die Einheit: Gesucht ist λ in Nanometern.'; return;}
+  const err=Math.abs(v-target)/target;
+  if(err<=tol){fb.className='fb ok'; fb.textContent=okMsg+' Abweichung '+de(err*100,1)+' %.';}
+  else if(err<=2.5*tol){fb.className='fb warn'; fb.textContent='Fast. Prüfe die Ablesung (2a messen und halbieren) und den Winkel.';}
+  else {fb.className='fb bad'; fb.textContent='Noch nicht. Sind a und e in derselben Einheit? Ist der Rechner auf Grad gestellt?';}
+}
+$('u-c1').addEventListener('click',()=>check('u-lv','u-fb1',task.lv,0.03,'Richtig!'));
+$('u-c2').addEventListener('click',()=>check('u-lr','u-fb2',task.lr,0.03,'Richtig!'));
+$('u-c3').addEventListener('click',()=>{ const v=parseNum($('u-lv').value); const ref=isFinite(v)&&Math.abs(v-task.lv)/task.lv<=0.03?v:task.lv; check('u-l2','u-fb3',1.5*ref,0.02,'Richtig! An dieser Stelle gilt 2 · λ₂ = 3 · λ_violett.'); });
+
+/* ---------- Start ---------- */
+newTask();
+showTab(location.hash.slice(1));
+})();
+</script>
+</body>
+</html>

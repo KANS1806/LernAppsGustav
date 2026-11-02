@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Zehnerzahlen-Trainer</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/lexend.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+
+/* Layout: eine Heftseite – Ziffernreihe mit wanderndem Komma oben, darunter nummerierte Schritte; Kästchenpapier als Grund. Gleiche Familie wie Kommastellen-Trainer, Überschlag-Detektiv, Figuren & Umfang, Einheiten-Umrechner und Flächen-Werkstatt. */
+:root{
+  --paper:#F6F8FC; --grid:rgba(43,79,168,.085); --surface:#FFFFFF; --line:#D3DBEA;
+  --ink:#1B2540; --muted:#56627C; --accent:#2B4FA8; --accent-ink:#FFFFFF; --accent-soft:#E5EBFA;
+  --est:#6B3FA0; --est-soft:#EFE7F8; --fa:#0A7C91; --fb:#C25E0C; --gridline:rgba(43,79,168,.28); --comma:#D2233A;
+  --good:#22814F; --good-soft:#DDF3E7; --warn:#9A6600; --warn-soft:#FFF1CC; --help:#B4462E; --help-soft:#FBE3DC;
+  --scrim:rgba(12,18,34,.5);
+  --font-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+    --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+    --est:#C9A6F5; --est-soft:#33274A; --fa:#4FC7DC; --fb:#FFA45E; --gridline:rgba(150,175,255,.25); --comma:#FF6B7D;
+    --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+    --scrim:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+  --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+  --est:#C9A6F5; --est-soft:#33274A; --fa:#4FC7DC; --fb:#FFA45E; --gridline:rgba(150,175,255,.25); --comma:#FF6B7D;
+  --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+  --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink); font-family:var(--font-body); font-size:18px; line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{
+  max-width:780px; margin:0 auto; display:flex; flex-direction:column; gap:14px;
+  padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+button{font:inherit; color:inherit}
+
+.top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.top h1{font-family:var(--font-display); font-weight:700; font-size:clamp(1.5rem,4.5vw,2rem); margin:0; letter-spacing:-.01em; text-wrap:balance}
+.top h1 .ap{color:var(--est)}
+.top p{margin:0; color:var(--muted)}
+.tipbtn{border:2px solid var(--accent); background:var(--surface); color:var(--accent); border-radius:999px; padding:10px 18px; min-height:48px; font-family:var(--font-display); font-weight:600; cursor:pointer}
+.tipbtn:hover{background:var(--accent-soft)}
+
+.stufen{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.stufen button{text-align:left; padding:10px 12px; border:2px solid var(--line); background:var(--surface); border-radius:12px; cursor:pointer; display:flex; flex-direction:column; gap:1px; min-height:68px}
+.stufen button:hover{border-color:var(--accent)}
+.stufen button[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+.lvl{font-size:.8rem; letter-spacing:.2em; color:var(--accent)}
+.stufen b{font-family:var(--font-display); font-weight:600}
+.stufen small{color:var(--muted); font-size:.82rem; line-height:1.25}
+
+.progress{display:flex; gap:6px; align-items:center}
+.pd{flex:1; height:9px; border-radius:5px; background:var(--line)}
+.pd.cur{background:var(--accent)}
+.pd.good{background:var(--good)} .pd.ok{background:var(--warn)} .pd.help{background:var(--help)}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:20px}
+.eyebrow{font-family:var(--font-display); font-size:.82rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.story{margin:8px 0 0; font-size:1.12rem; max-width:60ch}
+.term{font-weight:700; font-size:clamp(2.1rem,8vw,3.2rem); line-height:1.15; margin:6px 0 0; font-variant-numeric:tabular-nums; display:flex; flex-wrap:wrap; align-items:baseline; gap:.28em}
+.term.small{font-size:clamp(1.6rem,6vw,2.3rem)}
+.op,.q{color:var(--muted); font-weight:400}
+.res{color:var(--accent)}
+.claim{color:var(--muted)}
+.claim.bad{text-decoration:line-through; text-decoration-color:var(--help); text-decoration-thickness:4px}
+.cm{color:var(--comma)}
+.ap{color:var(--est); font-weight:700}
+.estline{display:inline-block; font-size:1.12rem; padding:8px 12px; background:var(--est-soft); border-radius:10px; font-variant-numeric:tabular-nums}
+.estline b{color:var(--est)}
+
+.steps{margin-top:14px; border-top:2px dashed var(--line)}
+.step{display:grid; grid-template-columns:38px minmax(0,1fr); gap:12px; padding:16px 0; border-bottom:2px dashed var(--line)}
+.step:last-child{border-bottom:0; padding-bottom:0}
+.sn{width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-family:var(--font-display); font-weight:700; background:var(--accent-soft); color:var(--accent)}
+.step.is-done .sn{background:var(--good-soft); color:var(--good)}
+.step.is-todo{opacity:.5}
+.step h2{font-family:var(--font-display); font-size:1.08rem; font-weight:600; margin:5px 0 8px}
+.step p{margin:0}
+.hint{color:var(--muted); font-size:.95rem; margin-top:4px!important}
+
+.ask{display:flex; flex-direction:column; gap:8px; margin-bottom:14px}
+.ask:last-child{margin-bottom:0}
+.ask .num{font-weight:700; font-size:1.25rem}
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{min-width:64px; height:58px; padding:0 14px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; font-size:1.4rem; cursor:pointer; font-variant-numeric:tabular-nums}
+.chip.wide{font-size:1.2rem}
+.chip.word{font-family:var(--font-display); font-weight:600; font-size:1.05rem}
+.chip:hover:not(:disabled){border-color:var(--accent)}
+.chip:disabled{cursor:default}
+.chip:disabled:not(.right){opacity:.4}
+.chip.right{background:var(--good-soft); border-color:var(--good); color:var(--good)}
+.chip.wrong{background:var(--help-soft); border-color:var(--help); color:var(--help)}
+.sum{display:inline-block; font-size:1.12rem; padding:8px 12px; background:var(--accent-soft); border-radius:10px; font-variant-numeric:tabular-nums}
+
+.tiles{display:flex; align-items:stretch; margin:10px 0 6px; overflow-x:auto; padding:2px 2px 4px}
+.tile{flex:none; position:relative; width:clamp(34px,9vw,60px); height:clamp(60px,13vw,78px); display:grid; place-items:center; font-weight:700; font-size:clamp(2rem,6vw,2.8rem); line-height:1; background:var(--surface); border:2px solid var(--line); border-radius:10px; font-variant-numeric:tabular-nums}
+.gap{flex:none; position:relative; width:clamp(18px,5vw,38px); border:0; padding:0; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center}
+.gap::after{content:""; position:absolute; left:50%; top:20%; bottom:20%; border-left:3px dotted var(--line); transform:translateX(-1px)}
+.gap:hover::after,.gap:focus-visible::after{border-color:var(--accent)}
+.gap.on::after{display:none}
+.gap.static{width:5px; cursor:default}
+.gap.static.on{width:clamp(20px,4.5vw,28px)}
+.gap.static::after{display:none}
+.comma{font-weight:700; font-size:clamp(2.6rem,7.5vw,3.4rem); line-height:1; color:var(--comma); transform:translateY(.3em); animation:pop .18s ease-out}
+@keyframes pop{from{transform:translateY(.3em) scale(.4); opacity:0}to{transform:translateY(.3em) scale(1); opacity:1}}
+.live{font-size:1rem; color:var(--muted)} .live b{color:var(--ink)}
+
+.tools{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center}
+.btn{font-family:var(--font-display); font-weight:600; font-size:1rem; padding:12px 18px; min-height:50px; border-radius:12px; border:2px solid var(--line); background:var(--surface); cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.4; cursor:default}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); margin-left:auto}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08)}
+
+.fb{margin-top:12px; padding:10px 14px; border-radius:10px; font-size:1rem}
+.fb b{font-family:var(--font-display); font-weight:600}
+.fb.bad{background:var(--help-soft)} .fb.info{background:var(--warn-soft)} .fb.good{background:var(--good-soft)}
+
+.donebox{margin-top:16px; padding:16px; border-radius:12px; background:var(--good-soft); display:flex; flex-direction:column; gap:10px}
+.donebox.ok{background:var(--warn-soft)} .donebox.help{background:var(--help-soft)}
+.donebox .big{font-family:var(--font-display); font-weight:600; font-size:1.15rem; margin:0}
+.donebox p{margin:0}
+.path{font-size:1.1rem; font-variant-numeric:tabular-nums}
+.path .arr{color:var(--muted); padding:0 .15em}
+.donebox .btn.primary{align-self:flex-end}
+
+.inrow{display:flex; align-items:center; gap:10px; flex-wrap:nowrap; max-width:400px}
+.display{font-weight:700; font-size:2.3rem; min-height:76px; min-width:0; flex:1 1 auto; border:2px solid var(--line); border-radius:12px; padding:8px 18px; display:flex; align-items:center; background:var(--paper); font-variant-numeric:tabular-nums; overflow-x:auto}
+.display .ph{font-size:1.1rem; font-weight:400; color:var(--muted)}
+.unit{font-weight:700; font-size:1.6rem; color:var(--muted)}
+.pre{font-weight:700; font-size:2rem; color:var(--est)}
+.keys{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; max-width:340px; margin-top:10px}
+.key{height:62px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; font-size:1.6rem; cursor:pointer}
+.key:hover{border-color:var(--accent)}
+.key:active{background:var(--accent-soft)}
+.key.ck{color:var(--comma); font-size:2.2rem; line-height:.6}
+.key.del{font-size:1.05rem; font-family:var(--font-display); font-weight:600}
+
+.summary h2{font-family:var(--font-display); font-size:clamp(1.5rem,5vw,2rem); margin:4px 0 6px; text-wrap:balance}
+.stats{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:14px 0}
+.stat{border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:2px}
+.stat b{font-family:var(--font-display); font-size:1.9rem; line-height:1.1}
+.stat span{font-size:.92rem}
+.stat.good{background:var(--good-soft)} .stat.good b{color:var(--good)}
+.stat.ok{background:var(--warn-soft)} .stat.ok b{color:var(--warn)}
+.stat.help{background:var(--help-soft)} .stat.help b{color:var(--help)}
+.summary .tools .btn.primary{margin-left:0}
+
+.sheet[hidden]{display:none!important}
+.sheet{position:fixed; inset:0; z-index:30; background:var(--scrim); display:flex; align-items:flex-end; justify-content:center}
+.sheet-in{background:var(--surface); width:100%; max-width:780px; max-height:86vh; overflow:auto; border-radius:18px 18px 0 0; padding:20px;
+  padding-left:max(20px,env(safe-area-inset-left,0px)); padding-right:max(20px,env(safe-area-inset-right,0px)); padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
+.sheet-head h2{font-family:var(--font-display); margin:0; font-size:1.3rem}
+.tipgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px}
+.tipcard{border:2px solid var(--line); border-radius:12px; padding:12px 14px}
+.tipcard.focus{border-color:var(--accent); background:var(--accent-soft)}
+.tipcard h3{font-family:var(--font-display); font-size:1rem; font-weight:600; margin:0 0 4px}
+.tipcard p{margin:0; font-size:.98rem}
+.tipcard .ex{margin-top:6px; font-weight:700; font-variant-numeric:tabular-nums}
+
+
+.credit{margin-top:18px; text-align:center; font-size:.85rem; color:var(--muted)}
+
+@media (max-width:520px){
+  .stufen small{display:none}
+  .stats{grid-template-columns:1fr}
+  .card{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important}
+}
+
+/* ---------- Ziffernreihe mit wanderndem Komma ---------- */
+.row{display:flex; align-items:stretch; justify-content:center; margin:14px 0 6px; overflow-x:auto; padding:4px 2px 6px}
+.dt{flex:none; position:relative; width:clamp(30px,8.4vw,56px); height:clamp(58px,13vw,76px); display:grid; place-items:center; font-weight:700; font-size:clamp(1.9rem,6vw,2.7rem); line-height:1; background:var(--surface); border:2px solid var(--line); border-radius:10px; font-variant-numeric:tabular-nums; color:var(--ink)}
+.dt.ph{border-style:dashed; background:transparent}
+.dt.zf{color:var(--fb); border-color:var(--fb)}
+.dt.dim{opacity:.35}
+.dt.dim::after{content:""; position:absolute; left:18%; right:18%; top:50%; border-top:3px solid var(--muted); transform:rotate(-35deg)}
+.gp{flex:none; position:relative; width:clamp(16px,4.6vw,34px); border:0; padding:0; background:transparent; display:flex; align-items:flex-end; justify-content:center}
+button.gp{cursor:pointer}
+button.gp::after{content:""; position:absolute; left:50%; top:22%; bottom:22%; border-left:3px dotted var(--line); transform:translateX(-1px)}
+button.gp:hover::after,button.gp:focus-visible::after{border-color:var(--accent)}
+button.gp.wrong::after{border-left:3px solid var(--help)}
+button.gp.has::after{display:none}
+.gp .cm2{font-weight:700; font-size:clamp(2.4rem,7vw,3.2rem); line-height:1; color:var(--comma); transform:translateY(.12em)}
+@keyframes pop3{from{transform:translateY(.12em) scale(.4); opacity:0}to{transform:translateY(.12em) scale(1); opacity:1}}
+.gp .cm2.old{color:var(--muted); opacity:.55; animation:none}
+.gp .cm2.dim{opacity:.35}
+.gp.static{width:6px}
+.gp.static.has{width:clamp(18px,4.6vw,30px)}
+.rowcap{text-align:center; font-size:.95rem; color:var(--muted); margin:0}
+.rowcap b{color:var(--comma)}
+.rowcap .o{color:var(--fb); font-weight:700}
+.dirtag{display:inline-block; padding:2px 10px; border-radius:999px; background:var(--accent-soft); color:var(--accent); font-family:var(--font-display); font-weight:600; font-size:.95rem}
+.gap-blank{display:inline-block; min-width:2.2em; border-bottom:3px solid var(--accent); text-align:center; color:var(--accent)}
+.chip.word{font-family:var(--font-display); font-weight:600; font-size:1.05rem}
+.ask.off{opacity:.5}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Zehnerzahlen<span class="ap">-</span>Trainer</h1>
+      <p>Multiplikation und Division mit 10, 100 und 1000</p>
+    </div>
+    <button class="tipbtn" type="button" data-action="tips" id="tipbtn">Tippkarten</button>
+  </header>
+
+  <nav class="stufen" aria-label="Stufe wählen">
+    <button type="button" id="st1" data-action="stufe" data-s="1" aria-pressed="true"><span class="lvl">●○○</span><b>Stufe 1</b><small>Komma rücken mit Hilfe</small></button>
+    <button type="button" id="st2" data-action="stufe" data-s="2" aria-pressed="false"><span class="lvl">●●○</span><b>Stufe 2</b><small>Nullen ergänzen, Zahl fehlt</small></button>
+    <button type="button" id="st3" data-action="stufe" data-s="3" aria-pressed="false"><span class="lvl">●●●</span><b>Stufe 3</b><small>Ohne Hilfe und Sachaufgaben</small></button>
+  </nav>
+
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <main id="app"></main>
+  <footer class="credit">Erstellt mit KI von Christoph Kansy</footer>
+</div>
+
+<div class="sheet" id="tips" hidden>
+  <div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="tipsTitle">
+    <div class="sheet-head">
+      <h2 id="tipsTitle">Tippkarten</h2>
+      <button class="btn" type="button" data-action="tipsclose" id="tipsclose">Schließen</button>
+    </div>
+    <div class="tipgrid">
+      <div class="tipcard" data-tip="1"><h3>1 · Multiplikation mit 10, 100, 1000</h3><p>Die Zahl wird <b>größer</b>. Das Komma rückt nach <b>rechts</b> – so viele Stellen, wie die Zahl Nullen hat.</p><p class="ex">3,45 · 10 = 34,5<br>3,45 · 100 = 345<br>3,45 · 1&#8239;000 = 3&#8239;450</p></div>
+      <div class="tipcard" data-tip="2"><h3>2 · Division durch 10, 100, 1000</h3><p>Die Zahl wird <b>kleiner</b>. Das Komma rückt nach <b>links</b> – so viele Stellen, wie die Zahl Nullen hat.</p><p class="ex">345 : 10 = 34,5<br>345 : 100 = 3,45<br>345 : 1&#8239;000 = 0,345</p></div>
+      <div class="tipcard" data-tip="3"><h3>3 · Nullen ergänzen</h3><p>Fehlen Stellen, schreibst du Nullen dazu. Vor dem Komma steht immer mindestens eine Ziffer.</p><p class="ex">0,7 · 100 = 70<br>4,5 : 100 = 0,045<br>7 : 1&#8239;000 = 0,007</p></div>
+      <div class="tipcard" data-tip="4"><h3>4 · Keine Null anhängen!</h3><p>Bei natürlichen Zahlen geht es: 45 · 10 = 450. Bei Dezimalzahlen nicht! 3,450 ist dasselbe wie 3,45. Das Komma muss rücken.</p><p class="ex">3,45 · 10 = 34,5 ✓<br>3,45 · 10 = 3,450 ✗</p></div>
+      <div class="tipcard" data-tip="5"><h3>5 · Welche Zahl fehlt?</h3><p>Zähle, um wie viele Stellen das Komma gerückt ist.<br>1 Stelle → 10 · 2 Stellen → 100 · 3 Stellen → 1&#8239;000</p><p class="ex">0,35 · 100 = 35 (2 Stellen)<br>48 : 1&#8239;000 = 0,048 (3 Stellen)</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const N = 8;
+const S = { stufe:1, tasks:[], idx:0, results:[], finished:false, justDone:false };
+const $app = document.getElementById('app');
+const $prog = document.getElementById('progress');
+const $tips = document.getElementById('tips');
+
+/* ---------- Zahlen als {i,p}: Wert = i / 10^p ---------- */
+function rnd(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(a){ for(let k=a.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [a[k],a[j]]=[a[j],a[k]]; } return a; }
+function simplify(n){ let i=n.i,p=n.p; while(p>0 && i%10===0){ i=i/10; p--; } return {i:i,p:p}; }
+function fmt(n){ const s=String(n.i).padStart(n.p+1,'0'); return n.p ? s.slice(0,s.length-n.p)+','+s.slice(s.length-n.p) : s; }
+function fs(n){ return fmt(simplify(n)); }
+function val(n){ return n.i/Math.pow(10,n.p); }
+function I(k){ return {i:k,p:0}; }
+function Q(i,p){ return simplify({i:i,p:p}); }
+function eq(a,b){ return fs(a)===fs(b); }
+function sh(n,e){ // n · 10^e
+  n=simplify(n);
+  if(e>=0){ if(e>=n.p) return simplify({i:n.i*Math.pow(10,e-n.p),p:0}); return simplify({i:n.i,p:n.p-e}); }
+  return simplify({i:n.i,p:n.p-e});
+}
+const NB=' ';
+function grpInt(s){ if(s.length<4) return s; let o=''; for(let k=0;k<s.length;k++){ if(k>0 && (s.length-k)%3===0) o+=NB; o+=s[k]; } return o; }
+function grpStr(s){ const parts=String(s).split(','); return grpInt(parts[0])+(parts.length>1?','+parts[1]:''); }
+function cm(s){ return String(s).replace(/(\d),(\d)/g,'$1<span class="cm">,</span>$2'); }
+function G(n){ return cm(grpStr(fs(n))); }
+function F(k){ return grpInt(String(Math.pow(10,k))); }              // 10, 100, 1 000
+function nbsp(h){ return h.replace(/([·:=]) (\d)/g,'$1 $2').replace(/(\d) (€|ct|mm|cm|km|kg|m|g|Liter|Blätter|Stellen|Stelle)(?![a-zäöüß])/g,'$1 $2'); }
+function opTxt(op){ return op==='·' ? '·' : ':'; }
+
+/* ---------- Aufgaben-Grundgerüst ---------- */
+function base(kind,extra){ return Object.assign({kind:kind, errors:0, stepErr:0, revealed:false, wrong:null, msg:null, input:'', ans:{}, tip:0}, extra||{}); }
+function opTask(kind,n,op,k,extra){ n=simplify(n); const E= op==='·'?k:-k; return base(kind,Object.assign({n:n, op:op, k:k, E:E, res:sh(n,E)},extra||{})); }
+
+/* Zahl gültig? Ergebnis höchstens 3 Stellen nach dem Komma und kleiner als 10 000 */
+function okNum(n,E){ const r=sh(n,E); return simplify(n).p<=3 && r.p<=3 && val(r)<10000 && val(r)>=0.001 && val(n)<10000; }
+function needsZeros(n,op,k){ n=simplify(n); const r=sh(n,op==='·'?k:-k); return op==='·' ? (k>n.p) : (val(r)<1); }
+function nz(lo,hi){ let x; do{ x=rnd(lo,hi); }while(x%10===0); return x; }
+
+/* Stufe 1: Komma rücken mit Hilfe */
+function m10(){ return Math.random()<.5 ? Q(nz(11,99),1) : Q(nz(101,999),2); }             // 3,4 · 10 / 3,45 · 10
+function s1List(){
+  return [
+    opTask('rueck', m10(),'·',1,{mode:'chips'}),
+    opTask('rueck', Q(nz(101,999),2),'·',2,{mode:'chips'}),                                      // 4,56 · 100
+    opTask('rueck', Q(nz(1001,9999),3),'·',3,{mode:'chips'}),                                    // 1,234 · 1 000
+    opTask('rueck', Math.random()<.5 ? Q(nz(101,999),1) : I(nz(11,99)),':',1,{mode:'chips'}),   // 34,5 : 10 / 76 : 10
+    opTask('rueck', I(nz(101,999)),':',2,{mode:'chips'}),                                        // 456 : 100
+    opTask('rueck', I(nz(1001,9999)),':',3,{mode:'chips'}),                                      // 2 375 : 1 000
+    opTask('rueck', Q(nz(11,99),1),'·',2,{mode:'chips'}),                                        // 3,5 · 100 = 350
+    opTask('rueck', Q(nz(11,99),1),':',1,{mode:'chips'})                                  // 4,5 : 10 = 0,45
+  ];
+}
+/* Zufallszahl, bei der Nullen ergänzt werden müssen */
+function hardNum(op,k){
+  for(let x=0;x<300;x++){
+    const form=rnd(0,4); let n;
+    if(form===0) n=I(rnd(2,9));
+    else if(form===1) n=Q(rnd(2,9),1);                 // 0,7
+    else if(form===2) n=Q(nz(11,99),1);                // 4,5
+    else if(form===3) n=Q(nz(11,99),3);                // 0,045
+    else n=Q(rnd(2,9),2);                              // 0,06
+    const E= op==='·'?k:-k;
+    if(okNum(n,E) && needsZeros(n,op,k)) return n;
+  }
+  return op==='·' ? Q(7,1) : I(7);
+}
+function hardTask(kind,mode){ const op=pick(['·',':']); const k=rnd(1,3); return opTask(kind,hardNum(op,k),op,k,{mode:mode}); }
+
+/* Welche Zahl fehlt? */
+function fehltTask(missing,mode){
+  const op=pick(['·',':']); const k=rnd(1,3);
+  let n;
+  for(let x=0;x<200;x++){ n = op==='·' ? Q(nz(11,99),rnd(1,3)) : pick([I(nz(11,99)),I(nz(101,999)),Q(nz(11,99),1)]); if(okNum(n,op==='·'?k:-k)) break; }
+  const t=opTask('fehlt',n,op,k,{missing:missing, mode:mode});
+  return t;
+}
+
+/* Fehler-Detektiv */
+const STIMMT=[
+  ['Mia rechnet: 3,45 · 10 = 3,450', false, 'Mia hat eine Null angehängt. 3,450 ist dasselbe wie 3,45. Richtig: 3,45 · 10 = 34,5 (Komma 1 Stelle nach rechts).',4],
+  ['Tom rechnet: 0,7 · 100 = 70', true, 'Das Komma rückt 2 Stellen nach rechts. Eine 0 wird ergänzt: 0,7 · 100 = 70.',3],
+  ['Lea rechnet: 45 : 100 = 4,5', false, 'Lea hat nur durch 10 dividiert. Richtig: 45 : 100 = 0,45 (Komma 2 Stellen nach links).',2],
+  ['Ben rechnet: 2,5 · 1 000 = 2 500', true, 'Das Komma rückt 3 Stellen nach rechts. Zwei Nullen werden ergänzt: 2 500.',3],
+  ['Ali rechnet: 6,3 : 10 = 0,63', true, 'Das Komma rückt 1 Stelle nach links: 0,63. Das stimmt.',2],
+  ['Emma rechnet: 0,032 · 100 = 32', false, 'Emma hat mit 1 000 multipliziert. Richtig: 0,032 · 100 = 3,2 (Komma 2 Stellen nach rechts).',1],
+  ['Jonas rechnet: 7 : 1 000 = 0,07', false, 'Jonas hat nur durch 100 dividiert. Richtig: 7 : 1 000 = 0,007 (Komma 3 Stellen nach links).',3],
+  ['Sara rechnet: 1,8 · 100 = 1,800', false, 'Sara hat Nullen angehängt. Richtig: 1,8 · 100 = 180 (Komma 2 Stellen nach rechts).',4],
+  ['Can rechnet: 560 : 10 = 56', true, '560 : 10 = 56,0 = 56. Das stimmt.',2]
+];
+function stimmtTask(k){ const s=STIMMT[k]; return base('stimmt',{text:s[0], truth:s[1], why:s[2], tipk:s[3], step:'judge'}); }
+
+/* Kette: zwei Rechnungen hintereinander */
+function ketteTask(){
+  for(let x=0;x<200;x++){
+    const op=pick(['·',':']); const k1=rnd(1,2), k2=rnd(1,2);
+    const n = op==='·' ? Q(nz(11,99),3) : pick([I(nz(11,99)*100), I(nz(101,999)*10), Q(nz(11,99),1)]);
+    const E= op==='·'?k1+k2:-(k1+k2);
+    if(okNum(n,E) && Math.abs(E)<=3) return base('kette',{n:n, op:op, k1:k1, k2:k2, k:k1+k2, E:E, res:sh(n,E), step:'input'});
+  }
+}
+/* Einheiten (Längen, Gewichte, Geld) */
+const EINH=[
+  function(){ const n=pick([Q(25,1),Q(13,1),Q(45,1),Q(205,2),Q(7,1)]); return {n:n, from:'m', to:'cm', E:2, rule:'1 m = 100 cm'}; },
+  function(){ const n=pick([I(750),I(250),I(1500),I(80),I(2500)]); return {n:n, from:'g', to:'kg', E:-3, rule:'1 kg = 1 000 g'}; },
+  function(){ const n=pick([Q(42,1),Q(15,1),Q(25,2),Q(305,2)]); return {n:n, from:'kg', to:'g', E:3, rule:'1 kg = 1 000 g'}; },
+  function(){ const n=pick([I(35),I(84),I(5),I(120)]); return {n:n, from:'mm', to:'cm', E:-1, rule:'1 cm = 10 mm'}; },
+  function(){ const n=pick([Q(16,1),Q(25,1),Q(4,1),Q(125,2)]); return {n:n, from:'km', to:'m', E:3, rule:'1 km = 1 000 m'}; },
+  function(){ const n=pick([I(85),I(7),I(140),I(65)]); return {n:n, from:'cm', to:'m', E:-2, rule:'1 m = 100 cm'}; },
+  function(){ const n=pick([Q(305,2),Q(45,1),Q(199,2),Q(12,1)]); return {n:n, from:'€', to:'ct', E:2, rule:'1 € = 100 ct'}; }
+];
+function einhTask(){ const e=pick(EINH)(); return base('einh',{n:simplify(e.n), from:e.from, to:e.to, E:e.E, op:e.E>0?'·':':', k:Math.abs(e.E), res:sh(e.n,e.E), rule:e.rule, step:'input'}); }
+
+/* Sachaufgaben */
+const SACH=[
+  function(){ const p=pick([Q(85,2),Q(95,2),Q(65,2),Q(125,2)]); const r=sh(p,1);
+    return {text:'Lea kauft 10 Hefte. Ein Heft kostet '+fs(p)+' €. Wie viel muss sie bezahlen?', ans:r, unit:'€', rech:fs(p)+' € · 10 = '+fs(r)+' € (Komma 1 Stelle nach rechts)'}; },
+  function(){ const d=pick([Q(8,2),Q(9,2),Q(7,2),Q(12,2)]); const r=sh(d,2);
+    return {text:'Ein Blatt Papier ist '+fs(d)+' mm dick. Ein Stapel hat 100 Blätter. Wie hoch ist der Stapel?', ans:r, unit:'mm', rech:fs(d)+' mm · 100 = '+fs(r)+' mm (Komma 2 Stellen nach rechts)'}; },
+  function(){ const g=pick([I(15),I(12),I(25),I(18)]); const r=sh(g,-2);
+    return {text:'Eine Packung mit 100 Kaugummis kostet '+fs(g)+' €. Wie viel kostet ein Kaugummi?', ans:r, unit:'€', rech:fs(g)+' € : 100 = '+fs(r)+' € (Komma 2 Stellen nach links)'}; },
+  function(){ const p=pick([Q(179,2),Q(169,2),Q(185,2)]); const r=sh(p,2);
+    return {text:'1 Liter Benzin kostet '+fs(p)+' €. Ein Lkw tankt 100 Liter. Wie viel kostet das?', ans:r, unit:'€', rech:fs(p)+' € · 100 = '+fs(r)+' € (Komma 2 Stellen nach rechts)'}; },
+  function(){ const h=pick([I(90),I(80),I(120),I(75)]); const r=sh(h,-3);
+    return {text:'Ein Stapel aus 1 000 Blättern ist '+fs(h)+' mm hoch. Wie dick ist ein Blatt?', ans:r, unit:'mm', rech:fs(h)+' mm : 1 000 = '+fs(r)+' mm (Komma 3 Stellen nach links)'}; },
+  function(){ const b=pick([Q(645,2),Q(825,2),Q(53,0),Q(472,1)]); const r=sh(b,-1);
+    return {text:'10 Freunde bestellen Pizza für '+fs(b)+' €. Alle zahlen gleich viel. Wie viel zahlt jedes Kind?', ans:r, unit:'€', rech:fs(b)+' € : 10 = '+fs(r)+' € (Komma 1 Stelle nach links)'}; }
+];
+function sachTask(k){ const s=SACH[k](); return base('sach',{text:s.text, target:s.ans, unit:s.unit, rech:s.rech, step:'input'}); }
+
+function prep(t){ // Startschritt je Aufgabentyp
+  if(t.kind==='rueck') t.step='plan';
+  else if(t.kind==='direct') t.step='input';
+  else if(t.kind==='fehlt') t.step = t.mode==='chips' ? 'pick' : 'input';
+  return t;
+}
+function generate(stufe){
+  let out;
+  if(stufe===1){ const l=s1List(); out=[l[0]].concat(shuffle(l.slice(1))); }
+  else if(stufe===2){
+    const first=opTask('rueck',pick([Q(rnd(2,9),1),Q(nz(11,99),1)]),'·',pick([2,3]),{mode:'input'});
+    const sv=pick([[Q(nz(11,99),1),2],[I(rnd(2,9)),2],[I(rnd(2,9)),3],[I(nz(11,99)),3]]); const second=opTask('rueck',sv[0],':',sv[1],{mode:'input'});
+    const ks=shuffle(STIMMT.map((x,i)=>i));
+    const fa=fehltTask('f','chips'); fa.op='·'; Object.assign(fa,fehltFix(fa));
+    const fb=fehltTask('f','chips'); fb.op=':'; Object.assign(fb,fehltFix(fb));
+    const rest=[second, hardTask('direct','input'), hardTask('direct','input'), opTask('direct',Q(rnd(2,9)*10+rnd(1,9),3),'·',pick([1,2]),{mode:'input'}), fa, fb, stimmtTask(ks[0])];
+    out=[first].concat(shuffle(rest));
+  } else {
+    const sk=shuffle([0,1,2,3,4,5]).slice(0,2).map(sachTask);
+    out=shuffle([hardTask('direct','input'), hardTask('direct','input'), ketteTask(), fehltTask('a','input'), fehltTask('f','input'), einhTask()].concat(sk));
+  }
+  return out.map(prep);
+}
+function fehltFix(t){ // nach Änderung des Rechenzeichens Zahlen neu passend wählen
+  let n;
+  for(let x=0;x<200;x++){ n = t.op==='·' ? Q(nz(11,99),rnd(1,3)) : pick([I(nz(11,99)),I(nz(101,999)),Q(nz(11,99),1)]); if(okNum(n,t.op==='·'?t.k:-t.k)) break; }
+  const E= t.op==='·'?t.k:-t.k; return {n:simplify(n), E:E, res:sh(n,E)};
+}
+function newRound(){ S.tasks=generate(S.stufe); S.idx=0; S.results=[]; S.finished=false; S.justDone=false; render(); }
+
+/* ---------- Ziffernreihe ---------- */
+function digits(n){ const s=fs(n).split(','); const ip=s[0], fp=s[1]||''; return {D:(ip+fp).split(''), c:ip.length}; }
+function resultTiles(n,E){
+  const d=digits(n); let D=d.D.map(x=>({d:x})); let g=d.c+E;
+  if(g<=0){ const lz=1-g; for(let k=0;k<lz;k++) D.unshift({d:'0',zf:true}); g=1; }
+  if(g>D.length){ const rz=g-D.length; for(let k=0;k<rz;k++) D.push({d:'0',zf:true}); }
+  for(let i=0;i<g-1 && D[i].d==='0';i++) D[i].dim=true;
+  let allDim=g<D.length;
+  for(let i=D.length-1;i>=g;i--){ if(D[i].d==='0') D[i].dim=true; else { allDim=false; break; } }
+  return {D:D, g:g, commaDim: g<D.length && allDim};
+}
+function staticRow(n,E){
+  const r=resultTiles(n,E); let h='<div class="row" aria-hidden="true">';
+  r.D.forEach((x,i)=>{
+    h+='<div class="gp static'+(i===r.g?' has':'')+'">'+(i===r.g?'<span class="cm2'+(r.commaDim?' dim':'')+'">,</span>':'')+'</div>';
+    h+='<div class="dt'+(x.zf?' zf':'')+(x.dim?' dim':'')+'">'+x.d+'</div>';
+  });
+  h+='<div class="gp static'+(r.g===r.D.length?'':'')+'"></div></div>';
+  return h;
+}
+/* antippbare Reihe: Platzhalter auf der Seite, in die das Komma rückt */
+function placeModel(t){
+  const d=digits(t.n); const L= t.E<0?3:0, R= t.E>0?3:0;
+  return {D:d.D, c:d.c, L:L, R:R, len:L+d.D.length+R, orig:L+d.c, target:L+d.c+t.E};
+}
+function placeRow(t){
+  const m=placeModel(t); let h='<div class="row" role="group" aria-label="Ziffern der Zahl. Tippe auf die Lücke, in die das Komma rückt.">';
+  for(let gI=0; gI<=m.len; gI++){
+    const isOld = gI===m.orig;
+    const wrong = t.wrong && t.wrong.step==='gap' && Number(t.wrong.v)===gI;
+    h+='<button type="button" class="gp'+(isOld?' has':'')+(wrong?' wrong':'')+'" data-action="gap" data-g="'+gI+'" aria-label="Komma in Lücke '+(gI+1)+' setzen">'+(isOld?'<span class="cm2 old">,</span>':'')+'</button>';
+    if(gI<m.len){
+      const di=gI-m.L;
+      if(di>=0 && di<m.D.length) h+='<div class="dt">'+m.D[di]+'</div>';
+      else h+='<div class="dt ph" aria-hidden="true"></div>';
+    }
+  }
+  return h+'</div>';
+}
+
+/* ---------- Bausteine ---------- */
+function chip(action,v,label,answer,active,t,cls,aria){
+  let c='chip'+(cls?' '+cls:'');
+  if(answer===v) c+=' right';
+  else if(active && t.wrong && t.wrong.step===action && t.wrong.v===v) c+=' wrong';
+  return '<button type="button" class="'+c+'" data-action="'+action+'" data-v="'+v+'"'+(aria?' aria-label="'+aria+'"':'')+(active?'':' disabled')+'>'+label+'</button>';
+}
+function msgHtml(t){ return t.msg ? '<div class="fb '+t.msg.kind+'" role="status">'+t.msg.text+'</div>' : ''; }
+function stepCls(s){ return 'step is-'+s; }
+function sn(s,n){ return '<div class="sn" aria-hidden="true">'+(s==='done'?'✓':n)+'</div>'; }
+function keypad(){
+  return '<div class="keys">'+
+    ['7','8','9','4','5','6','1','2','3'].map(k=>'<button type="button" class="key" data-action="key" data-k="'+k+'">'+k+'</button>').join('')+
+    '<button type="button" class="key ck" data-action="key" data-k="," aria-label="Komma">,</button>'+
+    '<button type="button" class="key" data-action="key" data-k="0">0</button>'+
+    '<button type="button" class="key del" data-action="key" data-k="del" aria-label="Löschen">⌫ Löschen</button></div>';
+}
+function inputBlock(t,pre,unit){
+  return '<div class="inrow">'+(pre?'<span class="pre">'+pre+'</span>':'')+'<div class="display" aria-live="polite" aria-label="Deine Antwort">'+(t.input?cm(grpStr(t.input)):'<span class="ph">Antwort</span>')+'</div>'+(unit?'<span class="unit">'+unit+'</span>':'')+'</div>'+
+    keypad()+'<div class="tools" style="max-width:340px"><button type="button" class="btn primary" data-action="check" id="checkbtn">Prüfen</button></div>'+msgHtml(t);
+}
+function term(t,showRes){
+  return '<p class="term small"><span>'+G(t.n)+'</span> <span class="op">'+opTxt(t.op)+'</span> <span>'+F(t.k)+'</span> <span class="op">=</span> '+(showRes?'<span class="res">'+G(t.res)+'</span>':'<span class="q">?</span>')+'</p>';
+}
+function dirWord(E){ return E>0?'rechts':'links'; }
+function stellen(k){ return k===1?'1 Stelle':k+' Stellen'; }
+
+/* ---------- Anzeige ---------- */
+function render(){
+  for(let s=1;s<=3;s++) document.getElementById('st'+s).setAttribute('aria-pressed', String(S.stufe===s));
+  let p='';
+  for(let k=0;k<N;k++){ const r=S.results[k]; p+='<span class="pd'+(r?' '+r:(k===S.idx && !S.finished?' cur':''))+'"></span>'; }
+  $prog.innerHTML=p;
+  if(S.finished){ renderSummary(); return; }
+  const t=S.tasks[S.idx];
+  let h='<div class="card"><span class="eyebrow">Aufgabe '+(S.idx+1)+' von '+N+' · '+eyebrow(t)+'</span>';
+  h+=({rueck:viewRueck, direct:viewDirect, fehlt:viewFehlt, stimmt:viewStimmt, kette:viewKette, einh:viewEinh, sach:viewSach})[t.kind](t);
+  if(t.step==='done') h+=doneBox(t);
+  h+='</div>';
+  $app.innerHTML=nbsp(h);
+  if(S.justDone){ S.justDone=false; const box=document.querySelector('.donebox'); if(box && box.scrollIntoView) box.scrollIntoView({block:'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); }
+}
+function eyebrow(t){
+  if(t.kind==='rueck'||t.kind==='direct') return t.op==='·' ? 'Multiplikation' : 'Division';
+  return ({fehlt:'Welche Zahl fehlt?', stimmt:'Fehler-Detektiv', kette:'Zwei Schritte', einh:'Einheiten umrechnen', sach:'Sachaufgabe'})[t.kind];
+}
+
+function viewRueck(t){
+  const st=t.step; const done=st==='done';
+  let h=term(t,done);
+  if(st==='plan') h+=placeRowStatic(t);
+  else if(st==='place') h+=placeRow(t)+'<p class="rowcap">Das graue Komma ist die alte Stelle. Tippe auf die Lücke, in die das Komma rückt.</p>';
+  else h+=staticRow(t.n,t.E)+'<p class="rowcap">'+(hasZf(t)?'<span class="o">Orange</span>: ergänzte Nullen. ':'')+(hasDim(t)?'Durchgestrichene Nullen fallen weg.':'')+'</p>';
+  h+='<div class="steps">';
+  // Schritt 1: Richtung und Stellen
+  const s1 = st==='plan' ? 'active' : 'done';
+  h+='<section class="'+stepCls(s1)+'">'+sn(s1,1)+'<div><h2>Wohin rückt das Komma?</h2>';
+  if(s1==='active'){
+    const dirDone=!!t.ans.dir;
+    h+='<div class="ask"><p>In welche Richtung rückt das Komma?</p>'+(S.stufe===1?'<p class="hint">'+(t.op==='·'?'Bei der Multiplikation mit '+F(t.k)+' wird die Zahl größer.':'Bei der Division durch '+F(t.k)+' wird die Zahl kleiner.')+'</p>':'')+
+       '<div class="chips">'+chip('dir','l','← nach links',t.ans.dir,!dirDone,t,'word')+chip('dir','r','nach rechts →',t.ans.dir,!dirDone,t,'word')+'</div>'+(!dirDone?msgHtml(t):'')+'</div>';
+    h+='<div class="ask'+(dirDone?'':' off')+'"><p>Um wie viele Stellen?</p>'+(S.stufe===1&&dirDone?'<p class="hint">Zähle die Nullen von '+F(t.k)+'.</p>':'')+
+       '<div class="chips">'+[1,2,3].map(k=>chip('cnt',String(k),stellen(k),t.ans.cnt,dirDone,t,'word')).join('')+'</div>'+(dirDone?msgHtml(t):'')+'</div>';
+  } else h+='<p><span class="dirtag">'+stellen(t.k)+' nach '+dirWord(t.E)+' '+(t.E>0?'→':'←')+'</span></p>';
+  h+='</div></section>';
+  // Schritt 2: Komma setzen
+  const s2 = st==='plan' ? 'todo' : (st==='place' ? 'active' : 'done');
+  h+='<section class="'+stepCls(s2)+'">'+sn(s2,2)+'<div><h2>Komma setzen</h2>';
+  if(s2==='todo') h+='<p class="hint">Zuerst Richtung und Stellen wählen.</p>';
+  else if(s2==='active') h+='<p>Zähle von der alten Stelle '+stellen(t.k)+' nach '+dirWord(t.E)+'. Tippe auf die Lücke.</p>'+(S.stufe===1?'<p class="hint">Leere Kästchen werden zu Nullen.</p>':'')+msgHtml(t);
+  else h+='<p class="hint">Das Komma ist '+stellen(t.k)+' nach '+dirWord(t.E)+' gerückt.</p>';
+  h+='</div></section>';
+  // Schritt 3: Ergebnis
+  const s3 = (st==='plan'||st==='place') ? 'todo' : (st==='answer' ? 'active' : 'done');
+  h+='<section class="'+stepCls(s3)+'">'+sn(s3,3)+'<div><h2>Ergebnis</h2>';
+  if(s3==='todo') h+='<p class="hint">Zuerst das Komma setzen.</p>';
+  else if(s3==='active'){
+    h+='<p class="num">'+G(t.n)+' '+opTxt(t.op)+' '+F(t.k)+' = ?</p>';
+    if(t.mode==='chips') h+='<div class="chips">'+chipOpts(t).map(o=>chip('res',o,cm(grpStr(o)),t.ans.res,true,t,'wide')).join('')+'</div>'+msgHtml(t);
+    else h+=inputBlock(t,'','');
+  } else h+='<p class="sum">'+G(t.n)+' '+opTxt(t.op)+' '+F(t.k)+' = <b>'+G(t.res)+'</b></p>';
+  h+='</div></section></div>';
+  return h;
+}
+function placeRowStatic(t){ // Zahl vor dem Rücken (nicht antippbar)
+  const d=digits(t.n); let h='<div class="row" aria-hidden="true">';
+  d.D.forEach((x,i)=>{ h+='<div class="gp static'+(i===d.c?' has':'')+'">'+(i===d.c?'<span class="cm2">,</span>':'')+'</div><div class="dt">'+x+'</div>'; });
+  h+='<div class="gp static'+(d.c===d.D.length?' has':'')+'">'+(d.c===d.D.length?'<span class="cm2 old">,</span>':'')+'</div></div>';
+  if(d.c===d.D.length) h+='<p class="rowcap">Bei '+G(t.n)+' steht das Komma unsichtbar am Ende: '+G(t.n)+'<b>,</b>0</p>';
+  return h;
+}
+function hasZf(t){ return resultTiles(t.n,t.E).D.some(x=>x.zf); }
+function hasDim(t){ return resultTiles(t.n,t.E).D.some(x=>x.dim); }
+function chipOpts(t){
+  if(!t._opts){
+    const o=[fs(t.res), fs(sh(t.n,-t.E)), fs(sh(t.n, t.E>0 ? t.E+1 : t.E-1))];
+    if(Math.abs(t.E)>1) o.push(fs(sh(t.n, t.E>0 ? t.E-1 : t.E+1)));
+    if(t.E>0 && simplify(t.n).p>0 && t.k<=2) o.push(fs(t.n)+'0'.repeat(t.k));           // Null angehängt
+    const u=o.filter((x,i)=>o.indexOf(x)===i && Number(x.replace(',','.'))>=0.0001);
+    t._opts=shuffle(u.slice(0,4).includes(fs(t.res))?u.slice(0,4):[fs(t.res)].concat(u.slice(1,4)));
+  }
+  return t._opts;
+}
+function viewDirect(t){
+  const done=t.step==='done';
+  let h='<p class="story">Rechne im Kopf. Tippe das Ergebnis ein.</p>'+term(t,done)+'<div class="steps">';
+  const s=done?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>Ergebnis</h2>';
+  if(!done) h+=(S.stufe<3?'<p class="hint">Richtung? Wie viele Stellen? Fehlen Nullen?</p>':'')+inputBlock(t,'','');
+  else h+='<p class="sum">'+G(t.n)+' '+opTxt(t.op)+' '+F(t.k)+' = <b>'+G(t.res)+'</b></p>';
+  h+='</div></section></div>';
+  return h;
+}
+function viewKette(t){
+  const done=t.step==='done';
+  let h='<p class="story">Zwei Schritte hintereinander. Tippe das Ergebnis ein.</p>';
+  h+='<p class="term small"><span>'+G(t.n)+'</span> <span class="op">'+opTxt(t.op)+'</span> <span>'+F(t.k1)+'</span> <span class="op">'+opTxt(t.op)+'</span> <span>'+F(t.k2)+'</span> <span class="op">=</span> '+(done?'<span class="res">'+G(t.res)+'</span>':'<span class="q">?</span>')+'</p><div class="steps">';
+  const s=done?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>Ergebnis</h2>';
+  if(!done) h+=inputBlock(t,'','');
+  else h+='<p class="sum">'+G(t.n)+' '+opTxt(t.op)+' '+F(t.k1)+' = '+G(sh(t.n,t.op==='·'?t.k1:-t.k1))+' → '+opTxt(t.op)+' '+F(t.k2)+' = <b>'+G(t.res)+'</b></p>';
+  h+='</div></section></div>';
+  return h;
+}
+function viewEinh(t){
+  const done=t.step==='done';
+  let h='<p class="story">Rechne um. Tippe das Ergebnis ein.</p>';
+  h+='<p class="term small"><span>'+G(t.n)+' '+t.from+'</span> <span class="op">=</span> '+(done?'<span class="res">'+G(t.res)+'</span>':'<span class="q">?</span>')+' <span>'+t.to+'</span></p><div class="steps">';
+  const s=done?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>Umrechnen</h2>';
+  if(!done) h+='<p class="hint">Denk daran: '+t.rule.replace(/(\d) (\d{3})/g,'$1'+NB+'$2')+'</p>'+inputBlock(t,'',t.to);
+  else h+='<p class="sum">'+G(t.n)+' '+t.from+' = <b>'+G(t.res)+' '+t.to+'</b></p>';
+  h+='</div></section></div>';
+  return h;
+}
+function viewFehlt(t){
+  const done=t.step==='done';
+  let h='<p class="story">Welche Zahl fehlt?</p><p class="term small">';
+  if(t.missing==='f') h+='<span>'+G(t.n)+'</span> <span class="op">'+opTxt(t.op)+'</span> <span class="gap-blank">'+(done?F(t.k):'?')+'</span> <span class="op">=</span> <span>'+G(t.res)+'</span>';
+  else h+='<span class="gap-blank">'+(done?G(t.n):'?')+'</span> <span class="op">'+opTxt(t.op)+'</span> <span>'+F(t.k)+'</span> <span class="op">=</span> <span>'+G(t.res)+'</span>';
+  h+='</p><div class="steps">';
+  const s=done?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>'+(t.missing==='f'?(t.op==='·'?'Mit welcher Zahl wurde multipliziert?':'Durch welche Zahl wurde dividiert?'):'Welche Zahl steht vorne?')+'</h2>';
+  if(!done){
+    if(t.mode==='chips') h+='<p class="hint">Zähle, um wie viele Stellen das Komma gerückt ist.</p><div class="chips">'+[1,2,3].map(k=>chip('fk',String(k),F(k),t.ans.fk,true,t,'wide')).join('')+'</div>'+msgHtml(t);
+    else h+=(t.missing==='a'?'<p class="hint">Rechne rückwärts: '+G(t.res)+' '+(t.op==='·'?':':'·')+' '+F(t.k)+'</p>':'<p class="hint">Zähle, um wie viele Stellen das Komma gerückt ist.</p>')+inputBlock(t,'','');
+  } else h+='<p class="sum">'+G(t.n)+' '+opTxt(t.op)+' <b>'+F(t.k)+'</b> = '+G(t.res)+'</p>';
+  h+='</div></section></div>';
+  return h;
+}
+function viewStimmt(t){
+  const done=t.step==='done';
+  let h='<p class="story">Fehler-Detektiv:</p><p class="story big"><b>'+cm(t.text.replace(/(\d) (\d{3})/g,'$1'+NB+'$2'))+'</b></p><div class="steps">';
+  h+='<section class="'+stepCls(done?'done':'active')+'">'+sn(done?'done':'active',1)+'<div><h2>Stimmt das?</h2><div class="chips">'+
+     chip('judge','ja','✓ Das stimmt',t.ans.judge,!done,t,'word')+chip('judge','nein','✗ Das stimmt nicht',t.ans.judge,!done,t,'word')+'</div>'+(!done?msgHtml(t):'')+'</div></section></div>';
+  return h;
+}
+function viewSach(t){
+  const done=t.step==='done';
+  let h='<p class="story">'+cm(t.text.replace(/(\d) (\d{3})/g,'$1'+NB+'$2'))+'</p><div class="steps">';
+  const s=done?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>Rechne im Heft</h2>';
+  if(!done) h+='<p class="hint">Frage – Rechnung – Antwort. Tippe nur das Ergebnis ein.</p>'+inputBlock(t,'',t.unit);
+  else h+='<p class="sum">'+cm(t.rech.replace(/(\d) (\d{3})/g,'$1'+NB+'$2'))+'</p>';
+  h+='</div></section></div>';
+  return h;
+}
+
+function opPath(t){ return G(t.n)+' '+opTxt(t.op)+' '+F(t.k)+' = <b>'+G(t.res)+'</b><br>'+(t.op==='·'?'Multiplikation mit ':'Division durch ')+F(t.k)+' → Komma '+stellen(t.k)+' nach '+dirWord(t.E); }
+function doneBox(t){
+  const cat=S.results[S.idx];
+  const praise = cat==='good' ? 'Super! Alles sofort richtig.' : (cat==='ok' ? 'Richtig! Du hast deinen Fehler selbst verbessert.' : 'Schau dir die Lösung genau an. Die nächste schaffst du!');
+  const last=S.idx===N-1;
+  let path='', extra='';
+  if(t.kind==='rueck') path=opPath(t);
+  else if(t.kind==='direct'){ path=opPath(t); extra='<p class="hint" style="margin:0">So rückt das Komma:</p>'+staticRow(t.n,t.E); }
+  else if(t.kind==='kette') path='Zusammen: '+(t.op==='·'?'Komma ':'Komma ')+stellen(t.k)+' nach '+dirWord(t.E)+'. '+G(t.n)+' '+opTxt(t.op)+' '+F(t.k)+' = <b>'+G(t.res)+'</b>';
+  else if(t.kind==='einh') path=t.rule.replace(/(\d) (\d{3})/g,'$1'+NB+'$2')+' → '+(t.E>0?'· ':': ')+F(t.k)+'<br>'+G(t.n)+' '+t.from+' = <b>'+G(t.res)+' '+t.to+'</b> (Komma '+stellen(t.k)+' nach '+dirWord(t.E)+')';
+  else if(t.kind==='fehlt') path=G(t.n)+' '+opTxt(t.op)+' <b>'+F(t.k)+'</b> = '+G(t.res)+'<br>Das Komma ist '+stellen(t.k)+' nach '+dirWord(t.E)+' gerückt → '+F(t.k)+'.';
+  else if(t.kind==='stimmt') path=(t.truth?'Das stimmt. ':'Das stimmt nicht. ')+cm(t.why.replace(/(\d) (\d{3})/g,'$1'+NB+'$2'));
+  else path=cm(t.rech.replace(/(\d) (\d{3})/g,'$1'+NB+'$2'));
+  return '<div class="donebox '+cat+'"><p class="big">'+praise+'</p>'+(t.msg?'<p>'+t.msg.text+'</p>':'')+'<p class="path">'+path+'</p>'+extra+
+    '<button type="button" class="btn primary" data-action="next" id="nextbtn">'+(last?'Zur Auswertung':'Nächste Aufgabe')+' →</button></div>';
+}
+function renderSummary(){
+  const c={good:0,ok:0,help:0}; S.results.forEach(r=>{ c[r]++; });
+  const strong=c.good>=6;
+  let advice;
+  if(S.stufe<3) advice = strong ? 'Stark! Mach weiter mit Stufe '+(S.stufe+1)+'.' : 'Übe Stufe '+S.stufe+' noch einmal. Die Tippkarten helfen dir.';
+  else advice = strong ? 'Du bist Zehnerzahlen-Profi! Schaffst du in einer neuen Runde alle 8 sofort richtig?' : 'Übe Stufe 3 noch einmal. Zähle immer die Nullen.';
+  let h='<div class="card summary"><span class="eyebrow">Auswertung</span><h2>Stufe '+S.stufe+' geschafft!</h2><p>'+advice+'</p>'+
+    '<div class="stats"><div class="stat good"><b>'+c.good+'</b><span>sofort richtig</span></div>'+
+    '<div class="stat ok"><b>'+c.ok+'</b><span>nach Verbessern richtig</span></div>'+
+    '<div class="stat help"><b>'+c.help+'</b><span>mit Lösung</span></div></div>'+
+    '<p class="hint">Schreibe dein Ergebnis ins Heft: „Stufe '+S.stufe+': '+c.good+' von 8 grün“.</p><div class="tools">';
+  if(S.stufe<3) h+='<button type="button" class="btn primary" data-action="stufe" data-s="'+(S.stufe+1)+'" id="nextstufe">Weiter mit Stufe '+(S.stufe+1)+'</button>';
+  h+='<button type="button" class="btn'+(S.stufe===3?' primary':'')+'" data-action="again" id="againbtn">Noch einmal Stufe '+S.stufe+'</button></div></div>';
+  $app.innerHTML=h;
+}
+
+/* ---------- Logik ---------- */
+function finish(t){ t.step='done'; S.results[S.idx] = t.revealed ? 'help' : (t.errors===0 ? 'good' : 'ok'); S.justDone=true; }
+function wrongStep(t,action,v){ t.errors++; t.stepErr++; t.wrong={step:action,v:v}; }
+function nextStep(t,step){ t.step=step; t.stepErr=0; t.wrong=null; }
+function tipOp(t){ return t.E>0?1:2; }
+
+/* typische Fehler erkennen */
+function diagnose(t,x,raw){
+  const n=t.n, E=t.E;
+  if(E>0 && eq(x,n) && /,\d*0$/.test(raw||'')){ t.tip=4; return '<b>Keine Null anhängen!</b> '+cm(grpStr(raw))+' ist dasselbe wie '+G(n)+'. Bei Dezimalzahlen rückt das Komma nach rechts.'; }
+  if(eq(x,n)){ t.tip=tipOp(t); return '<b>Noch nicht.</b> Die Zahl bleibt nicht gleich. '+(E>0?'Sie wird größer.':'Sie wird kleiner.'); }
+  if(eq(x,sh(n,-E))){ t.tip=tipOp(t); return '<b>Andere Richtung!</b> '+(E>0?'Bei der Multiplikation wird die Zahl größer: Komma nach rechts.':'Bei der Division wird die Zahl kleiner: Komma nach links.'); }
+  for(const d of [-1,1,-2,2]){
+    if(E+d!==0 && Math.sign(E+d)===Math.sign(E) && eq(x,sh(n,E+d))){
+      t.tip=tipOp(t);
+      return '<b>Die Richtung stimmt!</b> Prüfe, um wie viele Stellen das Komma rückt: '+F(Math.abs(E))+' hat '+Math.abs(E)+(Math.abs(E)===1?' Null':' Nullen')+' → '+stellen(Math.abs(E))+'.';
+    }
+  }
+  t.tip=3; return '<b>Noch nicht.</b> Komma '+stellen(Math.abs(E))+' nach '+dirWord(E)+'. Fehlen Stellen? Dann Nullen ergänzen.';
+}
+
+function onDir(t,v){
+  const right = t.E>0 ? 'r' : 'l';
+  if(v===right){ t.ans.dir=v; t.msg=null; t.stepErr=0; t.wrong=null; return; }
+  wrongStep(t,'dir',v); t.tip=tipOp(t);
+  if(t.stepErr>=2){ t.ans.dir=right; t.revealed=true; t.stepErr=0; t.wrong=null; t.msg={kind:'info', text:'<b>So geht es:</b> '+(t.E>0?'Multiplikation → die Zahl wird größer → Komma nach rechts.':'Division → die Zahl wird kleiner → Komma nach links.')}; return; }
+  t.msg={kind:'bad', text: t.E>0 ? '<b>Andere Richtung!</b> Bei der Multiplikation mit '+F(t.k)+' wird die Zahl größer. Dafür rückt das Komma nach rechts.' : '<b>Andere Richtung!</b> Bei der Division durch '+F(t.k)+' wird die Zahl kleiner. Dafür rückt das Komma nach links.'};
+}
+function onCnt(t,v){
+  if(Number(v)===t.k){ t.ans.cnt=v; t.msg=null; nextStep(t,'place'); return; }
+  wrongStep(t,'cnt',v); t.tip=tipOp(t);
+  if(t.stepErr>=2){ t.ans.cnt=String(t.k); t.revealed=true; nextStep(t,'place'); t.msg={kind:'info', text:'<b>So geht es:</b> '+F(t.k)+' hat '+t.k+(t.k===1?' Null':' Nullen')+'. Das Komma rückt '+stellen(t.k)+'.'}; return; }
+  t.msg={kind:'bad', text:'<b>Noch nicht.</b> Zähle die Nullen von '+F(t.k)+'. So viele Stellen rückt das Komma.'};
+}
+function onGap(t,g){
+  const m=placeModel(t);
+  if(g===m.target){ t.msg=null; nextStep(t,'answer'); return; }
+  wrongStep(t,'gap',String(g));
+  if(t.stepErr>=2){ t.revealed=true; nextStep(t,'answer'); t.msg={kind:'info', text:'<b>So geht es:</b> Von der alten Stelle '+stellen(t.k)+' nach '+dirWord(t.E)+' zählen.'}; return; }
+  let txt;
+  if(g===m.orig) txt='<b>Noch nicht.</b> Das ist die alte Stelle. Das Komma muss rücken.';
+  else if(Math.sign(g-m.orig)!==Math.sign(t.E)) txt='<b>Andere Richtung!</b> Das Komma rückt nach '+dirWord(t.E)+'.';
+  else txt='<b>Fast.</b> Zähle genau: Das Komma rückt '+stellen(t.k)+' – über jede Ziffer bzw. jedes Kästchen ein Schritt.';
+  t.tip=3; t.msg={kind:'bad', text:txt};
+}
+function onRes(t,v){
+  if(v===fs(t.res)){ t.ans.res=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'res',v);
+  if(t.stepErr>=2){ t.ans.res=fs(t.res); t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Lies die Zahl oben ab. Durchgestrichene Nullen fallen weg.'}; finish(t); return; }
+  t.msg={kind:'bad', text:diagnose(t,parseIn(v),v)};
+}
+function onFk(t,v){
+  if(Number(v)===t.k){ t.ans.fk=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'fk',v); t.tip=5;
+  if(t.stepErr>=2){ t.ans.fk=String(t.k); t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Das Komma ist '+stellen(t.k)+' gerückt → '+F(t.k)+'.'}; finish(t); return; }
+  t.msg={kind:'bad', text:'<b>Noch nicht.</b> Vergleiche '+G(t.n)+' und '+G(t.res)+'. Um wie viele Stellen ist das Komma gerückt? 1 Stelle → 10, 2 Stellen → 100, 3 Stellen → 1'+NB+'000.'};
+}
+function onJudge(t,v){
+  const right = t.truth ? 'ja' : 'nein';
+  if(v===right){ t.ans.judge=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'judge',v); t.tip=t.tipk;
+  t.ans.judge=right; t.revealed=true; finish(t);
+  t.msg={kind:'info', text:'<b>Schau genau.</b>'};
+}
+function parseIn(s){ const parts=s.split(','); const l=parts[0]||'0', r=parts[1]||''; return simplify({i:Number((l+r).replace(/^0+(?=\d)/,'')||'0'), p:r.length}); }
+function target(t){
+  if(t.kind==='fehlt') return t.missing==='f' ? I(Math.pow(10,t.k)) : t.n;
+  if(t.kind==='sach') return t.target;
+  return t.res;
+}
+function onCheck(t){
+  const s=t.input;
+  if(!s){ t.msg={kind:'info', text:'Tippe zuerst deine Antwort ein.'}; return; }
+  if(s.startsWith(',')){ t.msg={kind:'info', text:'Vor dem Komma steht immer eine Ziffer. Schreibe eine 0 davor.'}; t.tip=3; return; }
+  if(s.endsWith(',')){ t.msg={kind:'info', text:'Prüfe das Komma in deiner Antwort.'}; return; }
+  const x=parseIn(s), T=target(t);
+  if(eq(x,T)){ t.msg=null; if(t.kind==='rueck') t.ans.res=fs(x); finish(t); return; }
+  t.errors++; t.stepErr++;
+  if(t.stepErr>=2){ t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Schau dir die Lösung unten an.'}; finish(t); return; }
+  let txt;
+  if(t.kind==='sach'){
+    txt='<b>Noch nicht.</b> Multiplikation oder Division? Mit 10, 100 oder 1'+NB+'000? Lies die Frage noch einmal.';
+    t.tip=1;
+  } else if(t.kind==='fehlt' && t.missing==='f'){
+    t.tip=5; txt='<b>Noch nicht.</b> Um wie viele Stellen ist das Komma gerückt? 1 Stelle → 10, 2 Stellen → 100, 3 Stellen → 1'+NB+'000.';
+  } else if(t.kind==='fehlt'){
+    t.tip=5;
+    if(eq(x,sh(t.res,t.E))) txt='<b>Andere Richtung!</b> Rechne rückwärts: '+G(t.res)+' '+(t.op==='·'?':':'·')+' '+F(t.k)+'.';
+    else txt='<b>Noch nicht.</b> Rechne rückwärts: '+G(t.res)+' '+(t.op==='·'?':':'·')+' '+F(t.k)+'. Mach die Probe!';
+  } else txt=diagnose(t,x,s);
+  t.msg={kind:'bad', text:txt};
+}
+function press(t,k){
+  let s=t.input;
+  if(k==='del') s=s.slice(0,-1);
+  else if(k===','){ if(!s.includes(',') && s.length<9) s+=','; }
+  else if(s.length<9) s+=k;
+  t.input=s; t.msg=null;
+}
+function next(){ if(S.idx>=N-1) S.finished=true; else S.idx++; render(); window.scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); }
+
+/* ---------- Tippkarten ---------- */
+function tipFocus(){
+  if(S.finished) return 0;
+  const t=S.tasks[S.idx];
+  if(t.tip) return t.tip;
+  if(t.kind==='fehlt') return 5;
+  if(t.kind==='stimmt') return t.tipk;
+  if(t.kind==='sach') return 1;
+  return t.E>0?1:2;
+}
+function toggleTips(open){
+  $tips.hidden=!open;
+  if(open){ const f=tipFocus(); $tips.querySelectorAll('.tipcard').forEach(c=>c.classList.toggle('focus', Number(c.dataset.tip)===f)); document.getElementById('tipsclose').focus(); }
+  else document.getElementById('tipbtn').focus();
+}
+
+/* ---------- Ereignisse ---------- */
+function isInput(t){ return t.step==='input' || (t.kind==='rueck' && t.mode==='input' && t.step==='answer'); }
+document.addEventListener('click', function(e){
+  if(e.target===$tips){ toggleTips(false); return; }
+  const el=e.target.closest('[data-action]'); if(!el || el.disabled) return;
+  const a=el.dataset.action;
+  if(a==='tips'){ toggleTips(true); return; }
+  if(a==='tipsclose'){ toggleTips(false); return; }
+  if(a==='stufe'){ S.stufe=Number(el.dataset.s); newRound(); window.scrollTo({top:0}); return; }
+  if(a==='again'){ newRound(); window.scrollTo({top:0}); return; }
+  if(S.finished) return;
+  const t=S.tasks[S.idx], v=el.dataset.v;
+  if(a==='dir'){ if(t.step==='plan' && !t.ans.dir) onDir(t,v); }
+  else if(a==='cnt'){ if(t.step==='plan' && t.ans.dir) onCnt(t,v); }
+  else if(a==='gap'){ if(t.step==='place') onGap(t,Number(el.dataset.g)); }
+  else if(a==='res'){ if(t.step==='answer' && t.mode==='chips') onRes(t,v); }
+  else if(a==='fk'){ if(t.step==='pick') onFk(t,v); }
+  else if(a==='judge'){ if(t.step==='judge') onJudge(t,v); }
+  else if(a==='key'){ if(isInput(t)) press(t,el.dataset.k); }
+  else if(a==='check'){ if(isInput(t)) onCheck(t); }
+  else if(a==='next'){ next(); return; }
+  render();
+});
+document.addEventListener('keydown', function(e){
+  if(!$tips.hidden){ if(e.key==='Escape') toggleTips(false); return; }
+  if(S.finished) return;
+  const t=S.tasks[S.idx];
+  if(isInput(t)){
+    if(/^[0-9]$/.test(e.key)){ press(t,e.key); render(); e.preventDefault(); }
+    else if(e.key===','||e.key==='.'){ press(t,','); render(); e.preventDefault(); }
+    else if(e.key==='Backspace'){ press(t,'del'); render(); e.preventDefault(); }
+    else if(e.key==='Enter'){ onCheck(t); render(); e.preventDefault(); }
+  } else if(t.step==='done' && e.key==='Enter' && !(e.target instanceof HTMLButtonElement)){ next(); e.preventDefault(); }
+});
+
+window.__ZT = { S:S, generate:generate, fs:fs, sh:sh, resultTiles:resultTiles, placeModel:placeModel, render:render, target:target };
+newRound();
+})();
+</script>
+</body>
+</html>

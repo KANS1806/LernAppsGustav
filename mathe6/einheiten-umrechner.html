@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Einheiten-Umrechner</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/lexend.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+
+/* Layout: eine Heftseite – Stellenwerttafel oben, darunter nummerierte Schritte; Kästchenpapier als Grund. Gleiche Familie wie Kommastellen-Trainer, Überschlag-Detektiv und Figuren & Umfang. */
+:root{
+  --paper:#F6F8FC; --grid:rgba(43,79,168,.085); --surface:#FFFFFF; --line:#D3DBEA;
+  --ink:#1B2540; --muted:#56627C; --accent:#2B4FA8; --accent-ink:#FFFFFF; --accent-soft:#E5EBFA;
+  --est:#6B3FA0; --est-soft:#EFE7F8; --fa:#0A7C91; --fb:#C25E0C; --gridline:rgba(43,79,168,.28); --comma:#D2233A;
+  --good:#22814F; --good-soft:#DDF3E7; --warn:#9A6600; --warn-soft:#FFF1CC; --help:#B4462E; --help-soft:#FBE3DC;
+  --scrim:rgba(12,18,34,.5);
+  --font-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+    --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+    --est:#C9A6F5; --est-soft:#33274A; --fa:#4FC7DC; --fb:#FFA45E; --gridline:rgba(150,175,255,.25); --comma:#FF6B7D;
+    --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+    --scrim:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+  --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+  --est:#C9A6F5; --est-soft:#33274A; --fa:#4FC7DC; --fb:#FFA45E; --gridline:rgba(150,175,255,.25); --comma:#FF6B7D;
+  --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+  --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink); font-family:var(--font-body); font-size:18px; line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{
+  max-width:780px; margin:0 auto; display:flex; flex-direction:column; gap:14px;
+  padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+button{font:inherit; color:inherit}
+
+.top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.top h1{font-family:var(--font-display); font-weight:700; font-size:clamp(1.5rem,4.5vw,2rem); margin:0; letter-spacing:-.01em; text-wrap:balance}
+.top h1 .ap{color:var(--est)}
+.top p{margin:0; color:var(--muted)}
+.tipbtn{border:2px solid var(--accent); background:var(--surface); color:var(--accent); border-radius:999px; padding:10px 18px; min-height:48px; font-family:var(--font-display); font-weight:600; cursor:pointer}
+.tipbtn:hover{background:var(--accent-soft)}
+
+.stufen{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.stufen button{text-align:left; padding:10px 12px; border:2px solid var(--line); background:var(--surface); border-radius:12px; cursor:pointer; display:flex; flex-direction:column; gap:1px; min-height:68px}
+.stufen button:hover{border-color:var(--accent)}
+.stufen button[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+.lvl{font-size:.8rem; letter-spacing:.2em; color:var(--accent)}
+.stufen b{font-family:var(--font-display); font-weight:600}
+.stufen small{color:var(--muted); font-size:.82rem; line-height:1.25}
+
+.progress{display:flex; gap:6px; align-items:center}
+.pd{flex:1; height:9px; border-radius:5px; background:var(--line)}
+.pd.cur{background:var(--accent)}
+.pd.good{background:var(--good)} .pd.ok{background:var(--warn)} .pd.help{background:var(--help)}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:20px}
+.eyebrow{font-family:var(--font-display); font-size:.82rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.story{margin:8px 0 0; font-size:1.12rem; max-width:60ch}
+.term{font-weight:700; font-size:clamp(2.1rem,8vw,3.2rem); line-height:1.15; margin:6px 0 0; font-variant-numeric:tabular-nums; display:flex; flex-wrap:wrap; align-items:baseline; gap:.28em}
+.term.small{font-size:clamp(1.6rem,6vw,2.3rem)}
+.op,.q{color:var(--muted); font-weight:400}
+.res{color:var(--accent)}
+.claim{color:var(--muted)}
+.claim.bad{text-decoration:line-through; text-decoration-color:var(--help); text-decoration-thickness:4px}
+.cm{color:var(--comma)}
+.ap{color:var(--est); font-weight:700}
+.estline{display:inline-block; font-size:1.12rem; padding:8px 12px; background:var(--est-soft); border-radius:10px; font-variant-numeric:tabular-nums}
+.estline b{color:var(--est)}
+
+.steps{margin-top:14px; border-top:2px dashed var(--line)}
+.step{display:grid; grid-template-columns:38px minmax(0,1fr); gap:12px; padding:16px 0; border-bottom:2px dashed var(--line)}
+.step:last-child{border-bottom:0; padding-bottom:0}
+.sn{width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-family:var(--font-display); font-weight:700; background:var(--accent-soft); color:var(--accent)}
+.step.is-done .sn{background:var(--good-soft); color:var(--good)}
+.step.is-todo{opacity:.5}
+.step h2{font-family:var(--font-display); font-size:1.08rem; font-weight:600; margin:5px 0 8px}
+.step p{margin:0}
+.hint{color:var(--muted); font-size:.95rem; margin-top:4px!important}
+
+.ask{display:flex; flex-direction:column; gap:8px; margin-bottom:14px}
+.ask:last-child{margin-bottom:0}
+.ask .num{font-weight:700; font-size:1.25rem}
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{min-width:64px; height:58px; padding:0 14px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; font-size:1.4rem; cursor:pointer; font-variant-numeric:tabular-nums}
+.chip.wide{font-size:1.2rem}
+.chip.word{font-family:var(--font-display); font-weight:600; font-size:1.05rem}
+.chip:hover:not(:disabled){border-color:var(--accent)}
+.chip:disabled{cursor:default}
+.chip:disabled:not(.right){opacity:.4}
+.chip.right{background:var(--good-soft); border-color:var(--good); color:var(--good)}
+.chip.wrong{background:var(--help-soft); border-color:var(--help); color:var(--help)}
+.sum{display:inline-block; font-size:1.12rem; padding:8px 12px; background:var(--accent-soft); border-radius:10px; font-variant-numeric:tabular-nums}
+
+.tiles{display:flex; align-items:stretch; margin:10px 0 6px; overflow-x:auto; padding:2px 2px 4px}
+.tile{flex:none; position:relative; width:clamp(34px,9vw,60px); height:clamp(60px,13vw,78px); display:grid; place-items:center; font-weight:700; font-size:clamp(2rem,6vw,2.8rem); line-height:1; background:var(--surface); border:2px solid var(--line); border-radius:10px; font-variant-numeric:tabular-nums}
+.gap{flex:none; position:relative; width:clamp(18px,5vw,38px); border:0; padding:0; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center}
+.gap::after{content:""; position:absolute; left:50%; top:20%; bottom:20%; border-left:3px dotted var(--line); transform:translateX(-1px)}
+.gap:hover::after,.gap:focus-visible::after{border-color:var(--accent)}
+.gap.on::after{display:none}
+.gap.static{width:5px; cursor:default}
+.gap.static.on{width:clamp(20px,4.5vw,28px)}
+.gap.static::after{display:none}
+.comma{font-weight:700; font-size:clamp(2.6rem,7.5vw,3.4rem); line-height:1; color:var(--comma); transform:translateY(.3em); animation:pop .18s ease-out}
+@keyframes pop{from{transform:translateY(.3em) scale(.4); opacity:0}to{transform:translateY(.3em) scale(1); opacity:1}}
+.live{font-size:1rem; color:var(--muted)} .live b{color:var(--ink)}
+
+.tools{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center}
+.btn{font-family:var(--font-display); font-weight:600; font-size:1rem; padding:12px 18px; min-height:50px; border-radius:12px; border:2px solid var(--line); background:var(--surface); cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.4; cursor:default}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); margin-left:auto}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08)}
+
+.fb{margin-top:12px; padding:10px 14px; border-radius:10px; font-size:1rem}
+.fb b{font-family:var(--font-display); font-weight:600}
+.fb.bad{background:var(--help-soft)} .fb.info{background:var(--warn-soft)} .fb.good{background:var(--good-soft)}
+
+.donebox{margin-top:16px; padding:16px; border-radius:12px; background:var(--good-soft); display:flex; flex-direction:column; gap:10px}
+.donebox.ok{background:var(--warn-soft)} .donebox.help{background:var(--help-soft)}
+.donebox .big{font-family:var(--font-display); font-weight:600; font-size:1.15rem; margin:0}
+.donebox p{margin:0}
+.path{font-size:1.1rem; font-variant-numeric:tabular-nums}
+.path .arr{color:var(--muted); padding:0 .15em}
+.donebox .btn.primary{align-self:flex-end}
+
+.inrow{display:flex; align-items:center; gap:10px; flex-wrap:nowrap; max-width:400px}
+.display{font-weight:700; font-size:2.3rem; min-height:76px; min-width:0; flex:1 1 auto; border:2px solid var(--line); border-radius:12px; padding:8px 18px; display:flex; align-items:center; background:var(--paper); font-variant-numeric:tabular-nums; overflow-x:auto}
+.display .ph{font-size:1.1rem; font-weight:400; color:var(--muted)}
+.unit{font-weight:700; font-size:1.6rem; color:var(--muted)}
+.pre{font-weight:700; font-size:2rem; color:var(--est)}
+.keys{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; max-width:340px; margin-top:10px}
+.key{height:62px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; font-size:1.6rem; cursor:pointer}
+.key:hover{border-color:var(--accent)}
+.key:active{background:var(--accent-soft)}
+.key.ck{color:var(--comma); font-size:2.2rem; line-height:.6}
+.key.del{font-size:1.05rem; font-family:var(--font-display); font-weight:600}
+
+.summary h2{font-family:var(--font-display); font-size:clamp(1.5rem,5vw,2rem); margin:4px 0 6px; text-wrap:balance}
+.stats{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:14px 0}
+.stat{border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:2px}
+.stat b{font-family:var(--font-display); font-size:1.9rem; line-height:1.1}
+.stat span{font-size:.92rem}
+.stat.good{background:var(--good-soft)} .stat.good b{color:var(--good)}
+.stat.ok{background:var(--warn-soft)} .stat.ok b{color:var(--warn)}
+.stat.help{background:var(--help-soft)} .stat.help b{color:var(--help)}
+.summary .tools .btn.primary{margin-left:0}
+
+.sheet[hidden]{display:none!important}
+.sheet{position:fixed; inset:0; z-index:30; background:var(--scrim); display:flex; align-items:flex-end; justify-content:center}
+.sheet-in{background:var(--surface); width:100%; max-width:780px; max-height:86vh; overflow:auto; border-radius:18px 18px 0 0; padding:20px;
+  padding-left:max(20px,env(safe-area-inset-left,0px)); padding-right:max(20px,env(safe-area-inset-right,0px)); padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
+.sheet-head h2{font-family:var(--font-display); margin:0; font-size:1.3rem}
+.tipgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px}
+.tipcard{border:2px solid var(--line); border-radius:12px; padding:12px 14px}
+.tipcard.focus{border-color:var(--accent); background:var(--accent-soft)}
+.tipcard h3{font-family:var(--font-display); font-size:1rem; font-weight:600; margin:0 0 4px}
+.tipcard p{margin:0; font-size:.98rem}
+.tipcard .ex{margin-top:6px; font-weight:700; font-variant-numeric:tabular-nums}
+
+
+.credit{margin-top:18px; text-align:center; font-size:.85rem; color:var(--muted)}
+
+@media (max-width:520px){
+  .stufen small{display:none}
+  .stats{grid-template-columns:1fr}
+  .card{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important}
+}
+
+/* ---------- Stellenwerttafel für Flächeneinheiten ---------- */
+.swt{margin:12px 0 4px; overflow-x:auto; padding-bottom:2px}
+.swt-g{display:grid; grid-template-columns:repeat(8,minmax(36px,1fr)); max-width:560px; min-width:300px; margin:0 auto; border:2px solid var(--ink); border-radius:12px; overflow:hidden; background:var(--surface)}
+.uh{grid-column:span 2; text-align:center; font-family:var(--font-display); font-weight:600; font-size:1.05rem; padding:6px 0; border-bottom:1px solid var(--line); border-left:2px solid var(--ink)}
+.uh.first{border-left:0}
+.ze{text-align:center; font-size:.85rem; font-weight:700; color:var(--muted); padding:2px 0; border-bottom:2px solid var(--ink); border-left:1px dashed var(--line)}
+.ze.ub{border-left:2px solid var(--ink)} .ze.first{border-left:0}
+.cellb{position:relative; height:66px; border:0; border-left:1px dashed var(--line); background:transparent; font-weight:700; font-size:clamp(1.55rem,5.4vw,2.2rem); line-height:1; padding:0; cursor:pointer; font-variant-numeric:tabular-nums; color:var(--ink)}
+.cellb.ub{border-left:2px solid var(--ink)} .cellb.first{border-left:0}
+.cellb:disabled{cursor:default}
+.cellb:not(:disabled):hover{background:var(--accent-soft)}
+.src{background:var(--est-soft)}
+.dst{background:var(--accent-soft)}
+.cellb.wrong{background:var(--help-soft)!important}
+.cellb.mark{box-shadow:inset 0 0 0 3px var(--est)}
+.cellb.markd{box-shadow:inset 0 0 0 3px var(--accent)}
+.cellb .zf{color:var(--fb)}
+.swt-g.anim .dg,.swt-g.anim .zf,.swt-g.anim .cma{animation:pop2 .25s ease-out}
+.cellb .ein{color:var(--est)}
+.cellb.dim .dg,.cellb.dim .zf{opacity:.45}
+.cma{position:absolute; right:-.17em; bottom:6px; color:var(--comma); font-size:1.2em; line-height:1; z-index:2; pointer-events:none}
+@keyframes pop2{from{transform:scale(.4); opacity:0}to{transform:scale(1); opacity:1}}
+.swt.mini .swt-g{max-width:420px}
+.swt.mini .cellb{height:46px; font-size:1.4rem}
+.swt.mini .uh{font-size:.92rem; padding:4px 0}
+.legend{display:flex; gap:14px; flex-wrap:wrap; justify-content:center; font-size:.9rem; color:var(--muted); margin-top:6px}
+.legend i{display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px; margin-right:5px}
+.ein-c{color:var(--est); font-weight:700}
+.tg{font-weight:700; color:var(--accent)}
+
+/* ---------- Treppe ---------- */
+.trbox{display:flex; justify-content:center; margin:10px 0 4px}
+.trbox svg{width:100%; max-width:430px; height:auto; overflow:visible}
+.tr .st{fill:var(--surface); stroke:var(--line); stroke-width:2.5}
+.tr .st.on{fill:var(--accent-soft); stroke:var(--accent)}
+.tr .ut{font-family:var(--font-display); font-weight:600; font-size:19px; fill:var(--ink)}
+.tr .ar{stroke:var(--muted); stroke-width:2.5; fill:none}
+.tr .ar.on{stroke:var(--good); stroke-width:3.5}
+.tr .al{font-family:var(--font-body); font-weight:700; font-size:16px; fill:var(--muted)}
+.tr .al.on{fill:var(--good)}
+.tr .ah{fill:var(--muted)} .tr .ah.on{fill:var(--good)}
+
+/* ---------- Kleinigkeiten ---------- */
+.chip.sym{font-size:1.9rem; min-width:76px}
+.chip.unitc{font-family:var(--font-display); font-weight:600; font-size:1.25rem; min-width:76px}
+.gap-blank{display:inline-block; min-width:2.2em; border-bottom:3px solid var(--accent); text-align:center; color:var(--accent)}
+.tipcard svg{display:block; margin:6px 0 2px; width:110px; height:110px}
+.tipcard svg rect{fill:none; stroke:var(--accent); stroke-width:1}
+.tipcard svg rect.out{stroke-width:3}
+.tipcard svg rect.row{fill:var(--accent-soft); stroke:none}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Einheiten<span class="ap">-</span>Umrechner</h1>
+      <p>mm², cm², dm², m² und km² – die Umrechnungszahl ist 100</p>
+    </div>
+    <button class="tipbtn" type="button" data-action="tips" id="tipbtn">Tippkarten</button>
+  </header>
+
+  <nav class="stufen" aria-label="Stufe wählen">
+    <button type="button" id="st1" data-action="stufe" data-s="1" aria-pressed="true"><span class="lvl">●○○</span><b>Stufe 1</b><small>Stellenwerttafel, ganze Zahlen</small></button>
+    <button type="button" id="st2" data-action="stufe" data-s="2" aria-pressed="false"><span class="lvl">●●○</span><b>Stufe 2</b><small>Mit Komma, über zwei Einheiten</small></button>
+    <button type="button" id="st3" data-action="stufe" data-s="3" aria-pressed="false"><span class="lvl">●●●</span><b>Stufe 3</b><small>Ohne Tafel, km² und Sachaufgaben</small></button>
+  </nav>
+
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <main id="app"></main>
+  <footer class="credit">Erstellt mit KI von Christoph Kansy</footer>
+</div>
+
+<div class="sheet" id="tips" hidden>
+  <div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="tipsTitle">
+    <div class="sheet-head">
+      <h2 id="tipsTitle">Tippkarten</h2>
+      <button class="btn" type="button" data-action="tipsclose" id="tipsclose">Schließen</button>
+    </div>
+    <div class="tipgrid">
+      <div class="tipcard" data-tip="1"><h3>1 · 100, nicht 10!</h3><p>1 dm² ist ein Quadrat mit 10&nbsp;cm Seitenlänge. 10 Reihen mit je 10&nbsp;cm² = 100&nbsp;cm².</p><svg id="tipgrid" viewBox="0 0 110 110" aria-hidden="true"></svg><p class="ex">Bei Flächen ist die Umrechnungszahl immer 100.</p></div>
+      <div class="tipcard" data-tip="2"><h3>2 · Die Treppe</h3><p>m² → dm² → cm² → mm²<br>Nach unten (kleinere Einheit): <b>·&nbsp;100</b><br>Nach oben (größere Einheit): <b>:&nbsp;100</b></p><p class="ex">Zwei Stufen: ·&nbsp;100 ·&nbsp;100 = ·&nbsp;10&#8239;000<br>1&nbsp;km² = 1&#8239;000&#8239;000&nbsp;m²</p></div>
+      <div class="tipcard" data-tip="3"><h3>3 · Stellenwerttafel</h3><p>Jede Einheit hat zwei Spalten: Z und E. Die Einerziffer kommt in die Spalte E der Einheit. Lies in der neuen Einheit bis zur Spalte E ab. Leere Spalten füllst du mit 0.</p><p class="ex">3,5 m²: 3 in E von m², 5 in Z von dm², 0 in E von dm² → 350&nbsp;dm²</p></div>
+      <div class="tipcard" data-tip="4"><h3>4 · Komma verschieben</h3><p>In die kleinere Einheit (·&nbsp;100): Komma 2&nbsp;Stellen nach <b>rechts</b>.<br>In die größere Einheit (:&nbsp;100): Komma 2&nbsp;Stellen nach <b>links</b>.</p><p class="ex">2,5&nbsp;m² = 250&nbsp;dm²<br>450&nbsp;cm² = 4,50&nbsp;dm² = 4,5&nbsp;dm²<br>70&nbsp;mm² = 0,70&nbsp;cm² = 0,7&nbsp;cm²</p></div>
+      <div class="tipcard" data-tip="5"><h3>5 · Wie groß ist das?</h3><p>1 mm²: ein Stecknadelkopf<br>1 cm²: ein Fingernagel<br>1 dm²: eine Handfläche<br>1 m²: ein Quadrat mit 1&nbsp;m Seitenlänge<br>1 km²: etwa 140 Fußballfelder</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const N = 8;
+const S = { stufe:1, tasks:[], idx:0, results:[], finished:false, justDone:false };
+const $app = document.getElementById('app');
+const $prog = document.getElementById('progress');
+const $tips = document.getElementById('tips');
+
+/* ---------- Zahlen als {i,p}: Wert = i / 10^p ---------- */
+function rnd(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(a){ for(let k=a.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [a[k],a[j]]=[a[j],a[k]]; } return a; }
+function simplify(n){ let i=n.i,p=n.p; while(p>0 && i%10===0){ i=i/10; p--; } return {i:i,p:p}; }
+function fmt(n){ const s=String(n.i).padStart(n.p+1,'0'); return n.p ? s.slice(0,s.length-n.p)+','+s.slice(s.length-n.p) : s; }
+function fs(n){ return fmt(simplify(n)); }
+function val(n){ return n.i/Math.pow(10,n.p); }
+function I(k){ return {i:k,p:0}; }
+function D(x){ return simplify({i:Math.round(x*10),p:1}); }
+function eq(a,b){ return fs(a)===fs(b); }
+function sh(n,e){ // n · 10^e
+  n=simplify(n);
+  if(e>=0){ if(e>=n.p) return simplify({i:n.i*Math.pow(10,e-n.p),p:0}); return simplify({i:n.i,p:n.p-e}); }
+  return simplify({i:n.i,p:n.p-e});
+}
+function sub(a,b){ const p=Math.max(a.p,b.p); return simplify({i:a.i*Math.pow(10,p-a.p)-b.i*Math.pow(10,p-b.p), p:p}); }
+const NB=' ';
+function grpInt(s){ if(s.length<4) return s; let o=''; for(let k=0;k<s.length;k++){ if(k>0 && (s.length-k)%3===0) o+=NB; o+=s[k]; } return o; }
+function grpStr(s){ const parts=s.split(','); return grpInt(parts[0])+(parts.length>1?','+parts[1]:''); }
+function nbs(s){ return String(s).replace(/(\d) (\d{3})/g,'$1'+NB+'$2'); }
+function nbsp(h){ return h.replace(/([·:]) (\d)/g,'$1\u00a0$2').replace(/(\d) (m²|dm²|cm²|mm²|km²|cm|m|Fliesen|Sticker)(?![a-zäöü])/g,'$1\u00a0$2'); }
+function cm(s){ return String(s).replace(/(\d),(\d)/g,'$1<span class="cm">,</span>$2'); }
+function G(n){ return cm(grpStr(fs(n))); }
+function L(n,u){ return G(n)+(u?' '+u:''); }
+
+/* ---------- Einheiten ---------- */
+const U=['m²','dm²','cm²','mm²'];
+function convTask(kind,n,u,t,extra){ // u,t: Index in U
+  return base(kind,Object.assign({n:simplify(n), from:U[u], to:U[t], u:u, t:t, E:2*(t-u), km:false, res:sh(n,2*(t-u))},extra||{}));
+}
+function kmTask(n,down){
+  return base('direct',{n:simplify(n), from: down?'km²':'m²', to: down?'m²':'km²', E: down?6:-6, km:true, res:sh(n, down?6:-6), step:'input'});
+}
+/* Ziffern der Zahl in der Stellenwerttafel (Spalte 0 = Z von m², Spalte 7 = E von mm²) */
+function digitCells(n,u){
+  const s=fs(n).split(','); const ip=s[0], fp=s[1]||'';
+  const e=2*u+1, cells={};
+  for(let k=0;k<ip.length;k++) cells[e-(ip.length-1-k)]={d:ip[k], ein:k===ip.length-1};
+  for(let j=0;j<fp.length;j++) cells[e+1+j]={d:fp[j]};
+  return cells;
+}
+function fits(n,u,t){
+  const c=Object.keys(digitCells(n,u)).map(Number);
+  const lo=Math.min.apply(null,c.concat([2*t+1])), hi=Math.max.apply(null,c.concat([2*t+1]));
+  return lo>=0 && hi<=7 && Math.min.apply(null,c)>=0 && Math.max.apply(null,c)<=7;
+}
+function filledCells(n,u,t){
+  const cells=digitCells(n,u); const keys=Object.keys(cells).map(Number);
+  const te=2*t+1, lo=Math.min.apply(null,keys.concat([te])), hi=Math.max.apply(null,keys.concat([te]));
+  for(let c=lo;c<=hi;c++) if(!cells[c]) cells[c]={d:'0', zero:true};
+  return cells;
+}
+
+/* ---------- Aufgaben ---------- */
+function base(kind,extra){ return Object.assign({kind:kind, errors:0, stepErr:0, revealed:false, wrong:null, msg:null, input:'', ans:{}, tip:0}, extra||{}); }
+
+const EINHEIT=[
+  ['Ein Klassenraum ist etwa','60','m²'],
+  ['Eine Briefmarke ist etwa','6','cm²'],
+  ['Eine Heftseite ist etwa','6','dm²'],
+  ['Ein Kästchen im Rechenheft ist','25','mm²'],
+  ['Die Stadt Essen ist etwa','210','km²'],
+  ['Eine Tür ist etwa','2','m²'],
+  ['Der Bildschirm eines iPads ist etwa','4','dm²'],
+  ['Ein Fußballfeld ist etwa','7 000','m²'],
+  ['Die Tischplatte von deinem Tisch ist etwa','80','dm²'],
+  ['Ein Schulhof ist etwa','3 000','m²']
+];
+const ALLU=['mm²','cm²','dm²','m²','km²'];
+const STUETZ={'mm²':'1 mm² ist winzig – etwa so groß wie ein Stecknadelkopf.','cm²':'1 cm² ist etwa so groß wie ein Fingernagel.','dm²':'1 dm² ist etwa so groß wie eine Handfläche.','m²':'1 m² ist ein Quadrat mit 1 m Seitenlänge.','km²':'1 km² ist riesig – etwa 140 Fußballfelder.'};
+function einheitTask(k){ const e=EINHEIT[k]; return base('einheit',{text:e[0], v:e[1], unit:e[2], step:'pick'}); }
+
+function treppeTask(two){
+  let u,t;
+  if(two){ u=rnd(0,1); t=u+2; } else { u=rnd(0,2); t=u+1; }
+  const right = two ? I(10000) : I(100);
+  const o = two ? [I(100),I(1000),I(10000),I(200)] : [I(10),I(100),I(1000)];
+  return base('treppe',{u:u, t:t, from:U[u], to:U[t], right:right, options:o, step:'pick'});
+}
+
+/* Stufe 1: ganze Zahlen, benachbarte Einheiten */
+function swt1Down(){
+  for(let k=0;k<100;k++){ const u=rnd(0,2); const g = Math.random()<.7 ? rnd(2,9) : pick([11,12,15,20,24,25]);
+    const n=I(g); if(fits(n,u,u+1)) return convTask('swt',n,u,u+1,{mode:'chips', step:'place'}); }
+}
+function swt1Up(){
+  for(let k=0;k<100;k++){ const u=rnd(1,3); const g = (Math.random()<.75 ? rnd(2,9) : pick([12,15]))*100;
+    const n=I(g); if(fits(n,u,u-1)) return convTask('swt',n,u,u-1,{mode:'chips', step:'place'}); }
+}
+/* Stufe 2 / 3: mit Komma, über zwei Einheiten */
+function dec1(){ let k; do{ k=rnd(2,95); }while(k%10===0); return {i:k,p:1}; }      // 0,2 … 9,5 (eine Stelle nach dem Komma)
+function kOne(){ return Math.random()<.3 ? rnd(2,9) : (function(){ let k; do{ k=rnd(11,95); }while(k%10===0); return k; })(); }
+function genA(mode){ for(let x=0;x<100;x++){ const u=rnd(0,2), n=dec1(); if(fits(n,u,u+1)) return convTask(mode==='direct'?'direct':'swt',n,u,u+1,{mode:mode, step:mode==='direct'?'input':'place'}); } }
+function genB(mode){ for(let x=0;x<100;x++){ const u=rnd(1,3), n=I(kOne()*10); if(fits(n,u,u-1)) return convTask(mode==='direct'?'direct':'swt',n,u,u-1,{mode:mode, step:mode==='direct'?'input':'place'}); } }
+function genC(mode){ for(let x=0;x<100;x++){ const u=rnd(0,1), n= Math.random()<.5 ? I(rnd(2,9)) : D(rnd(1,8)+0.5); if(fits(n,u,u+2)) return convTask(mode==='direct'?'direct':'swt',n,u,u+2,{mode:mode, step:mode==='direct'?'input':'place'}); } }
+function genD(mode){ for(let x=0;x<100;x++){ const u=rnd(2,3), n=I(kOne()*1000); if(fits(n,u,u-2)) return convTask(mode==='direct'?'direct':'swt',n,u,u-2,{mode:mode, step:mode==='direct'?'input':'place'}); } }
+
+const VGL=[
+  ['2,9 m²','280 dm²','>','2,9 m² = 290 dm². Also: 290 dm² > 280 dm².'],
+  ['3 m²','30 000 cm²','=','3 m² = 300 dm² = 30 000 cm². Beide sind gleich groß.'],
+  ['4,5 dm²','450 cm²','=','4,5 dm² = 450 cm². Beide sind gleich groß.'],
+  ['0,5 m²','60 dm²','<','0,5 m² = 50 dm². Also: 50 dm² < 60 dm².'],
+  ['350 cm²','3 dm²','>','3 dm² = 300 cm². Also: 350 cm² > 300 cm².'],
+  ['1,2 cm²','150 mm²','<','1,2 cm² = 120 mm². Also: 120 mm² < 150 mm².'],
+  ['70 dm²','0,7 m²','=','0,7 m² = 70 dm². Beide sind gleich groß.'],
+  ['6 m²','590 dm²','>','6 m² = 600 dm². Also: 600 dm² > 590 dm².'],
+  ['8 cm²','80 mm²','>','8 cm² = 800 mm². Also: 800 mm² > 80 mm².'],
+  ['40 dm²','4 m²','<','4 m² = 400 dm². Also: 40 dm² < 400 dm².']
+];
+function vglTask(k){ const v=VGL[k]; return base('vgl',{a:v[0], b:v[1], rel:v[2], why:v[3], step:'pick'}); }
+
+const STIMMT=[
+  ['Tim rechnet: 5 m² = 50 dm²', false, 'Tim hat nur mit 10 multipliziert. Richtig: 5 m² = 500 dm² (· 100).'],
+  ['Ella rechnet: 250 cm² = 25 dm²', false, 'Ella hat nur durch 10 dividiert. Richtig: 250 cm² = 2,5 dm² (: 100).'],
+  ['Lea rechnet: 4,5 m² = 450 dm²', true, '4,5 · 100 = 450. Das Komma rückt 2 Stellen nach rechts.'],
+  ['Ben rechnet: 1 m² = 10 000 cm²', true, 'Zwei Stufen: 1 m² = 100 dm² = 10 000 cm².'],
+  ['Mia rechnet: 70 mm² = 7 cm²', false, 'Richtig: 70 mm² = 0,7 cm² (: 100). 7 cm² wären 700 mm².'],
+  ['Ali rechnet: 1,2 dm² = 120 cm²', true, '1,2 · 100 = 120. Das Komma rückt 2 Stellen nach rechts.'],
+  ['Jonas rechnet: 600 cm² = 0,6 dm²', false, 'Jonas hat durch 1 000 dividiert. Richtig: 600 cm² = 6 dm² (: 100).'],
+  ['Emma rechnet: 3,5 dm² = 350 cm²', true, '3,5 · 100 = 350. Das stimmt.']
+];
+function stimmtTask(k){ const s=STIMMT[k]; return base('stimmt',{text:s[0], truth:s[1], why:s[2], step:'judge'}); }
+
+const SACH=[
+  function(){ const g=pick([56,60,64,72,75,80]); const r=I(g*100);
+    return {text:'Der Klassenraum der 6a ist '+g+' m² groß. Wie viele dm² sind das?', ans:r, unit:'dm²', rech:g+' m² = '+g+' · 100 dm² = '+L(r,'dm²')}; },
+  function(){ const c=pick([[1,4],[2,4],[2,5],[3,5],[3,4],[1,5]]); const w=c[0], f=c[1], z=w*100/f;
+    return {text:'Herr Klein fliest eine Wand im Bad. Die Wand ist '+w+' m² groß. Eine Fliese ist '+f+' dm² groß. Wie viele Fliesen braucht er?', ans:I(z), unit:'Fliesen', rech:w+' m² = '+(w*100)+' dm² → '+(w*100)+' dm² : '+f+' dm² = '+z+' Fliesen'}; },
+  function(){ const c=pick([[2,5],[3,5],[2,4],[4,5],[3,10]]); const b=c[0], s=c[1], z=b*100/s;
+    return {text:'Ein Stickerbogen ist '+b+' dm² groß. Ein Sticker ist '+s+' cm² groß. Wie viele Sticker passen höchstens auf den Bogen?', ans:I(z), unit:'Sticker', rech:b+' dm² = '+(b*100)+' cm² → '+(b*100)+' cm² : '+s+' cm² = '+z+' Sticker'}; },
+  function(){ const t=pick([D(1.2),D(1.5),D(0.8),D(1.4)]); const over=pick([20,30,40]); const tt=sh(t,2); const d=I(val(tt)+over);
+    return {text:'Ein Tisch ist '+L(t,'m²')+' groß. Die Tischdecke ist '+L(d,'dm²')+' groß. Wie viele dm² ist die Decke größer als der Tisch?', ans:I(over), unit:'dm²', rech:L(t,'m²')+' = '+L(tt,'dm²')+' → '+L(d,'dm²')+' − '+L(tt,'dm²')+' = '+over+' dm²'}; },
+  function(){ const F=pick([2,3,4]); const s=pick([500000,1000000]); const r=I(F*1000000-s);
+    return {text:'Bauer Schulte hat ein Feld. Es ist '+F+' km² groß. Er verkauft '+L(I(s),'m²')+' davon. Wie viele m² bleiben ihm?', ans:r, unit:'m²', rech:F+' km² = '+L(I(F*1000000),'m²')+' → '+L(I(F*1000000),'m²')+' − '+L(I(s),'m²')+' = '+L(r,'m²')}; }
+];
+function sachTask(k){ const s=SACH[k](); return base('sach',{text:s.text, target:s.ans, unit:s.unit, rech:s.rech, step:'input'}); }
+
+function generate(stufe){
+  if(stufe===1){
+    const e=einheitTask(rnd(0,EINHEIT.length-1));
+    const tr=treppeTask(false);
+    const sw=[swt1Down(),swt1Down(),swt1Down(),swt1Down(),swt1Up(),swt1Up()];
+    // erste Tafel-Aufgabe: in die kleinere Einheit
+    return [e,tr].concat([sw[0]]).concat(shuffle(sw.slice(1)));
+  }
+  if(stufe===2){
+    const first=convTask('swt',D(3.5),0,1,{mode:'input', step:'place'});
+    const list=[genA('input'),genB('input'),genC('input'),genD('input'),treppeTask(true),vglTask(rnd(0,VGL.length-1)),stimmtTask(rnd(0,STIMMT.length-1))];
+    return [first].concat(shuffle(list));
+  }
+  const sk=shuffle([0,1,2,3,4]).slice(0,2).map(sachTask);
+  const out=[genA('direct'),genB('direct'),genC('direct'),genD('direct'),kmTask(I(rnd(2,9)),true),kmTask(I(rnd(2,9)*1000000),false)].concat(sk);
+  return shuffle(out);
+}
+function newRound(){ S.tasks=generate(S.stufe); S.idx=0; S.results=[]; S.finished=false; S.justDone=false; render(); }
+
+/* ---------- Bausteine ---------- */
+function chip(action,v,label,answer,active,t,cls,aria){
+  let c='chip'+(cls?' '+cls:'');
+  if(answer===v) c+=' right';
+  else if(active && t.wrong && t.wrong.step===action && t.wrong.v===v) c+=' wrong';
+  return '<button type="button" class="'+c+'" data-action="'+action+'" data-v="'+v+'"'+(aria?' aria-label="'+aria+'"':'')+(active?'':' disabled')+'>'+label+'</button>';
+}
+function msgHtml(t){ return t.msg ? '<div class="fb '+t.msg.kind+'" role="status">'+t.msg.text+'</div>' : ''; }
+function stepCls(s){ return 'step is-'+s; }
+function sn(s,n){ return '<div class="sn" aria-hidden="true">'+(s==='done'?'✓':n)+'</div>'; }
+function keypad(){
+  return '<div class="keys">'+
+    ['7','8','9','4','5','6','1','2','3'].map(k=>'<button type="button" class="key" data-action="key" data-k="'+k+'">'+k+'</button>').join('')+
+    '<button type="button" class="key ck" data-action="key" data-k="," aria-label="Komma">,</button>'+
+    '<button type="button" class="key" data-action="key" data-k="0">0</button>'+
+    '<button type="button" class="key del" data-action="key" data-k="del" aria-label="Löschen">⌫ Löschen</button></div>';
+}
+function inputBlock(t,pre,unit){
+  return '<div class="inrow">'+(pre?'<span class="pre">'+pre+'</span>':'')+'<div class="display" aria-live="polite" aria-label="Deine Antwort">'+(t.input?cm(grpStr(t.input)):'<span class="ph">Antwort</span>')+'</div>'+(unit?'<span class="unit">'+unit+'</span>':'')+'</div>'+
+    keypad()+'<div class="tools" style="max-width:340px"><button type="button" class="btn primary" data-action="check" id="checkbtn">Prüfen</button></div>'+msgHtml(t);
+}
+/* Zahl mit hervorgehobener Einerziffer */
+function numEin(n){
+  const s=grpStr(fs(n)); const k=s.indexOf(','); const e=(k<0?s.length:k)-1;
+  return cm(s.slice(0,e))+'<span class="ein-c">'+s[e]+'</span>'+cm(s.slice(e+1)).replace(/^,/,'<span class="cm">,</span>');
+}
+
+/* ---------- Stellenwerttafel zeichnen ---------- */
+// o: {cells, src, dst, comma (Spalte, hinter der das Komma steht), clickable, wrongCol, markSrc, markDst, dimAfter, mini}
+function swtHtml(o){
+  let h='<div class="swt'+(o.mini?' mini':'')+'"><div class="swt-g'+(o.anim?' anim':'')+'" role="group" aria-label="Stellenwerttafel für Flächeneinheiten">';
+  U.forEach((u,k)=>{ h+='<div class="uh'+(k===0?' first':'')+(o.src===k?' src':'')+(o.dst===k?' dst':'')+'">'+u+'</div>'; });
+  for(let c=0;c<8;c++){ const k=c>>1; h+='<div class="ze'+(c===0?' first':(c%2===0?' ub':''))+(o.src===k?' src':'')+(o.dst===k?' dst':'')+'">'+(c%2===0?'Z':'E')+'</div>'; }
+  for(let c=0;c<8;c++){
+    const k=c>>1, cell=o.cells[c];
+    let cls='cellb'+(c===0?' first':(c%2===0?' ub':''));
+    if(o.dst===k) cls+=' dst'; else if(o.src===k) cls+=' src';
+    if(o.wrongCol===c) cls+=' wrong';
+    if(o.markSrc===c) cls+=' mark';
+    if(o.markDst===c) cls+=' markd';
+    if(o.dimAfter!=null && c>o.dimAfter && cell && cell.d==='0' && !hasFrac(o.cells,c)) cls+=' dim';
+    let inner='';
+    if(cell) inner = cell.zero ? '<span class="zf">0</span>' : '<span class="dg'+(cell.ein&&o.einHi?' ein':'')+'">'+cell.d+'</span>';
+    if(o.comma===c) inner+='<span class="cma" aria-hidden="true">,</span>';
+    const lab=U[k]+' '+(c%2===0?'Z':'E')+(cell?': '+cell.d:'');
+    h+='<button type="button" class="'+cls+'" data-action="cell" data-c="'+c+'" aria-label="'+lab+'"'+(o.clickable?'':' disabled')+'>'+inner+'</button>';
+  }
+  return h+'</div></div>';
+}
+function hasFrac(cells,after){ return Object.keys(cells).some(c=>Number(c)>after && cells[c].d!=='0'); }
+function swtSolution(t){ // fertige Tafel für die Lösung
+  const cells=filledCells(t.n,t.u,t.t), te=2*t.t+1;
+  return swtHtml({cells:cells, src:t.u, dst:t.t, comma: hasFrac(cells,te)?te:null, dimAfter:te, mini:true});
+}
+
+/* ---------- Treppe (SVG) ---------- */
+function treppeSvg(t,done){
+  const lo=Math.min(t.u,t.t), hi=Math.max(t.u,t.t);
+  let h='<svg class="tr" viewBox="0 0 430 205" role="img" aria-label="Treppe der Flächeneinheiten">';
+  h+='<defs></defs>';
+  for(let k=0;k<4;k++){
+    const x=20+k*100, y=8+k*48, on=k>=lo&&k<=hi;
+    h+='<rect class="st'+(on?' on':'')+'" x="'+x+'" y="'+y+'" width="84" height="38" rx="9"/>';
+    h+='<text class="ut" x="'+(x+42)+'" y="'+(y+26)+'" text-anchor="middle">'+U[k]+'</text>';
+    if(k<3){
+      const a=k>=lo&&k<hi&&done;
+      const ax=x+114, y1=y+19;
+      h+='<path class="ar'+(a?' on':'')+'" d="M'+(x+87)+','+y1+' Q'+ax+','+y1+' '+ax+','+(y+38)+'"/>';
+      h+='<polygon class="ah'+(a?' on':'')+'" points="'+(ax-6)+','+(y+37)+' '+(ax+6)+','+(y+37)+' '+ax+','+(y+47)+'"/>';
+      h+='<text class="al'+(a?' on':'')+'" x="'+(ax+10)+'" y="'+(y+30)+'">· 100</text>';
+    }
+  }
+  return h+'</svg>';
+}
+
+/* ---------- Anzeige ---------- */
+function render(){
+  for(let s=1;s<=3;s++) document.getElementById('st'+s).setAttribute('aria-pressed', String(S.stufe===s));
+  let p='';
+  for(let k=0;k<N;k++){ const r=S.results[k]; p+='<span class="pd'+(r?' '+r:(k===S.idx && !S.finished?' cur':''))+'"></span>'; }
+  $prog.innerHTML=p;
+  if(S.finished){ renderSummary(); return; }
+  const t=S.tasks[S.idx];
+  let h='<div class="card"><span class="eyebrow">Aufgabe '+(S.idx+1)+' von '+N+' · '+eyebrow(t)+'</span>';
+  h+=({einheit:viewEinheit, treppe:viewTreppe, swt:viewSwt, vgl:viewVgl, stimmt:viewStimmt, direct:viewDirect, sach:viewSach})[t.kind](t);
+  if(t.step==='done') h+=doneBox(t);
+  h+='</div>';
+  $app.innerHTML=nbsp(h);
+  t._anim=false;
+  if(S.justDone){ S.justDone=false; const box=document.querySelector('.donebox'); if(box && box.scrollIntoView) box.scrollIntoView({block:'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); }
+}
+function eyebrow(t){ return ({einheit:'Welche Einheit passt?', treppe:'Die Treppe', swt:'Stellenwerttafel', vgl:'Vergleichen', stimmt:'Stimmt das?', direct:'Umrechnen', sach:'Sachaufgabe'})[t.kind]; }
+
+function viewEinheit(t){
+  const done=t.step==='done';
+  let h='<p class="story big">'+t.text+' '+nbs(t.v)+' <span class="gap-blank">'+(done?t.unit:'?')+'</span> groß.</p><div class="steps">';
+  const s=done?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>Welche Einheit passt?</h2><p class="hint">Stell dir die Fläche vor.</p><div class="chips">'+
+     ALLU.map(v=>chip('unit',v,v,t.ans.unit,!done,t,'unitc')).join('')+'</div>'+(!done?msgHtml(t):'')+'</div></section></div>';
+  return h;
+}
+function viewTreppe(t){
+  const done=t.step==='done';
+  let h='<p class="story">Schau auf die Treppe. Ergänze.</p><div class="trbox">'+treppeSvg(t,done)+'</div>';
+  h+='<p class="term"><span>1 '+t.from+'</span> <span class="op">=</span> <span>'+(done?'<span class="res">'+G(t.right)+'</span>':'<span class="q">?</span>')+' '+t.to+'</span></p><div class="steps">';
+  const s=done?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>Wie viele '+t.to+' sind 1 '+t.from+'?</h2><div class="chips">'+
+     t.options.map(o=>chip('tr',fs(o),G(o)+' '+t.to,t.ans.tr,!done,t,'wide')).join('')+'</div>'+(!done?msgHtml(t):'')+'</div></section></div>';
+  return h;
+}
+function swtState(t){
+  const st=t.step;
+  const te=2*t.t+1, se=2*t.u+1;
+  if(st==='place') return {cells:{}, clickable:true, src:t.u, wrongCol: t.wrong&&t.wrong.step==='cell'?Number(t.wrong.v):null};
+  const dig=digitCells(t.n,t.u);
+  if(st==='read') return {anim:t._anim, cells:dig, clickable:true, src:t.u, markSrc:se, einHi:true, comma: hasFrac(dig,se)?se:null, wrongCol: t.wrong&&t.wrong.step==='cell'?Number(t.wrong.v):null};
+  const all=filledCells(t.n,t.u,t.t);
+  return {anim:t._anim, cells:all, clickable:false, src:t.u, dst:t.t, markDst:te, comma: hasFrac(all,te)?te:null, dimAfter:te};
+}
+function viewSwt(t){
+  const st=t.step;
+  let h='<p class="term small"><span>'+(st==='place'?numEin(t.n):G(t.n))+' '+t.from+'</span> <span class="op">=</span> <span>'+(st==='done'?'<span class="res">'+G(t.res)+'</span>':'<span class="q">?</span>')+' '+t.to+'</span></p>';
+  h+=swtHtml(swtState(t));
+  h+='<div class="steps">';
+  // Schritt 1
+  const s1 = st==='place' ? 'active' : 'done';
+  h+='<section class="'+stepCls(s1)+'">'+sn(s1,1)+'<div><h2>Zahl eintragen</h2>';
+  if(s1==='active') h+='<p>Die Zahl ist in <b>'+t.from+'</b>. In welche Spalte kommt die Einerziffer <span class="ein-c">'+einDigit(t.n)+'</span>? Tippe auf die Spalte.</p>'+(S.stufe===1?'<p class="hint">Die Einer kommen immer in die Spalte E der Einheit.</p>':'')+msgHtml(t);
+  else h+='<p class="hint">Die Einerziffer steht in der Spalte E von '+t.from+'.</p>';
+  h+='</div></section>';
+  // Schritt 2
+  const s2 = st==='place' ? 'todo' : (st==='read' ? 'active' : 'done');
+  h+='<section class="'+stepCls(s2)+'">'+sn(s2,2)+'<div><h2>In '+t.to+' ablesen</h2>';
+  if(s2==='todo') h+='<p class="hint">Zuerst die Zahl eintragen.</p>';
+  else if(s2==='active') h+='<p>Du rechnest in <b>'+t.to+'</b> um. Bis zu welcher Spalte liest du ab? Tippe auf die Spalte.</p>'+(S.stufe===1?'<p class="hint">Lies immer bis zur Spalte E der neuen Einheit ab.</p>':'')+msgHtml(t);
+  else h+='<p class="hint">Bis zur Spalte E von '+t.to+'. Leere Spalten sind mit <b style="color:var(--fb)">0</b> gefüllt.'+(swtState(t).comma!=null?' Das Komma steht jetzt hinter der Spalte E von '+t.to+'.':'')+'</p>';
+  h+='</div></section>';
+  // Schritt 3
+  const s3 = (st==='place'||st==='read') ? 'todo' : (st==='answer' ? 'active' : 'done');
+  h+='<section class="'+stepCls(s3)+'">'+sn(s3,3)+'<div><h2>Ergebnis</h2>';
+  if(s3==='todo') h+='<p class="hint">Zuerst ablesen.</p>';
+  else if(s3==='active'){
+    h+='<p class="num">'+G(t.n)+' '+t.from+' = ? '+t.to+'</p>';
+    if(t.mode==='chips') h+='<div class="chips">'+chipOpts(t).map(o=>chip('res',fs(o),G(o)+' '+t.to,t.ans.res,true,t,'wide')).join('')+'</div>'+msgHtml(t);
+    else h+=inputBlock(t,'',t.to);
+  } else h+='<p class="sum">'+L(t.n,t.from)+' = <b>'+L(t.res,t.to)+'</b></p>';
+  h+='</div></section></div>';
+  return h;
+}
+function einDigit(n){ const s=fs(n).split(',')[0]; return s[s.length-1]; }
+function chipOpts(t){
+  if(!t._opts){
+    const o = t.E>0 ? [t.res, sh(t.n,t.E/2), sh(t.n,t.E*1.5)] : [t.res, sh(t.n,t.E/2), t.n];
+    t._opts=shuffle(o.filter((x,i)=>o.findIndex(y=>eq(x,y))===i));
+  }
+  return t._opts;
+}
+function viewVgl(t){
+  const done=t.step==='done';
+  let h='<p class="story">Welche Fläche ist größer? Setze das richtige Zeichen ein.</p>';
+  h+='<p class="term small"><span>'+cm(nbs(t.a))+'</span> <span class="'+(done?'res':'q')+'">'+(done?{'<':'&lt;','>':'&gt;','=':'='}[t.rel]:'?')+'</span> <span>'+cm(nbs(t.b))+'</span></p><div class="steps">';
+  const s=done?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>&lt;, = oder &gt;?</h2><p class="hint">Rechne zuerst in die gleiche Einheit um.</p><div class="chips">'+
+     chip('rel','<','&lt;',t.ans.rel,!done,t,'sym','ist kleiner als')+chip('rel','=','=',t.ans.rel,!done,t,'sym','ist gleich')+chip('rel','>','&gt;',t.ans.rel,!done,t,'sym','ist größer als')+'</div>'+(!done?msgHtml(t):'')+'</div></section></div>';
+  return h;
+}
+function viewStimmt(t){
+  const done=t.step==='done';
+  let h='<p class="story">Fehler-Detektiv:</p><p class="story big">'+cm(t.text)+'</p><div class="steps">';
+  h+='<section class="'+stepCls(done?'done':'active')+'">'+sn(done?'done':'active',1)+'<div><h2>Stimmt das?</h2><div class="chips">'+
+     chip('judge','ja','✓ Das stimmt',t.ans.judge,!done,t,'word')+chip('judge','nein','✗ Das stimmt nicht',t.ans.judge,!done,t,'word')+'</div>'+(!done?msgHtml(t):'')+'</div></section></div>';
+  return h;
+}
+function viewDirect(t){
+  const done=t.step==='done';
+  let h='<p class="story">Rechne um. Tippe das Ergebnis ein.</p>';
+  h+='<p class="term small"><span>'+G(t.n)+' '+t.from+'</span> <span class="op">=</span> <span>'+(done?'<span class="res">'+G(t.res)+'</span>':'<span class="q">?</span>')+' '+t.to+'</span></p><div class="steps">';
+  const s=done?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>Umrechnen</h2>';
+  if(!done) h+='<p class="hint">Kleinere oder größere Einheit? · 100 oder : 100? Wie viele Stufen?</p>'+inputBlock(t,'',t.to);
+  else h+='<p class="sum">'+L(t.n,t.from)+' = <b>'+L(t.res,t.to)+'</b></p>';
+  h+='</div></section></div>';
+  return h;
+}
+function viewSach(t){
+  const done=t.step==='done';
+  let h='<p class="story">'+cm(t.text.replace(/(\d) (\d{3})/g,'$1'+NB+'$2'))+'</p><div class="steps">';
+  const s=done?'done':'active';
+  h+='<section class="'+stepCls(s)+'">'+sn(s,1)+'<div><h2>Rechne im Heft</h2>';
+  if(!done) h+='<p class="hint">Gegeben – Gesucht – Rechnung – Antwort. Rechne zuerst in die gleiche Einheit um!</p>'+inputBlock(t,'',t.unit);
+  else h+='<p class="sum">'+cm(t.rech)+'</p>';
+  h+='</div></section></div>';
+  return h;
+}
+
+function convPath(t){
+  if(t.km) return t.E>0 ? L(t.n,'km²')+' = '+G(t.n)+' · 1'+NB+'000'+NB+'000 m² = <b>'+L(t.res,'m²')+'</b>' : L(t.n,'m²')+' = '+L(t.n)+' : 1'+NB+'000'+NB+'000 = <b>'+L(t.res,'km²')+'</b>';
+  const st=Math.abs(t.t-t.u), down=t.E>0;
+  const f = st===1 ? '100' : '10'+NB+'000';
+  return L(t.n,t.from)+' = <b>'+L(t.res,t.to)+'</b><br>'+(down?'· ':': ')+f+' → Komma '+(2*st)+' Stellen nach '+(down?'rechts':'links');
+}
+function doneBox(t){
+  const cat=S.results[S.idx];
+  const praise = cat==='good' ? 'Super! Alles sofort richtig.' : (cat==='ok' ? 'Richtig! Du hast deinen Fehler selbst verbessert.' : 'Schau dir die Lösung genau an. Die nächste schaffst du!');
+  const last=S.idx===N-1;
+  let path='';
+  if(t.kind==='einheit') path=t.text+' '+nbs(t.v)+' <b>'+t.unit+'</b> groß. '+STUETZ[t.unit];
+  else if(t.kind==='treppe') path= (t.t-t.u===1) ? '1 '+t.from+' = <b>100 '+t.to+'</b>. Eine Stufe nach unten: · 100.' : '1 '+t.from+' = 100 '+U[t.u+1]+' = <b>10'+NB+'000 '+t.to+'</b>. Zwei Stufen: · 100 · 100 = · 10'+NB+'000.';
+  else if(t.kind==='swt') path=convPath(t);
+  else if(t.kind==='vgl') path=cm(nbs(t.a))+' '+{'<':'&lt;','>':'&gt;','=':'='}[t.rel]+' '+cm(nbs(t.b))+'<br>'+cm(t.why.replace(/(\d) (\d{3})/g,'$1'+NB+'$2'));
+  else if(t.kind==='stimmt') path=(t.truth?'Das stimmt. ':'Das stimmt nicht. ')+cm(t.why.replace(/(\d) (\d{3})/g,'$1'+NB+'$2'));
+  else if(t.kind==='direct') path=convPath(t);
+  else path=cm(t.rech);
+  const extra = (t.kind==='direct' && !t.km) ? '<p class="hint" style="margin:0">So sieht es in der Stellenwerttafel aus:</p>'+swtSolution(t) : '';
+  return '<div class="donebox '+cat+'"><p class="big">'+praise+'</p>'+(t.msg?'<p>'+t.msg.text+'</p>':'')+'<p class="path">'+path+'</p>'+extra+
+    '<button type="button" class="btn primary" data-action="next" id="nextbtn">'+(last?'Zur Auswertung':'Nächste Aufgabe')+' →</button></div>';
+}
+function renderSummary(){
+  const c={good:0,ok:0,help:0}; S.results.forEach(r=>{ c[r]++; });
+  const strong=c.good>=6;
+  let advice;
+  if(S.stufe<3) advice = strong ? 'Stark! Mach weiter mit Stufe '+(S.stufe+1)+'.' : 'Übe Stufe '+S.stufe+' noch einmal. Die Tippkarten helfen dir.';
+  else advice = strong ? 'Du bist Umrechnungs-Profi! Schaffst du in einer neuen Runde alle 8 sofort richtig?' : 'Übe Stufe 3 noch einmal. Denk an die Umrechnungszahl 100.';
+  let h='<div class="card summary"><span class="eyebrow">Auswertung</span><h2>Stufe '+S.stufe+' geschafft!</h2><p>'+advice+'</p>'+
+    '<div class="stats"><div class="stat good"><b>'+c.good+'</b><span>sofort richtig</span></div>'+
+    '<div class="stat ok"><b>'+c.ok+'</b><span>nach Verbessern richtig</span></div>'+
+    '<div class="stat help"><b>'+c.help+'</b><span>mit Lösung</span></div></div>'+
+    '<p class="hint">Zeige dieses Ergebnis deiner Lehrkraft.</p><div class="tools">';
+  if(S.stufe<3) h+='<button type="button" class="btn primary" data-action="stufe" data-s="'+(S.stufe+1)+'" id="nextstufe">Weiter mit Stufe '+(S.stufe+1)+'</button>';
+  h+='<button type="button" class="btn'+(S.stufe===3?' primary':'')+'" data-action="again" id="againbtn">Noch einmal Stufe '+S.stufe+'</button></div></div>';
+  $app.innerHTML=h;
+}
+
+/* ---------- Logik ---------- */
+function finish(t){ t.step='done'; S.results[S.idx] = t.revealed ? 'help' : (t.errors===0 ? 'good' : 'ok'); S.justDone=true; }
+function wrongStep(t,action,v){ t.errors++; t.stepErr++; t.wrong={step:action,v:v}; }
+function nextStep(t,step){ t.step=step; t.stepErr=0; t.wrong=null; }
+
+/* typische Fehler beim Umrechnen erkennen */
+function diagnose(t,x){
+  const n=t.n, E=t.E, T=t.res;
+  const down=E>0;
+  if(t.km){
+    if(eq(x,sh(n,down?3:-3))){ t.tip=2; return '<b>Achtung:</b> 1 km = 1'+NB+'000 m. Aber 1 km² = 1'+NB+'000 · 1'+NB+'000 m² = 1'+NB+'000'+NB+'000 m².'; }
+    if(eq(x,sh(n,down?2:-2))){ t.tip=2; return '<b>Noch nicht.</b> Zwischen km² und m² ist die Umrechnungszahl nicht 100, sondern 1'+NB+'000'+NB+'000.'; }
+    if(eq(x,sh(n,-E))){ return '<b>Andere Richtung!</b> '+(down?'In die kleinere Einheit wird die Zahl größer.':'In die größere Einheit wird die Zahl kleiner.'); }
+    t.tip=2; return '<b>Zähle die Nullen:</b> 1 km² = 1'+NB+'000'+NB+'000 m² – das sind 6 Nullen.';
+  }
+  if(Math.abs(E)===2 && eq(x,sh(n,E/2))){ t.tip=1; return '<b>100, nicht 10!</b> Bei Flächen ist die Umrechnungszahl 100. '+(down?'Multipliziere mit 100.':'Dividiere durch 100.'); }
+  if(Math.abs(E)===4 && eq(x,sh(n,E/2))){ t.tip=2; return '<b>Fast.</b> Das ist nur eine Stufe – oder du hast mit 10 statt mit 100 gerechnet. Von '+t.from+' nach '+t.to+' sind es zwei Stufen: '+(down?'· 100 · 100 = · 10'+NB+'000':': 100 : 100 = : 10'+NB+'000')+'.'; }
+  if(Math.abs(E)===4 && eq(x,sh(n,E/4))){ t.tip=1; return '<b>100, nicht 10!</b> Pro Stufe ist die Umrechnungszahl 100. Hier sind es zwei Stufen.'; }
+  if(eq(x,n)){ return '<b>Noch nicht.</b> Die Zahl bleibt nicht gleich. In '+t.to+' sieht sie anders aus.'; }
+  if(eq(x,sh(n,-E))){ return '<b>Andere Richtung!</b> '+(down?t.to+' ist die kleinere Einheit. Die Zahl wird größer.':t.to+' ist die größere Einheit. Die Zahl wird kleiner.'); }
+  if(eq(x,sh(T,1))||eq(x,sh(T,-1))){ t.tip=t.kind==='swt'?3:4; return '<b>Die Ziffern stimmen!</b> Prüfe das Komma'+(t.kind==='swt'?': Lies bis zur Spalte E von '+t.to+' ab.':': '+Math.abs(E)+' Stellen nach '+(down?'rechts':'links')+'.'); }
+  if(eq(x,sh(T,2))||eq(x,sh(T,-2))){ t.tip=2; return '<b>Noch nicht.</b> Zähle die Stufen auf der Treppe. Pro Stufe 2 Stellen.'; }
+  return '<b>Noch nicht.</b> '+(down?'In die kleinere Einheit: · 100 pro Stufe.':'In die größere Einheit: : 100 pro Stufe.')+' Die Tippkarten helfen dir.';
+}
+
+function onUnit(t,v){
+  if(v===t.unit){ t.ans.unit=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'unit',v);
+  if(t.stepErr>=2){ t.ans.unit=t.unit; t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> '+STUETZ[t.unit]}; finish(t); return; }
+  const small=ALLU.indexOf(v)<ALLU.indexOf(t.unit);
+  t.tip=5;
+  t.msg={kind:'bad', text:(small?'<b>Zu klein.</b> ':'<b>Zu groß.</b> ')+STUETZ[v]+' Wie groß wären dann '+t.v+' '+v+'?'};
+}
+function onTreppe(t,v){
+  if(v===fs(t.right)){ t.ans.tr=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'tr',v);
+  if(t.stepErr>=2){ t.ans.tr=fs(t.right); t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Jede Stufe nach unten heißt · 100.'}; finish(t); return; }
+  let txt='<b>Noch nicht.</b> Jede Stufe nach unten heißt · 100.';
+  if(v==='10'){ txt='<b>100, nicht 10!</b> 1 dm² ist ein Quadrat mit 10 cm Seitenlänge: 10 Reihen mit je 10 cm² = 100 cm².'; t.tip=1; }
+  else if(t.t-t.u===2 && v==='100') txt='<b>Fast.</b> Das ist nur eine Stufe. Hier sind es zwei Stufen: · 100 · 100.';
+  else if(t.t-t.u===2 && v==='200') txt='<b>Noch nicht.</b> Zwei Stufen heißt nicht · 200, sondern · 100 · 100.';
+  else if(v==='1000') txt='<b>Noch nicht.</b> Bei Längen ist die Umrechnungszahl 10, bei Flächen 100. Zähle die Stufen.';
+  t.msg={kind:'bad', text:txt};
+}
+function onCell(t,c){
+  if(t.step==='place'){
+    const right=2*t.u+1;
+    if(c===right){ t.msg=null; t._anim=true; nextStep(t,'read'); return; }
+    wrongStep(t,'cell',String(c));
+    if(t.stepErr>=2){ t.revealed=true; t.msg=null; t._anim=true; nextStep(t,'read'); t.msg={kind:'info', text:'<b>So geht es:</b> Die Einerziffer kommt in die Spalte E von '+t.from+'.'}; return; }
+    let txt;
+    if(c===2*t.u) txt='<b>Fast.</b> Die Einer kommen in die Spalte <b>E</b> – nicht in die Spalte Z.';
+    else txt='<b>Noch nicht.</b> Die Zahl ist in '+t.from+'. Die Einerziffer kommt in die Spalte E von '+t.from+'.';
+    t.tip=3; t.msg={kind:'bad', text:txt}; return;
+  }
+  if(t.step==='read'){
+    const right=2*t.t+1;
+    if(c===right){ t.msg=null; t._anim=true; nextStep(t,'answer'); return; }
+    wrongStep(t,'cell',String(c));
+    if(t.stepErr>=2){ t.revealed=true; t._anim=true; nextStep(t,'answer'); t.msg={kind:'info', text:'<b>So geht es:</b> Du liest bis zur Spalte E von '+t.to+' ab.'}; return; }
+    let txt;
+    if(c===2*t.t) txt='<b>Fast.</b> Du liest immer bis zur Spalte <b>E</b> ab – nicht bis Z.';
+    else if(c===2*t.u+1) txt='<b>Noch nicht.</b> Das ist die alte Einheit '+t.from+'. Du rechnest in '+t.to+' um.';
+    else txt='<b>Noch nicht.</b> Die neue Einheit ist '+t.to+'. Suche die Spalte E von '+t.to+'.';
+    t.tip=3; t.msg={kind:'bad', text:txt};
+  }
+}
+function onRes(t,v){
+  if(v===fs(t.res)){ t.ans.res=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'res',v);
+  if(t.stepErr>=2){ t.ans.res=fs(t.res); t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Lies die Ziffern bis zur Spalte E von '+t.to+' ab.'}; finish(t); return; }
+  t.msg={kind:'bad', text:diagnose(t,parseIn(v))};
+}
+function onRel(t,v){
+  if(v===t.rel){ t.ans.rel=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'rel',v);
+  if(t.stepErr>=2){ t.ans.rel=t.rel; t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Erst in die gleiche Einheit umrechnen, dann vergleichen.'}; finish(t); return; }
+  t.tip=4;
+  t.msg={kind:'bad', text:'<b>Noch nicht.</b> Rechne zuerst beide Flächen in die gleiche Einheit um. Achtung: Die größere Zahl ist nicht immer die größere Fläche!'};
+}
+function onJudge(t,v){
+  const right = t.truth ? 'ja' : 'nein';
+  if(v===right){ t.ans.judge=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'judge',v);
+  t.ans.judge=right; t.revealed=true; finish(t);
+  t.msg={kind:'info', text:'<b>Schau genau.</b>'};
+}
+function parseIn(s){ const parts=s.split(','); const l=parts[0]||'0', r=parts[1]||''; return simplify({i:Number((l+r).replace(/^0+(?=\d)/,'')||'0'), p:r.length}); }
+function target(t){ return (t.kind==='swt'||t.kind==='direct') ? t.res : t.target; }
+function onCheck(t){
+  const s=t.input;
+  if(!s){ t.msg={kind:'info', text:'Tippe zuerst deine Antwort ein.'}; return; }
+  if(s.endsWith(',')||s.startsWith(',')){ t.msg={kind:'info', text:'Prüfe das Komma in deiner Antwort.'}; return; }
+  const x=parseIn(s), T=target(t);
+  if(eq(x,T)){ t.msg=null; finish(t); return; }
+  t.errors++; t.stepErr++;
+  if(t.stepErr>=2){ t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Schau dir die Rechnung unten an.'}; finish(t); return; }
+  let txt;
+  if(t.kind==='sach'){
+    txt='<b>Noch nicht.</b> Rechne zuerst in die gleiche Einheit um. Lies dann die Frage noch einmal: Was ist gesucht?';
+    if(eq(x,sh(T,-1))||eq(x,sh(T,1))) txt='<b>Fast.</b> Prüfe die Umrechnung: 100, nicht 10!';
+    t.tip=1;
+  } else txt=diagnose(t,x);
+  t.msg={kind:'bad', text:txt};
+}
+function press(t,k){
+  let s=t.input;
+  if(k==='del') s=s.slice(0,-1);
+  else if(k===','){ if(!s.includes(',') && s.length<9) s+=','; }
+  else if(s.length<9) s+=k;
+  t.input=s; t.msg=null;
+}
+function next(){ if(S.idx>=N-1) S.finished=true; else S.idx++; render(); window.scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); }
+
+/* ---------- Tippkarten ---------- */
+function tipFocus(){
+  if(S.finished) return 0;
+  const t=S.tasks[S.idx];
+  if(t.tip) return t.tip;
+  return ({einheit:5, treppe:2, swt:3, vgl:4, stimmt:1, direct:4, sach:4})[t.kind];
+}
+function toggleTips(open){
+  $tips.hidden=!open;
+  if(open){ const f=tipFocus(); $tips.querySelectorAll('.tipcard').forEach(c=>c.classList.toggle('focus', Number(c.dataset.tip)===f)); document.getElementById('tipsclose').focus(); }
+  else document.getElementById('tipbtn').focus();
+}
+(function(){ // 10 × 10 Raster für Tippkarte 1
+  let h='<rect class="row" x="5" y="5" width="100" height="10"/>';
+  for(let r=0;r<10;r++) for(let c=0;c<10;c++) h+='<rect x="'+(5+c*10)+'" y="'+(5+r*10)+'" width="10" height="10"/>';
+  h+='<rect class="out" x="5" y="5" width="100" height="100"/>';
+  document.getElementById('tipgrid').innerHTML=h;
+})();
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click', function(e){
+  if(e.target===$tips){ toggleTips(false); return; }
+  const el=e.target.closest('[data-action]'); if(!el || el.disabled) return;
+  const a=el.dataset.action;
+  if(a==='tips'){ toggleTips(true); return; }
+  if(a==='tipsclose'){ toggleTips(false); return; }
+  if(a==='stufe'){ S.stufe=Number(el.dataset.s); newRound(); window.scrollTo({top:0}); return; }
+  if(a==='again'){ newRound(); window.scrollTo({top:0}); return; }
+  if(S.finished) return;
+  const t=S.tasks[S.idx], v=el.dataset.v;
+  if(a==='unit'){ if(t.step==='pick') onUnit(t,v); }
+  else if(a==='tr'){ if(t.step==='pick') onTreppe(t,v); }
+  else if(a==='cell'){ if(t.step==='place'||t.step==='read') onCell(t,Number(el.dataset.c)); }
+  else if(a==='res'){ if(t.step==='answer') onRes(t,v); }
+  else if(a==='rel'){ if(t.step==='pick') onRel(t,v); }
+  else if(a==='judge'){ if(t.step==='judge') onJudge(t,v); }
+  else if(a==='key'){ if(isInput(t)) press(t,el.dataset.k); }
+  else if(a==='check'){ if(isInput(t)) onCheck(t); }
+  else if(a==='next'){ next(); return; }
+  render();
+});
+function isInput(t){ return t.step==='input' || (t.kind==='swt' && t.mode==='input' && t.step==='answer'); }
+document.addEventListener('keydown', function(e){
+  if(!$tips.hidden){ if(e.key==='Escape') toggleTips(false); return; }
+  if(S.finished) return;
+  const t=S.tasks[S.idx];
+  if(isInput(t)){
+    if(/^[0-9]$/.test(e.key)){ press(t,e.key); render(); e.preventDefault(); }
+    else if(e.key===','||e.key==='.'){ press(t,','); render(); e.preventDefault(); }
+    else if(e.key==='Backspace'){ press(t,'del'); render(); e.preventDefault(); }
+    else if(e.key==='Enter'){ onCheck(t); render(); e.preventDefault(); }
+  } else if(t.step==='done' && e.key==='Enter' && !(e.target instanceof HTMLButtonElement)){ next(); e.preventDefault(); }
+});
+
+window.__EU = { S:S, generate:generate, fs:fs, sh:sh, digitCells:digitCells, filledCells:filledCells, render:render };
+newRound();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stationenlernen Wellenoptik</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/bricolage-grotesque.css">
+<link rel="stylesheet" href="../fonts/jetbrains-mono.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: wie die Simulationen der Reihe – Kopf mit Codefeld-Leiste und Reitern A/B/C; je Station links Aufgabe und gestufte Hilfen, rechts Ergebnis prüfen, Codeziffer und Musterlösung; schmal: gestapelt */
+:root{
+  --bg:#edf0f3;
+  --panel:#ffffff;
+  --line:#d3d9e1;
+  --fg:#15202b;
+  --muted:#556272;
+  --accent:#2b4ea8;
+  --accent-soft:#e2e8f8;
+  --ok:#1b7443;
+  --ok-soft:#dff1e6;
+  --warn:#9a5208;
+  --warn-soft:#fbe9d6;
+  --bad:#b0271f;
+  --bad-soft:#f8e1de;
+  --code:#c1440e;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1319;--panel:#161d26;--line:#2a3542;--fg:#e4e9ef;--muted:#97a4b3;
+    --accent:#93acff;--accent-soft:#1f2a44;--ok:#5fd08e;--ok-soft:#14301f;--warn:#f0b35c;--warn-soft:#3a2a14;--bad:#ff8a80;--bad-soft:#3a1a18;--code:#ff9a6b;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1319;--panel:#161d26;--line:#2a3542;--fg:#e4e9ef;--muted:#97a4b3;
+  --accent:#93acff;--accent-soft:#1f2a44;--ok:#5fd08e;--ok-soft:#14301f;--warn:#f0b35c;--warn-soft:#3a2a14;--bad:#ff8a80;--bad-soft:#3a1a18;--code:#ff9a6b;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font-family:var(--f-display);font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-0.01em}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:700;border:0;background:transparent;color:var(--muted);padding:10px 16px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:44px}
+.tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+.tabs .dot{width:10px;height:10px;border-radius:50%;border:2px solid currentColor}
+.tabs .dot.done{background:var(--ok);border-color:var(--ok)}
+button:focus-visible,input:focus-visible,summary:focus-visible,label:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Codefeld */
+.codebar{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px}
+.codebar h2{font-family:var(--f-display);font-size:1.1rem;margin:0}
+.codebar p{margin:0;color:var(--muted);font-size:.9rem;flex:1 1 220px;min-width:0}
+.slots{display:flex;gap:10px}
+.slot{display:flex;flex-direction:column;align-items:center;gap:2px}
+.slot span{font-size:.75rem;font-weight:700;letter-spacing:.08em;color:var(--muted)}
+.slot b{width:52px;height:60px;border:2px dashed var(--line);border-radius:8px;display:grid;place-items:center;font-family:var(--f-mono);font-size:1.9rem;color:var(--muted)}
+.slot.on b{border-style:solid;border-color:var(--code);color:var(--code);background:var(--warn-soft)}
+
+.work{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.work{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{font-family:var(--f-display);font-size:1.15rem;margin:0;text-wrap:balance}
+h3{font-size:.8rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+p{margin:0}
+.sub{color:var(--muted);font-size:.92rem}
+.formula{font-family:var(--f-mono);background:var(--accent-soft);color:var(--fg);padding:8px 10px;border-radius:6px;font-size:.95rem;overflow-x:auto}
+ul.plain{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+svg.sketch{width:100%;height:auto;max-width:100%;display:block}
+svg.sketch text{font-family:var(--f-body);font-size:13px;fill:var(--muted)}
+
+/* Hilfen */
+.hints{display:flex;flex-direction:column;gap:8px}
+.hint{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.hint b{color:var(--accent);font-size:.9rem}
+.btn{font:inherit;font-size:.95rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:10px 14px;cursor:pointer;min-height:44px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel);font-weight:700}
+.btn:disabled{opacity:.5;cursor:default}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* Prüfen */
+.field{display:flex;flex-direction:column;gap:6px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.field:last-of-type{border-bottom:0;padding-bottom:0}
+.field label.q,.field .q{font-weight:700}
+.field .opt{font-weight:400;color:var(--muted);font-size:.85rem}
+.inrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+input[type=text]{font:inherit;font-family:var(--f-mono);font-size:1.05rem;width:140px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);min-height:44px}
+.unit{font-family:var(--f-mono);color:var(--muted)}
+.choices{display:flex;flex-direction:column;gap:6px}
+.choices label{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);cursor:pointer;min-height:44px}
+.choices input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent);flex:none}
+.choices.inline{flex-direction:row;flex-wrap:wrap}
+.fb{font-weight:700;min-height:1.5em;font-size:.95rem}
+.fb.ok{color:var(--ok)}.fb.warn{color:var(--warn)}.fb.bad{color:var(--bad)}
+.state-ok input[type=text]{border-color:var(--ok)}
+.state-bad input[type=text]{border-color:var(--bad)}
+.state-warn input[type=text]{border-color:var(--warn)}
+
+.unlock{border:2px solid var(--code);background:var(--warn-soft);border-radius:10px;padding:14px 16px;display:flex;gap:16px;align-items:center}
+.unlock .digit{font-family:var(--f-mono);font-size:3rem;line-height:1;color:var(--code);font-weight:600;flex:none;width:64px;text-align:center}
+.unlock p{font-weight:700}
+.locked{color:var(--muted);font-size:.92rem;border:1px dashed var(--line);border-radius:10px;padding:12px 14px}
+
+.solution{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem}
+th,td{text-align:right;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:700;color:var(--muted);font-size:.82rem}
+td{font-family:var(--f-mono)}
+.note{font-size:.9rem;color:var(--muted)}
+a{color:var(--accent);font-weight:700}
+footer{font-size:.85rem;color:var(--muted);display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:12px}
+sub,sup{line-height:0}
+@media (max-width:520px){.slot b{width:44px;height:52px;font-size:1.6rem}.unlock .digit{font-size:2.4rem;width:48px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (prefers-reduced-motion:no-preference){.unlock{animation:pop .35s ease-out}@keyframes pop{from{transform:scale(.96);opacity:.6}to{transform:none;opacity:1}}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Physik GK Q1 · Wellenoptik · Stunde 8</p>
+      <h1>Lösungskarten Stationenlernen</h1>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Stationen">
+      <button id="tab-A" role="tab" aria-selected="true" aria-controls="view-A" data-tab="A"><span class="dot" id="dot-A"></span>Station A</button>
+      <button id="tab-B" role="tab" aria-selected="false" aria-controls="view-B" data-tab="B"><span class="dot" id="dot-B"></span>Station B</button>
+      <button id="tab-C" role="tab" aria-selected="false" aria-controls="view-C" data-tab="C"><span class="dot" id="dot-C"></span>Station C</button>
+    </nav>
+  </header>
+
+  <section class="codebar" aria-label="Euer Codefeld">
+    <h2>Euer Codefeld</h2>
+    <div class="slots">
+      <div class="slot" id="slot-A"><span>A</span><b id="slotv-A">·</b></div>
+      <div class="slot" id="slot-B"><span>B</span><b id="slotv-B">·</b></div>
+      <div class="slot" id="slot-C"><span>C</span><b id="slotv-C">·</b></div>
+    </div>
+    <p>Jede Station schaltet eine Ziffer frei, sobald alle Pflichtergebnisse stimmen. Übertragt sie auf euren Laufzettel.</p>
+    <div class="btnrow">
+      <button class="btn" id="reset" type="button">Codefeld zurücksetzen</button>
+      <span id="resetask" class="btnrow" hidden>
+        <span class="sub">Wirklich alles löschen?</span>
+        <button class="btn primary" id="resetyes" type="button">Ja, löschen</button>
+        <button class="btn" id="resetno" type="button">Abbrechen</button>
+      </span>
+    </div>
+  </section>
+
+  <!-- ===================== Station A ===================== -->
+  <section id="view-A" class="work" role="tabpanel" aria-labelledby="tab-A">
+    <div class="col">
+      <div class="card">
+        <h3>Station A · Laser</h3>
+        <h2>Spurabstand von CD und DVD</h2>
+        <p>Der rote Laser (λ = 650 nm) fällt durch das Loch im Schirm senkrecht auf die CD. Die Spuren wirken wie ein Reflexionsgitter: Links und rechts vom Loch erscheinen die beiden 1. Ordnungen.</p>
+        <svg class="sketch" viewBox="0 0 520 186" role="img" aria-label="Skizze: Laser, Schirm mit Loch, CD im Abstand e, die 1. Ordnungen treffen den Schirm im Abstand a vom Loch">
+          <rect x="14" y="74" width="70" height="22" rx="3" fill="var(--muted)"/>
+          <text x="20" y="116">Laser</text>
+          <line x1="84" y1="85" x2="420" y2="85" stroke="var(--bad)" stroke-width="2.5"/>
+          <rect x="250" y="12" width="7" height="146" fill="var(--line)" stroke="var(--muted)"/>
+          <rect x="250" y="81" width="7" height="8" fill="var(--panel)"/>
+          <text x="196" y="180">Schirm mit Loch</text>
+          <rect x="420" y="20" width="9" height="130" rx="2" fill="var(--accent)" opacity=".85"/>
+          <text x="436" y="88">CD</text>
+          <line x1="420" y1="85" x2="257" y2="32" stroke="var(--bad)" stroke-width="2" stroke-dasharray="5 4"/>
+          <line x1="420" y1="85" x2="257" y2="138" stroke="var(--bad)" stroke-width="2" stroke-dasharray="5 4"/>
+          <circle cx="257" cy="32" r="4" fill="var(--bad)"/><circle cx="257" cy="138" r="4" fill="var(--bad)"/>
+          <line x1="268" y1="85" x2="268" y2="32" stroke="var(--fg)" stroke-width="1.2"/>
+          <text x="274" y="62" style="fill:var(--fg)">a</text>
+          <line x1="257" y1="150" x2="420" y2="150" stroke="var(--fg)" stroke-width="1.2"/>
+          <text x="330" y="146" style="fill:var(--fg)">e</text>
+          <text x="300" y="112">α</text>
+        </svg>
+        <div class="formula">a = Hälfte von 2a · tan α = a / e · g = λ / sin α (k = 1)</div>
+        <ul class="plain">
+          <li>CD: Abstand CD–Schirm etwa e = 10,0 cm</li>
+          <li>DVD: Abstand etwa e = 5,0 cm (sehr große Winkel)</li>
+          <li>Denkfrage: Warum gibt die Blu-ray keine 1. Ordnung?</li>
+        </ul>
+        <p class="sub">Nie in den Strahl oder in eine Reflexion schauen. Der Schirm fängt die zurückgeworfenen Strahlen auf.</p>
+      </div>
+      <div class="card">
+        <h2>Hilfen</h2>
+        <p class="sub">Öffnet immer nur die nächste Hilfe, wenn ihr nicht weiterkommt.</p>
+        <div class="hints" id="hints-A"></div>
+        <div class="btnrow"><button class="btn" id="hintbtn-A" type="button">Hilfe 1 öffnen</button></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" id="check-A">
+        <h2>Ergebnis prüfen</h2>
+        <div class="field" id="f-A-cd">
+          <label class="q" for="in-A-cd">Spurabstand der CD</label>
+          <div class="inrow"><span class="unit">g =</span><input id="in-A-cd" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 1,2"><span class="unit">µm</span></div>
+          <p class="fb" id="fb-A-cd" aria-live="polite"></p>
+        </div>
+        <div class="field" id="f-A-dvd">
+          <label class="q" for="in-A-dvd">Spurabstand der DVD</label>
+          <div class="inrow"><span class="unit">g =</span><input id="in-A-dvd" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 0,5"><span class="unit">µm</span></div>
+          <p class="fb" id="fb-A-dvd" aria-live="polite"></p>
+        </div>
+        <fieldset class="field" id="f-A-bd" style="border:0;margin:0;padding:0 0 0 0">
+          <legend class="q" style="padding:0;margin-bottom:6px">Denkfrage: Warum zeigt eine Blu-ray (Spurabstand 0,32 µm) mit dem roten Laser keine 1. Ordnung?</legend>
+          <div class="choices" id="ch-A-bd"></div>
+          <p class="fb" id="fb-A-bd" aria-live="polite"></p>
+        </fieldset>
+        <div class="btnrow"><button class="btn primary" id="go-A" type="button">Prüfen</button></div>
+        <div id="code-A" class="locked">Die Codeziffer erscheint, wenn CD, DVD und Denkfrage stimmen.</div>
+        <div class="btnrow">
+          <button class="btn" id="solbtn-A" type="button" disabled>Musterlösung anzeigen</button>
+          <span class="sub" id="solhint-A">Erst selbst rechnen! Die Musterlösung wird nach dem ersten Prüfen frei.</span>
+        </div>
+        <div class="solution" id="sol-A" hidden>
+          <h3>Musterlösung</h3>
+          <div class="tablewrap"><table>
+            <thead><tr><th></th><th>e</th><th>2a</th><th>a</th><th>α</th><th>sin α</th><th>g</th><th>Literatur</th></tr></thead>
+            <tbody>
+              <tr><td>CD</td><td>10,0 cm</td><td>8,8 cm</td><td>4,40 cm</td><td>23,7°</td><td>0,403</td><td>1,61 µm</td><td>1,6 µm</td></tr>
+              <tr><td>DVD</td><td>5,0 cm</td><td>18,6 cm</td><td>9,30 cm</td><td>61,7°</td><td>0,881</td><td>0,738 µm</td><td>0,74 µm</td></tr>
+            </tbody>
+          </table></div>
+          <p>Rechenweg DVD: α = arctan(9,30 cm / 5,0 cm) = 61,7°; g = 650 nm / sin 61,7° = 650 nm / 0,881 = 738 nm ≈ 0,74 µm.</p>
+          <p>Mit Kleinwinkelnäherung (g ≈ λ · e / a) käme für die DVD 0,35 µm heraus – völlig falsch, weil der Winkel über 60° liegt.</p>
+          <p><b>Blu-ray:</b> Für die 1. Ordnung müsste sin α = λ / g = 650 nm / 320 nm ≈ 2,0 sein. Das geht nicht, denn sin α ≤ 1. Es gibt also keine 1. Ordnung.</p>
+          <p class="note">Zusatz: CD-Player arbeiten mit 780 nm, DVD-Player mit 650 nm, Blu-ray-Player mit 405 nm. Ein Lichtfleck lässt sich nicht viel kleiner als die Wellenlänge fokussieren. Engere Spuren lassen sich deshalb nur mit kleinerer Wellenlänge abtasten.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Station B ===================== -->
+  <section id="view-B" class="work" role="tabpanel" aria-labelledby="tab-B" hidden>
+    <div class="col">
+      <div class="card">
+        <h3>Station B · Hg-Spektrallampe</h3>
+        <h2>Gitter-Spektroskop: Wellenlängen der Hg-Linien</h2>
+        <p>Ihr haltet das Gitter (300 Linien/mm) direkt vor das Auge und schaut aus e = 1,00 m auf den Spalt der Hg-Lampe. Links und rechts vom Spalt seht ihr farbige Linien – scheinbar auf dem Maßband.</p>
+        <svg class="sketch" viewBox="0 0 520 170" role="img" aria-label="Skizze: Auge mit Gitter im Abstand e von der Lampe mit Spalt und Maßband; die grüne Linie erscheint im Abstand a vom Spalt">
+          <rect x="30" y="20" width="44" height="40" rx="4" fill="var(--muted)"/>
+          <rect x="49" y="30" width="6" height="30" fill="var(--panel)"/>
+          <text x="10" y="14">Hg-Lampe mit Spalt</text>
+          <line x1="20" y1="70" x2="250" y2="70" stroke="var(--fg)" stroke-width="3"/>
+          <g stroke="var(--fg)" stroke-width="1">
+            <line x1="52" y1="70" x2="52" y2="78"/><line x1="92" y1="70" x2="92" y2="76"/><line x1="132" y1="70" x2="132" y2="76"/><line x1="172" y1="70" x2="172" y2="76"/><line x1="212" y1="70" x2="212" y2="76"/>
+          </g>
+          <text x="176" y="92">Maßband</text>
+          <line x1="150" y1="30" x2="150" y2="62" stroke="#2fa84f" stroke-width="4"/>
+          <line x1="164" y1="30" x2="164" y2="62" stroke="#d9b400" stroke-width="4"/>
+          <line x1="120" y1="30" x2="120" y2="62" stroke="#3d5bd9" stroke-width="3"/>
+          <line x1="52" y1="104" x2="150" y2="104" stroke="var(--fg)" stroke-width="1.2"/>
+          <text x="94" y="120" style="fill:var(--fg)">a</text>
+                    <line x1="150" y1="46" x2="468" y2="140" stroke="#2fa84f" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <ellipse cx="482" cy="140" rx="16" ry="10" fill="none" stroke="var(--fg)" stroke-width="1.5"/>
+          <circle cx="478" cy="140" r="4" fill="var(--fg)"/>
+          <rect x="462" y="122" width="4" height="36" fill="var(--accent)"/>
+          <text x="420" y="168">Gitter am Auge</text>
+          <line x1="52" y1="150" x2="462" y2="150" stroke="var(--fg)" stroke-width="1.2"/>
+          <text x="250" y="146" style="fill:var(--fg)">e = 1,00 m</text>
+        </svg>
+        <div class="formula">g = 1 mm / 300 · tan α = a / e · λ = g · sin α</div>
+        <ul class="plain">
+          <li>a links und rechts ablesen, Mittelwert bilden</li>
+          <li>Pflicht: grüne und gelbe Linie, freiwillig: blaue Linie</li>
+        </ul>
+        <p class="sub">Nicht lange aus kurzer Entfernung in die Lampe schauen. Das Gehäuse wird heiß.</p>
+      </div>
+      <div class="card">
+        <h2>Hilfen</h2>
+        <p class="sub">Öffnet immer nur die nächste Hilfe, wenn ihr nicht weiterkommt.</p>
+        <div class="hints" id="hints-B"></div>
+        <div class="btnrow"><button class="btn" id="hintbtn-B" type="button">Hilfe 1 öffnen</button></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" id="check-B">
+        <h2>Ergebnis prüfen</h2>
+        <div class="field" id="f-B-gr">
+          <label class="q" for="in-B-gr">Grüne Linie</label>
+          <div class="inrow"><span class="unit">λ =</span><input id="in-B-gr" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 500"><span class="unit">nm</span></div>
+          <p class="fb" id="fb-B-gr" aria-live="polite"></p>
+        </div>
+        <div class="field" id="f-B-ge">
+          <label class="q" for="in-B-ge">Gelbe Linie</label>
+          <div class="inrow"><span class="unit">λ =</span><input id="in-B-ge" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 600"><span class="unit">nm</span></div>
+          <p class="fb" id="fb-B-ge" aria-live="polite"></p>
+        </div>
+        <div class="field" id="f-B-bl">
+          <label class="q" for="in-B-bl">Blaue Linie <span class="opt">(freiwillig)</span></label>
+          <div class="inrow"><span class="unit">λ =</span><input id="in-B-bl" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 450"><span class="unit">nm</span></div>
+          <p class="fb" id="fb-B-bl" aria-live="polite"></p>
+        </div>
+        <div class="btnrow"><button class="btn primary" id="go-B" type="button">Prüfen</button></div>
+        <div id="code-B" class="locked">Die Codeziffer erscheint, wenn die grüne und die gelbe Linie stimmen.</div>
+        <div class="btnrow">
+          <button class="btn" id="solbtn-B" type="button" disabled>Musterlösung anzeigen</button>
+          <span class="sub" id="solhint-B">Erst selbst rechnen! Die Musterlösung wird nach dem ersten Prüfen frei.</span>
+        </div>
+        <div class="solution" id="sol-B" hidden>
+          <h3>Musterlösung (g = 3333 nm, e = 1,00 m)</h3>
+          <div class="tablewrap"><table>
+            <thead><tr><th>Linie</th><th>a</th><th>α</th><th>λ gemessen</th><th>Literatur</th></tr></thead>
+            <tbody>
+              <tr><td>blau</td><td>13,2 cm</td><td>7,52°</td><td>436 nm</td><td>435,8 nm</td></tr>
+              <tr><td>grün</td><td>16,6 cm</td><td>9,43°</td><td>546 nm</td><td>546,1 nm</td></tr>
+              <tr><td>gelb</td><td>17,6 cm</td><td>9,98°</td><td>578 nm</td><td>577,0 / 579,1 nm</td></tr>
+            </tbody>
+          </table></div>
+          <p>Rechenweg grün: α = arctan(16,6 cm / 100 cm) = 9,43°; λ = 3333 nm · sin 9,43° = 3333 nm · 0,164 ≈ 546 nm.</p>
+          <p class="note">Die gelbe Linie ist eigentlich eine Doppellinie (577,0 nm und 579,1 nm). Mit 300 Linien/mm lässt sie sich nicht trennen. Die violette Linie bei 404,7 nm (a ≈ 12,2 cm) ist sehr schwach.</p>
+          <p class="note">Jedes Element hat sein eigenes Linienspektrum – wie ein Fingerabdruck. Darauf kommen wir in der Atomphysik zurück.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Station C ===================== -->
+  <section id="view-C" class="work" role="tabpanel" aria-labelledby="tab-C" hidden>
+    <div class="col">
+      <div class="card">
+        <h3>Station C · Tablet</h3>
+        <h2>Simulation quantitativ</h2>
+        <p><b>C1:</b> Ein grüner Laserpointer fällt auf ein Gitter mit 600 Linien/mm. Der Schirm steht in e = 1,00 m. Gemessen: Abstand der beiden 1. Ordnungen 2a₁ = 67,4 cm.</p>
+        <ul class="plain">
+          <li>a) Bestimmt die Wellenlänge λ (ohne Kleinwinkelnäherung).</li>
+          <li>b) Welche Ordnung ist höchstens möglich?</li>
+          <li>Prüft euer λ in der Simulation, Reiter „Gitter“: 600/mm, e = 1,00 m, λ so einstellen, dass a₁ passt.</li>
+        </ul>
+        <p><b>C2:</b> Reiter „Mehrfachspalt“ mit N = 2 (Doppelspalt): Wie hängt der Streifenabstand Δa von e, d und λ ab?</p>
+        <p><b>C3 (freiwillig):</b> Reiter „Übung“ – Aufgaben mit Zufallswerten. Die Simulation prüft selbst.</p>
+        <div class="formula">g · sin αₖ = k · λ · tan αₖ = aₖ / e · Doppelspalt: Δa ≈ λ · e / d</div>
+        <p><a href="doppelspalt-zum-gitter.html" target="_blank" rel="noopener">Simulation „Vom Doppelspalt zum Gitter“ öffnen</a></p>
+      </div>
+      <div class="card">
+        <h2>Hilfen</h2>
+        <p class="sub">Öffnet immer nur die nächste Hilfe, wenn ihr nicht weiterkommt.</p>
+        <div class="hints" id="hints-C"></div>
+        <div class="btnrow"><button class="btn" id="hintbtn-C" type="button">Hilfe 1 öffnen</button></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" id="check-C">
+        <h2>Ergebnis prüfen</h2>
+        <div class="field" id="f-C-lam">
+          <label class="q" for="in-C-lam">C1 a) Wellenlänge des grünen Lasers</label>
+          <div class="inrow"><span class="unit">λ =</span><input id="in-C-lam" type="text" inputmode="decimal" autocomplete="off" placeholder="z. B. 500"><span class="unit">nm</span></div>
+          <p class="fb" id="fb-C-lam" aria-live="polite"></p>
+        </div>
+        <div class="field" id="f-C-k">
+          <label class="q" for="in-C-k">C1 b) Höchste mögliche Ordnung</label>
+          <div class="inrow"><span class="unit">k<sub>max</sub> =</span><input id="in-C-k" type="text" inputmode="numeric" autocomplete="off" placeholder="z. B. 2"></div>
+          <p class="fb" id="fb-C-k" aria-live="polite"></p>
+        </div>
+        <fieldset class="field" id="f-C-e" style="border:0;margin:0;padding:0 0 12px">
+          <legend class="q" style="padding:0;margin-bottom:6px">C2: Wenn man e verdoppelt, wird Δa …</legend>
+          <div class="choices inline" id="ch-C-e"></div>
+          <p class="fb" id="fb-C-e" aria-live="polite"></p>
+        </fieldset>
+        <fieldset class="field" id="f-C-d" style="border:0;margin:0;padding:0 0 12px">
+          <legend class="q" style="padding:0;margin-bottom:6px">C2: Wenn man d verdoppelt, wird Δa …</legend>
+          <div class="choices inline" id="ch-C-d"></div>
+          <p class="fb" id="fb-C-d" aria-live="polite"></p>
+        </fieldset>
+        <fieldset class="field" id="f-C-l" style="border:0;margin:0;padding:0">
+          <legend class="q" style="padding:0;margin-bottom:6px">C2: Wenn man λ vergrößert, wird Δa …</legend>
+          <div class="choices inline" id="ch-C-l"></div>
+          <p class="fb" id="fb-C-l" aria-live="polite"></p>
+        </fieldset>
+        <div class="btnrow"><button class="btn primary" id="go-C" type="button">Prüfen</button></div>
+        <div id="code-C" class="locked">Die Codeziffer erscheint, wenn C1 und C2 vollständig stimmen.</div>
+        <div class="btnrow">
+          <button class="btn" id="solbtn-C" type="button" disabled>Musterlösung anzeigen</button>
+          <span class="sub" id="solhint-C">Erst selbst rechnen! Die Musterlösung wird nach dem ersten Prüfen frei.</span>
+        </div>
+        <div class="solution" id="sol-C" hidden>
+          <h3>Musterlösung C1</h3>
+          <p>a₁ = 67,4 cm / 2 = 33,7 cm; α₁ = arctan(33,7 cm / 100 cm) = 18,6°; sin α₁ = 0,319.</p>
+          <p>g = 1 mm / 600 = 1667 nm; λ = g · sin α₁ = 1667 nm · 0,319 ≈ <b>532 nm</b>.</p>
+          <p>Mit Kleinwinkelnäherung (λ ≈ g · a / e) käme 562 nm heraus – 6 % zu groß.</p>
+          <p>g / λ = 1667 nm / 532 nm = 3,13 → <b>k<sub>max</sub> = 3</b>. Die 2. Ordnung liegt bei α = 39,7° (a = 83 cm), die 3. Ordnung bei α = 73° (a = 3,3 m) – sie trifft den 2 m breiten Schirm nicht mehr.</p>
+          <p class="note">Simulation: Reiter „Gitter“, 600/mm, e = 1,00 m. λ = 530 nm ergibt a₁ = 33,5 cm, λ = 535 nm ergibt a₁ = 33,9 cm.</p>
+          <h3>Musterlösung C2</h3>
+          <p>Δa = λ · e / d: proportional zu e und zu λ, antiproportional zu d.</p>
+          <div class="tablewrap"><table>
+            <thead><tr><th>Einstellung</th><th>λ</th><th>d</th><th>e</th><th>Δa</th></tr></thead>
+            <tbody>
+              <tr><td>Ausgang</td><td>650 nm</td><td>0,25 mm</td><td>2,0 m</td><td>5,2 mm</td></tr>
+              <tr><td>e verdoppelt</td><td>650 nm</td><td>0,25 mm</td><td>4,0 m</td><td>10,4 mm</td></tr>
+              <tr><td>d verdoppelt</td><td>650 nm</td><td>0,50 mm</td><td>4,0 m</td><td>5,2 mm</td></tr>
+              <tr><td>λ kleiner</td><td>450 nm</td><td>0,25 mm</td><td>4,0 m</td><td>7,2 mm</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Die Codeziffern bekommt ihr nur über diese Seite. Ein Team = ein Gerät für das Codefeld.</p>
+    <p>Dezimalzahlen dürft ihr mit Komma oder Punkt eingeben.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+/* ======================================================================
+   CODEZIFFERN – Platzhalter für den Escape Room in Std. 9.
+   Hier ändern, falls der Escape Room andere Ziffern braucht.
+   ====================================================================== */
+const CODE = { A: 3, B: 1, C: 4 };
+const STORE = 'wellenoptik-std8-codefeld';
+
+const $ = id => document.getElementById(id);
+const de = (x,d) => x.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
+function num(s){ const t=String(s).trim().replace(/\s/g,'').replace(',','.'); if(t==='') return NaN; return Number(t); }
+const inR = (v,a,b) => v>=a && v<=b;
+
+/* ---------- Speicher (pro Gerät, darf fehlen) ---------- */
+let unlocked = {A:false,B:false,C:false};
+try{ const s=JSON.parse(localStorage.getItem(STORE)||'null'); if(s&&typeof s==='object'){ for(const k of 'ABC') unlocked[k]=!!s[k]; } }catch(e){}
+function save(){ try{ localStorage.setItem(STORE, JSON.stringify(unlocked)); }catch(e){} }
+
+function renderCode(){
+  for(const k of 'ABC'){
+    $('slot-'+k).classList.toggle('on', unlocked[k]);
+    $('slotv-'+k).textContent = unlocked[k] ? CODE[k] : '·';
+    $('dot-'+k).classList.toggle('done', unlocked[k]);
+    const box=$('code-'+k);
+    if(unlocked[k]){
+      box.className='unlock';
+      box.innerHTML='<span class="digit">'+CODE[k]+'</span><p>Eure Codeziffer für Station '+k+': '+CODE[k]+' – tragt sie in das Codefeld auf dem Laufzettel ein. Ihr braucht sie in der nächsten Stunde!</p>';
+    }
+  }
+}
+
+/* ---------- Reiter ---------- */
+const tabs=[...document.querySelectorAll('.tabs button')];
+function showTab(t){
+  if(!['A','B','C'].includes(t)) t='A';
+  tabs.forEach(b=>{ const on=b.dataset.tab===t; b.setAttribute('aria-selected',on); b.tabIndex=on?0:-1; });
+  for(const k of 'ABC') $('view-'+k).hidden = k!==t;
+}
+tabs.forEach((b,i)=>{
+  b.addEventListener('click',()=>{ showTab(b.dataset.tab); try{history.replaceState(null,'','#station-'+b.dataset.tab.toLowerCase());}catch(e){} });
+  b.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'||e.key==='ArrowLeft'){ const n=tabs[(i+(e.key==='ArrowRight'?1:2))%3]; n.focus(); n.click(); } });
+});
+function fromHash(){ const m=location.hash.match(/^#station-([abc])$/i); showTab(m?m[1].toUpperCase():'A'); }
+window.addEventListener('hashchange',fromHash);
+
+/* ---------- Gestufte Hilfen ---------- */
+const HINTS = {
+  A:[
+    'Messt den Abstand 2a der beiden 1. Ordnungen und halbiert ihn. Den Abstand e messt ihr von der CD bis zum Schirm.',
+    'Winkel: α = arctan(a / e). Achtung: Bei der DVD ist der Winkel groß – keine Kleinwinkelnäherung!',
+    'Gittergleichung mit k = 1: g = λ / sin α. Beispiel CD: e = 10,0 cm, 2a = 8,8 cm → a = 4,4 cm → α = 23,7° → g = 650 nm / 0,403 ≈ 1,61 µm.'
+  ],
+  B:[
+    'g = 1 mm / 300 = 3,33 µm = 3333 nm.',
+    'Ihr seht die Linien scheinbar auf dem Maßband. a links und rechts ablesen, Mittelwert bilden. tan α = a / e.',
+    'λ = g · sin α. Beispiel grün: a = 16,6 cm → α = 9,43° → λ = 3333 nm · 0,164 ≈ 546 nm.'
+  ],
+  C:[
+    'a₁ = 33,7 cm, α₁ = arctan(a₁ / e).',
+    'g = 1 mm / 600 = 1667 nm; λ = g · sin α₁.',
+    'k_max: sin α = k · λ / g ≤ 1 → k ≤ g / λ.'
+  ]
+};
+const hintCount={A:0,B:0,C:0};
+function renderHints(k){
+  const box=$('hints-'+k); box.innerHTML='';
+  for(let i=0;i<hintCount[k];i++){
+    const d=document.createElement('div'); d.className='hint';
+    d.innerHTML='<b>Hilfe '+(i+1)+'</b><span></span>'; d.querySelector('span').textContent=HINTS[k][i];
+    box.appendChild(d);
+  }
+  const btn=$('hintbtn-'+k);
+  if(hintCount[k]>=3){ btn.disabled=true; btn.textContent='Alle Hilfen geöffnet'; }
+  else { btn.disabled=false; btn.textContent='Hilfe '+(hintCount[k]+1)+' öffnen'; }
+}
+for(const k of 'ABC'){ $('hintbtn-'+k).addEventListener('click',()=>{ hintCount[k]=Math.min(3,hintCount[k]+1); renderHints(k); }); renderHints(k); }
+
+/* ---------- Auswahlfragen ---------- */
+function buildChoices(id, name, opts){
+  const box=$(id);
+  opts.forEach((o,i)=>{
+    const l=document.createElement('label');
+    l.innerHTML='<input type="radio" name="'+name+'" id="'+name+'-'+i+'" value="'+i+'"><span></span>';
+    l.querySelector('span').textContent=o;
+    box.appendChild(l);
+  });
+}
+const BD_OPTS=[
+  'Weil die Blu-ray das rote Licht vollständig absorbiert.',
+  'Weil λ/g = 650/320 ≈ 2 > 1 wäre – sin α kann nicht größer als 1 sein.',
+  'Weil die Spuren zu weit auseinander liegen.',
+  'Weil die 1. Ordnung genau in den Laser zurückfällt.'
+];
+buildChoices('ch-A-bd','bd',BD_OPTS);
+buildChoices('ch-C-e','ce',['doppelt so groß','halb so groß','bleibt gleich']);
+buildChoices('ch-C-d','cd',['doppelt so groß','halb so groß','bleibt gleich']);
+buildChoices('ch-C-l','cl',['größer','kleiner','bleibt gleich']);
+const picked = name => { const r=document.querySelector('input[name="'+name+'"]:checked'); return r?Number(r.value):null; };
+
+/* ---------- Rückmeldung ---------- */
+function setFb(field, fbId, state, msg){
+  const f=$(field); f.classList.remove('state-ok','state-warn','state-bad'); if(state) f.classList.add('state-'+state);
+  const fb=$(fbId); fb.className='fb'+(state?' '+state:''); fb.textContent=msg||'';
+  return state==='ok';
+}
+function emptyMsg(unit){ return ['bad','Tragt eine Zahl in '+unit+' ein.']; }
+
+const R = {
+  cd(v){
+    if(!isFinite(v)) return emptyMsg('µm');
+    if(inR(v,1.45,1.75)) return ['ok','Richtig! Literaturwert: 1,6 µm.'];
+    if(inR(v,1450,1750)) return ['warn','Der Wert passt, aber gesucht ist g in µm, nicht in nm.'];
+    if(inR(v,0.9,1.05)) return ['bad','Habt ihr 2a halbiert? In tan α = a / e gehört der halbe Abstand.'];
+    if(inR(v,1.35,1.45)||inR(v,1.75,1.85)) return ['warn','Knapp daneben – prüft e und 2a noch einmal.'];
+    return ['bad','Noch nicht. Rechnet α = arctan(a / e) (Taschenrechner auf Grad) und dann g = λ / sin α mit λ = 650 nm.'];
+  },
+  dvd(v){
+    if(!isFinite(v)) return emptyMsg('µm');
+    if(inR(v,0.68,0.80)) return ['ok','Richtig! Literaturwert: 0,74 µm.'];
+    if(inR(v,680,800)) return ['warn','Der Wert passt, aber gesucht ist g in µm, nicht in nm.'];
+    if(inR(v,0.30,0.40)) return ['bad','Kleinwinkelnäherung bei über 60° ist nicht erlaubt – rechnet mit sin(arctan(a/e)).'];
+    if(inR(v,0.62,0.68)) return ['warn','Knapp daneben. Prüft e und 2a noch einmal – und ob ihr a = 2a / 2 genommen habt: Mit dem ganzen Abstand 2a kommen bei e = 5 cm etwa 0,67 µm heraus.'];
+    if(inR(v,0.80,0.86)) return ['warn','Knapp daneben – prüft e und 2a noch einmal.'];
+    return ['bad','Noch nicht. Rechnet α = arctan(a / e) (Taschenrechner auf Grad) und dann g = λ / sin α mit λ = 650 nm.'];
+  },
+  green(v){
+    if(!isFinite(v)) return emptyMsg('nm');
+    if(inR(v,530,562)) return ['ok','Richtig! Literaturwert: 546,1 nm.'];
+    if(inR(v,0.5,0.6)) return ['warn','Der Wert passt, aber gesucht ist λ in nm.'];
+    if(inR(v,1000,1120)) return ['bad','Habt ihr von links bis rechts gemessen und nicht halbiert? a ist der Abstand vom Spalt zur Linie.'];
+    if(inR(v,515,530)||inR(v,562,575)) return ['warn','Knapp daneben – lest a links und rechts noch einmal ab und bildet den Mittelwert.'];
+    return ['bad','Noch nicht. Prüft g = 3333 nm, e = 100 cm und den Taschenrechner (Grad).'];
+  },
+  yellow(v){
+    if(!isFinite(v)) return emptyMsg('nm');
+    if(inR(v,562,595)) return ['ok','Richtig! Literaturwert: 577,0 / 579,1 nm (Doppellinie).'];
+    if(inR(v,0.56,0.6)) return ['warn','Der Wert passt, aber gesucht ist λ in nm.'];
+    if(inR(v,1060,1160)) return ['bad','Habt ihr von links bis rechts gemessen und nicht halbiert? a ist der Abstand vom Spalt zur Linie.'];
+    if(inR(v,548,562)||inR(v,595,608)) return ['warn','Knapp daneben – lest a links und rechts noch einmal ab und bildet den Mittelwert.'];
+    return ['bad','Noch nicht. Prüft g = 3333 nm, e = 100 cm und den Taschenrechner (Grad).'];
+  },
+  blue(v){
+    if(!isFinite(v)) return [null,''];
+    if(inR(v,420,452)) return ['ok','Richtig! Literaturwert: 435,8 nm.'];
+    if(inR(v,0.42,0.46)) return ['warn','Der Wert passt, aber gesucht ist λ in nm.'];
+    if(inR(v,820,880)) return ['bad','Habt ihr von links bis rechts gemessen und nicht halbiert?'];
+    if(inR(v,410,420)||inR(v,452,462)) return ['warn','Knapp daneben – lest a noch einmal ab.'];
+    return ['bad','Noch nicht. Rechnet wie bei der grünen Linie.'];
+  },
+  lam(v){
+    if(!isFinite(v)) return emptyMsg('nm');
+    if(inR(v,520,545)) return ['ok','Richtig! Ein grüner Laserpointer hat 532 nm.'];
+    if(inR(v,0.52,0.545)) return ['warn','Der Wert passt, aber gesucht ist λ in nm.'];
+    if(inR(v,555,570)) return ['bad','Das ist die Kleinwinkelnäherung – am Gitter verboten! Rechnet λ = g · sin(arctan(a₁ / e)).'];
+    if(inR(v,900,960)) return ['bad','2a halbieren! a₁ = 67,4 cm / 2.'];
+    if(inR(v,510,520)||inR(v,545,555)) return ['warn','Knapp daneben – rundet nicht zu früh und prüft g = 1667 nm.'];
+    return ['bad','Noch nicht. g = 1 mm / 600 = 1667 nm, a₁ = 33,7 cm, e = 100 cm.'];
+  },
+  k(v){
+    if(!isFinite(v)) return ['bad','Tragt eine ganze Zahl ein.'];
+    if(v===3) return ['ok','Richtig! g / λ = 3,13 – also höchstens die 3. Ordnung.'];
+    if(v===4) return ['bad','sin α ≤ 1 → k ≤ g / λ, abrunden.'];
+    if(v===1||v===2) return ['bad','Rechnet g / λ = 1667 nm / 532 nm.'];
+    return ['bad','Noch nicht. Bedingung: sin α = k · λ / g ≤ 1, also k ≤ g / λ.'];
+  }
+};
+function choice(name, correct, okMsg, badMsg){
+  const p=picked(name);
+  if(p===null) return ['bad','Wählt eine Antwort aus.'];
+  return p===correct ? ['ok',okMsg] : ['bad',badMsg];
+}
+
+const tried={A:false,B:false,C:false};
+function afterCheck(k, allOk){
+  tried[k]=true; $('solbtn-'+k).disabled=false; $('solhint-'+k).textContent='Vergleicht erst eure Rechnung, dann die Musterlösung.';
+  if(allOk && !unlocked[k]){ unlocked[k]=true; save(); }
+  renderCode();
+}
+
+$('go-A').addEventListener('click',()=>{
+  const a=setFb('f-A-cd','fb-A-cd',...R.cd(num($('in-A-cd').value)));
+  const b=setFb('f-A-dvd','fb-A-dvd',...R.dvd(num($('in-A-dvd').value)));
+  const c=setFb('f-A-bd','fb-A-bd',...choice('bd',1,'Richtig! sin α = λ / g wäre etwa 2 – das gibt es nicht.','Noch nicht. Rechnet sin α = λ / g mit λ = 650 nm und g = 320 nm.'));
+  afterCheck('A',a&&b&&c);
+});
+$('go-B').addEventListener('click',()=>{
+  const a=setFb('f-B-gr','fb-B-gr',...R.green(num($('in-B-gr').value)));
+  const b=setFb('f-B-ge','fb-B-ge',...R.yellow(num($('in-B-ge').value)));
+  setFb('f-B-bl','fb-B-bl',...R.blue(num($('in-B-bl').value)));
+  afterCheck('B',a&&b);
+});
+$('go-C').addEventListener('click',()=>{
+  const a=setFb('f-C-lam','fb-C-lam',...R.lam(num($('in-C-lam').value)));
+  const b=setFb('f-C-k','fb-C-k',...R.k(num($('in-C-k').value)));
+  const c=setFb('f-C-e','fb-C-e',...choice('ce',0,'Richtig! Δa ist proportional zu e.','Noch nicht. Verdoppelt e in der Simulation und vergleicht Δa.'));
+  const d=setFb('f-C-d','fb-C-d',...choice('cd',1,'Richtig! Δa ist antiproportional zu d.','Noch nicht. Stellt d = 0,25 mm und d = 0,50 mm ein und vergleicht Δa.'));
+  const e=setFb('f-C-l','fb-C-l',...choice('cl',0,'Richtig! Δa ist proportional zu λ.','Noch nicht. Verändert λ in der Simulation und beobachtet Δa.'));
+  afterCheck('C',a&&b&&c&&d&&e);
+});
+for(const k of 'ABC'){
+  $('solbtn-'+k).addEventListener('click',()=>{ const s=$('sol-'+k); s.hidden=!s.hidden; $('solbtn-'+k).textContent=s.hidden?'Musterlösung anzeigen':'Musterlösung ausblenden'; });
+  $('check-'+k).querySelectorAll('input[type=text]').forEach(inp=>inp.addEventListener('keydown',e=>{ if(e.key==='Enter') $('go-'+k).click(); }));
+}
+
+/* ---------- Zurücksetzen (Bestätigung auf der Seite) ---------- */
+$('reset').addEventListener('click',()=>{ $('resetask').hidden=false; $('reset').hidden=true; $('resetyes').focus(); });
+$('resetno').addEventListener('click',()=>{ $('resetask').hidden=true; $('reset').hidden=false; });
+$('resetyes').addEventListener('click',()=>{
+  unlocked={A:false,B:false,C:false}; save();
+  for(const k of 'ABC'){ const box=$('code-'+k); box.className='locked'; }
+  $('code-A').textContent='Die Codeziffer erscheint, wenn CD, DVD und Denkfrage stimmen.';
+  $('code-B').textContent='Die Codeziffer erscheint, wenn die grüne und die gelbe Linie stimmen.';
+  $('code-C').textContent='Die Codeziffer erscheint, wenn C1 und C2 vollständig stimmen.';
+  $('resetask').hidden=true; $('reset').hidden=false; renderCode();
+});
+
+renderCode();
+fromHash();
+})();
+</script>
+</body>
+</html>

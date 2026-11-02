@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mathe-Apps Klasse 6</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/lexend.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: eine Heftseite mit Kästchenpapier – oben „So übst du“, darunter die Apps in der Reihenfolge der Reihe. Gleiche Familie wie die sechs Apps. */
+:root{
+  --paper:#F6F8FC; --grid:rgba(43,79,168,.085); --surface:#FFFFFF; --line:#D3DBEA;
+  --ink:#1B2540; --muted:#56627C; --accent:#2B4FA8; --accent-ink:#FFFFFF; --accent-soft:#E5EBFA;
+  --est:#6B3FA0; --est-soft:#EFE7F8; --comma:#D2233A;
+  --good:#22814F; --good-soft:#DDF3E7; --warn:#9A6600; --warn-soft:#FFF1CC; --help:#B4462E; --help-soft:#FBE3DC;
+  --font-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+    --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+    --est:#C9A6F5; --est-soft:#33274A; --comma:#FF6B7D;
+    --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+  --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+  --est:#C9A6F5; --est-soft:#33274A; --comma:#FF6B7D;
+  --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink); font-family:var(--font-body); font-size:18px; line-height:1.45;
+}
+.wrap{max-width:780px; margin:0 auto; display:flex; flex-direction:column; gap:16px;
+  padding-block:22px 48px; padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-family:var(--font-display); font-weight:700; font-size:clamp(1.6rem,5vw,2.2rem); margin:0; letter-spacing:-.01em; text-wrap:balance}
+h1 .ap{color:var(--est)}
+.lead{margin:4px 0 0; color:var(--muted)}
+:focus-visible{outline:3px solid var(--accent); outline-offset:3px}
+.how{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:16px 18px}
+.how h2,.part h2{font-family:var(--font-display); font-size:1.1rem; font-weight:600; margin:0 0 8px}
+.how ol{margin:0; padding-left:1.3em; display:flex; flex-direction:column; gap:6px}
+.lvls{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px}
+.lvl{display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; font-size:.95rem}
+.lvl b{font-family:var(--font-display); font-weight:600; letter-spacing:.12em}
+.l1{background:var(--help-soft)} .l2{background:var(--warn-soft)} .l3{background:var(--good-soft)}
+.part{display:flex; flex-direction:column; gap:10px}
+.part h2{margin:6px 0 0; color:var(--muted); font-size:.85rem; letter-spacing:.08em; text-transform:uppercase}
+.apps{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr)); gap:12px}
+a.app{display:flex; flex-direction:column; gap:6px; text-decoration:none; color:inherit; background:var(--surface); border:2px solid var(--line); border-radius:var(--r); padding:16px 18px; min-height:132px; transition:border-color .15s, transform .15s}
+a.app:hover{border-color:var(--accent); transform:translateY(-1px)}
+.app .name{font-family:var(--font-display); font-weight:700; font-size:1.25rem; color:var(--accent)}
+.app .what{margin:0}
+.meta{display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; padding-top:6px}
+.tag{font-size:.82rem; padding:2px 10px; border-radius:999px; background:var(--accent-soft); color:var(--ink)}
+.tag.cl{background:var(--est-soft)}
+a.app.wide{grid-column:1/-1}
+.note{font-size:.95rem; color:var(--muted); margin:0}
+.credit{margin-top:18px; text-align:center; font-size:.85rem; color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Mathe-Apps <span class="ap">Klasse 6</span></h1>
+    <p class="lead">Dezimalzahlen multiplizieren und Flächen – alle Übungs-Apps an einem Ort</p>
+  </header>
+
+  <section class="how" aria-labelledby="howTitle">
+    <h2 id="howTitle">So übst du</h2>
+    <ol>
+      <li>Schau in deine Checkliste: Wo steht „Noch üben!“ oder „Fast.“? Die Nummer findest du bei der passenden App.</li>
+      <li>Tippe auf die App. Sie öffnet sich in einem neuen Tab.</li>
+      <li>6 von 8 sofort richtig (grün)? Dann nimm die nächste Stufe.</li>
+    </ol>
+    <div class="lvls" aria-label="Welche Stufe?">
+      <span class="lvl l1"><b>●○○</b> „Noch üben!“ → Stufe 1</span>
+      <span class="lvl l2"><b>●●○</b> „Fast.“ → Stufe 2</span>
+      <span class="lvl l3"><b>●●●</b> „Das kann ich.“ → Stufe 3</span>
+    </div>
+  </section>
+
+  <section class="part" aria-labelledby="pA">
+    <h2 id="pA">Wiederholung</h2>
+    <div class="apps">
+      <a class="app wide" href="zehnerzahlen-trainer.html" target="_blank" rel="noopener">
+        <span class="name">Zehnerzahlen-Trainer</span>
+        <p class="what">Dezimalzahlen mit 10, 100 und 1&#8239;000 multiplizieren und durch 10, 100 und 1&#8239;000 dividieren: Komma rücken und Nullen ergänzen.</p>
+        <span class="meta"><span class="tag">Stunde 1</span><span class="tag cl">Checkliste Klassenarbeit 1: Nr. 11, 12</span></span>
+      </a>
+    </div>
+  </section>
+
+  <section class="part" aria-labelledby="pB">
+    <h2 id="pB">Dezimalzahlen multiplizieren</h2>
+    <div class="apps">
+      <a class="app" href="kommastellen-trainer.html" target="_blank" rel="noopener">
+        <span class="name">Kommastellen-Trainer</span>
+        <p class="what">Ohne Komma rechnen, Stellen nach dem Komma zählen, Komma setzen und Nullen ergänzen.</p>
+        <span class="meta"><span class="tag">Stunde 3</span><span class="tag cl">Checkliste 4, 5</span></span>
+      </a>
+      <a class="app" href="ueberschlag-detektiv.html" target="_blank" rel="noopener">
+        <span class="name">Überschlag-Detektiv</span>
+        <p class="what">Faktoren runden, im Kopf überschlagen und prüfen, ob das Ergebnis passt.</p>
+        <span class="meta"><span class="tag">Stunde 4</span><span class="tag cl">Checkliste 6</span></span>
+      </a>
+    </div>
+  </section>
+
+  <section class="part" aria-labelledby="pC">
+    <h2 id="pC">Figuren und Flächen</h2>
+    <div class="apps">
+      <a class="app" href="figuren-und-umfang.html" target="_blank" rel="noopener">
+        <span class="name">Figuren &amp; Umfang</span>
+        <p class="what">Rechteck, Quadrat und Dreieck erkennen und den Umfang berechnen.</p>
+        <span class="meta"><span class="tag">Stunde 6</span><span class="tag cl">Checkliste 8, 9</span></span>
+      </a>
+      <a class="app" href="einheiten-umrechner.html" target="_blank" rel="noopener">
+        <span class="name">Einheiten-Umrechner</span>
+        <p class="what">Die passende Flächeneinheit wählen und mm², cm², dm², m² und km² umrechnen.</p>
+        <span class="meta"><span class="tag">Stunde 8</span><span class="tag cl">Checkliste 11, 12</span></span>
+      </a>
+      <a class="app wide" href="flaechen-werkstatt.html" target="_blank" rel="noopener">
+        <span class="name">Flächen-Werkstatt</span>
+        <p class="what">Flächeninhalt von Rechteck und Quadrat, zusammengesetzte Flächen zerlegen, Umfang oder Flächeninhalt?</p>
+        <span class="meta"><span class="tag">Stunde 10</span><span class="tag cl">Checkliste 10, 13, 14</span><span class="tag">Nr. 10 → Stufe 1 · Nr. 13 → Stufe 2 · Nr. 14 → Stufe 3</span></span>
+      </a>
+    </div>
+  </section>
+
+  <p class="note">Die Apps speichern nichts. Du kannst so oft üben, wie du willst – auch zu Hause.</p>
+  <footer class="credit">Erstellt mit KI von Christoph Kansy</footer>
+</div>
+</body>
+</html>

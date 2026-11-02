@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Polarisation</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/bricolage-grotesque.css">
+<link rel="stylesheet" href="../fonts/jetbrains-mono.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: wie „Weißlicht am Gitter“ – Kopf mit Reitern; je Reiter links Regler und Aufträge, rechts 3D-Szene bzw. Strahlengang; schmal: gestapelt */
+:root{
+  --bg:#edf0f3;
+  --panel:#ffffff;
+  --line:#d3d9e1;
+  --fg:#15202b;
+  --muted:#556272;
+  --accent:#2b4ea8;
+  --accent-soft:#e2e8f8;
+  --ok:#1b7443;
+  --ok-soft:#dcefe3;
+  --warn:#9a5208;
+  --warn-soft:#fbe9d6;
+  --bad:#b0271f;
+  --bad-soft:#f8dedb;
+  --rope:#c1440e;
+  --rope2:#2b4ea8;
+  --plate:#8a97a6;
+  --stage:#10161d;
+  --stage-fg:#d7dee6;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1319;--panel:#161d26;--line:#2a3542;--fg:#e4e9ef;--muted:#97a4b3;
+    --accent:#93acff;--accent-soft:#1f2a44;--ok:#5fd08e;--ok-soft:#163323;--warn:#f0b35c;--warn-soft:#3a2a14;--bad:#ff8a80;--bad-soft:#3d1c1a;
+    --rope:#ff8a5c;--rope2:#93acff;--plate:#6c7a8a;--stage:#0a0e13;--stage-fg:#d7dee6;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1319;--panel:#161d26;--line:#2a3542;--fg:#e4e9ef;--muted:#97a4b3;
+  --accent:#93acff;--accent-soft:#1f2a44;--ok:#5fd08e;--ok-soft:#163323;--warn:#f0b35c;--warn-soft:#3a2a14;--bad:#ff8a80;--bad-soft:#3d1c1a;
+  --rope:#ff8a5c;--rope2:#93acff;--plate:#6c7a8a;--stage:#0a0e13;--stage-fg:#d7dee6;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font-family:var(--f-display);font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-0.01em}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:700;border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.work{display:grid;grid-template-columns:minmax(260px,330px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.work{grid-template-columns:1fr}.work .main{order:-1}}
+.side,.main{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{font-family:var(--f-display);font-size:1.12rem;margin:0}
+h3{font-size:.8rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+.ctrl{display:flex;flex-direction:column;gap:4px}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctrl label,.lbl{font-weight:700}
+.ctrl.off{opacity:.5}
+output,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:.92rem}
+input[type=range]{width:100%;accent-color:var(--accent);touch-action:pan-y}
+select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);max-width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button,.btn{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:6px;padding:4px 10px;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:700}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel);font-weight:700}
+.btn:disabled{opacity:.5;cursor:default}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.check{display:flex;gap:8px;align-items:center;font-weight:700}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.sub{font-size:.85rem;color:var(--muted);font-weight:400}
+canvas{display:block;width:100%}
+#cv1{height:380px;touch-action:none;cursor:grab;border-radius:8px;background:var(--bg)}
+#cv1.drag{cursor:grabbing}
+#ins1{height:150px}
+#cv2{height:320px;touch-action:pan-y;border-radius:8px;background:var(--stage)}
+@media (max-width:520px){#cv1{height:290px}#cv2{height:260px}#ins1{height:130px}}
+.caption{font-size:.85rem;color:var(--muted);margin:0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px 18px;margin:0}
+.facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.facts dt{font-size:.85rem;color:var(--muted)}
+.facts dd{margin:0;font-weight:700}
+.facts dd .num{font-weight:400}
+.state-dark{color:var(--bad)}
+.state-weak{color:var(--warn)}
+.state-ok{color:var(--ok)}
+ol.tasks{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:8px}
+details{border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-weight:700;color:var(--accent)}
+details ul{margin:8px 0 0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+dl.terms{margin:0;display:flex;flex-direction:column;gap:8px}
+dl.terms dt{font-weight:700}
+dl.terms dd{margin:0;color:var(--fg)}
+.note{font-size:.9rem;background:var(--accent-soft);border-radius:8px;padding:8px 12px;margin:0}
+/* Reiter 3 */
+.pool{display:flex;flex-wrap:wrap;gap:8px;min-height:60px;padding:10px;border:1px dashed var(--line);border-radius:8px;background:var(--bg)}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:620px){.zones{grid-template-columns:1fr}}
+.zone{display:flex;flex-direction:column;gap:8px;border:2px dashed var(--line);border-radius:10px;padding:12px;min-height:180px;background:var(--panel);cursor:pointer}
+.zone.hot{border-color:var(--accent);background:var(--accent-soft)}
+.zone h3{font-size:.95rem;color:var(--fg);letter-spacing:.02em;text-transform:none;display:flex;justify-content:space-between;gap:8px}
+.zone .list{display:flex;flex-direction:column;gap:8px}
+.zone .hintz{font-size:.85rem;color:var(--muted);margin:0}
+.wcard{font:inherit;text-align:left;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:8px;padding:8px 12px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;display:flex;flex-direction:column;gap:4px;max-width:100%}
+.pool .wcard{max-width:280px}
+.wcard[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.wcard .why{font-size:.85rem;font-weight:400}
+.wcard.ok{border-color:var(--ok);background:var(--ok-soft)}
+.wcard.bad{border-color:var(--bad);background:var(--bad-soft)}
+.wcard.ok .why{color:var(--ok)}
+.wcard.bad .why{color:var(--bad)}
+@media (max-width:620px){.wcard{touch-action:pan-y}}
+.ghost{position:fixed;z-index:60;pointer-events:none;opacity:.92;box-shadow:0 6px 18px rgba(0,0,0,.25);transform:translate(-50%,-60%)}
+.score{font-weight:700;margin:0;min-height:1.5em}
+.score.ok{color:var(--ok)}.score.warn{color:var(--warn)}
+footer{font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.linkrow{display:flex;flex-wrap:wrap;gap:6px 18px}
+.linkrow a{color:var(--accent);font-weight:700}
+sub,sup{line-height:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Physik GK Q1 · Wellenoptik · Stunde 7</p>
+      <h1>Polarisation</h1>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Bereiche">
+      <button id="tab-seil" role="tab" aria-selected="true" data-tab="seil">1 · Seilwelle am Schlitz</button>
+      <button id="tab-filter" role="tab" aria-selected="false" data-tab="filter">2 · Polarisator und Analysator</button>
+      <button id="tab-zuordnung" role="tab" aria-selected="false" data-tab="zuordnung">3 · Polarisierbar?</button>
+    </nav>
+  </header>
+
+  <!-- ===================== Reiter 1: Seilwelle ===================== -->
+  <section id="view-seil" class="work" role="tabpanel" aria-labelledby="tab-seil">
+    <div class="side">
+      <div class="card">
+        <h2>Einstellungen</h2>
+        <div class="ctrl">
+          <span class="lbl">Welle</span>
+          <div class="chips" id="mode-chips">
+            <button data-m="trans" aria-pressed="true">Transversal</button>
+            <button data-m="unpol" aria-pressed="false">unpolarisiert</button>
+            <button data-m="long" aria-pressed="false">Longitudinal</button>
+          </div>
+        </div>
+        <div class="ctrl" id="phi-ctrl">
+          <div class="row"><label for="phi">Schwingungsrichtung φ</label><output id="phi-out">0°</output></div>
+          <input id="phi" type="range" min="0" max="180" step="1" value="0">
+          <div class="chips" data-for="phi"><button data-v="0">0° senkrecht</button><button data-v="45">45°</button><button data-v="90">90° waagerecht</button></div>
+        </div>
+        <div class="ctrl" id="s1-ctrl">
+          <label class="check"><input id="s1on" type="checkbox" checked> Schlitz 1 (Polarisator)</label>
+          <div class="row"><label for="th1">Schlitzrichtung θ₁</label><output id="th1-out">0°</output></div>
+          <input id="th1" type="range" min="0" max="180" step="1" value="0">
+          <div class="chips" data-for="th1"><button data-v="0">0°</button><button data-v="45">45°</button><button data-v="90">90°</button></div>
+        </div>
+        <div class="ctrl" id="s2-ctrl">
+          <label class="check"><input id="s2on" type="checkbox"> Schlitz 2 (Analysator)</label>
+          <div class="row"><label for="th2">Schlitzrichtung θ₂</label><output id="th2-out">90°</output></div>
+          <input id="th2" type="range" min="0" max="180" step="1" value="90">
+          <div class="chips" data-for="th2"><button data-v="0">0°</button><button data-v="45">45°</button><button data-v="90">90°</button></div>
+        </div>
+        <p class="caption">Winkel: 0° = senkrecht, 90° = waagerecht.</p>
+        <div class="ctrl">
+          <div class="row"><label for="speed">Tempo</label><output id="speed-out">1,0×</output></div>
+          <input id="speed" type="range" min="0.2" max="2" step="0.1" value="1">
+        </div>
+        <div class="btnrow">
+          <button class="btn primary" id="play">Pause</button>
+          <button class="btn" id="viewreset">Ansicht zurücksetzen</button>
+        </div>
+        <div class="ctrl">
+          <span class="lbl">Ansicht</span>
+          <div class="chips" id="view-chips">
+            <button data-az="-38" data-el="22">schräg</button>
+            <button data-az="0" data-el="2">von der Seite</button>
+            <button data-az="0" data-el="85">von oben</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Arbeitsaufträge</h2>
+        <ol class="tasks">
+          <li>Transversalwelle mit φ = 0° (senkrecht). Stelle Schlitz 1 zuerst senkrecht (0°), dann waagerecht (90°). Was passiert hinter dem Schlitz?</li>
+          <li>Stelle Schlitz 1 auf 45°. Wie schwingt das Seil jetzt hinter dem Schlitz?</li>
+          <li>Wähle „unpolarisiert“. Die Hand ändert ständig die Richtung. Was kommt hinter Schlitz 1 an?</li>
+          <li>Schalte Schlitz 2 dazu und drehe ihn. Bei welcher Stellung ist das Seil hinter Schlitz 2 in Ruhe?</li>
+          <li>Wähle die Longitudinalwelle und drehe die Schlitze. Was ändert sich?</li>
+        </ol>
+        <details>
+          <summary>Ergebnisse prüfen</summary>
+          <ul>
+            <li>Schlitz parallel zur Schwingungsrichtung: Die Welle läuft ungehindert durch. Schlitz gekreuzt (90°): Die Welle wird ausgelöscht, hinter dem Schlitz bleibt das Seil in Ruhe.</li>
+            <li>Bei 45° kommt eine kleinere Amplitude durch. Das Seil schwingt hinter dem Schlitz in Schlitzrichtung: Nur die Komponente parallel zum Schlitz bleibt übrig.</li>
+            <li>Hinter Schlitz 1 schwingt das Seil immer in derselben Richtung (der Schlitzrichtung), nur die Amplitude schwankt. Aus der unpolarisierten Welle ist eine linear polarisierte Welle geworden.</li>
+            <li>Stehen die Schlitze gekreuzt (θ₂ = θ₁ ± 90°), ist das Seil hinter Schlitz 2 in Ruhe. Bei paralleler Stellung läuft alles durch, was Schlitz 1 durchgelassen hat.</li>
+            <li>Bei der Longitudinalwelle haben die Schlitze keine Wirkung: Die Windungen schwingen in Ausbreitungsrichtung, und diese Bewegung wird von keiner Schlitzstellung behindert. Nur Transversalwellen lassen sich polarisieren.</li>
+          </ul>
+        </details>
+      </div>
+      <div class="card">
+        <h2>Begriffe</h2>
+        <dl class="terms">
+          <dt>unpolarisiert</dt><dd>Die Schwingungsrichtung quer zur Ausbreitung wechselt ständig und zufällig.</dd>
+          <dt>linear polarisiert</dt><dd>Die Welle schwingt immer in derselben Richtung.</dd>
+          <dt>Durchlassrichtung</dt><dd>Die Richtung, in der ein Schlitz oder Polfilter die Schwingung durchlässt.</dd>
+          <dt>Polarisator</dt><dd>Der erste Schlitz bzw. Filter. Er macht aus der Welle eine linear polarisierte Welle.</dd>
+          <dt>Analysator</dt><dd>Der zweite Schlitz bzw. Filter. Mit ihm prüft man, ob und wie die Welle polarisiert ist.</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="main">
+      <div class="card">
+        <h2>Seilwelle am Schlitz</h2>
+        <canvas id="cv1" aria-label="3D-Ansicht: Seil mit laufender Welle, zwei Platten mit drehbarem Schlitz"></canvas>
+        <p class="caption">Ziehen dreht die Ansicht. Die Welle läuft von links (Hand) nach rechts.</p>
+      </div>
+      <div class="card">
+        <h2>Blick in Ausbreitungsrichtung</h2>
+        <canvas id="ins1" aria-label="Schwingungsrichtung vor Schlitz 1, zwischen den Schlitzen und hinter Schlitz 2"></canvas>
+        <p class="caption">Kreis = Querschnitt des Seils. Gestrichelt: Schlitzrichtung. Der Pfeil zeigt, in welche Richtung und wie weit das Seil an dieser Stelle schwingt.</p>
+        <dl class="facts" id="facts1"></dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Reiter 2: Polarisator und Analysator ===================== -->
+  <section id="view-filter" class="work" role="tabpanel" aria-labelledby="tab-filter" hidden>
+    <div class="side">
+      <div class="card">
+        <h2>Einstellungen</h2>
+        <div class="ctrl">
+          <label for="src">Lichtquelle</label>
+          <select id="src">
+            <option value="lamp" selected>Lampe / Sonne (unpolarisiert)</option>
+            <option value="tablet">Tablet-Display (linear polarisiert, 45°)</option>
+            <option value="mirror">Spiegelung auf Wasser/Straße (teilweise waagerecht polarisiert)</option>
+          </select>
+        </div>
+        <div class="ctrl" id="f1-ctrl">
+          <label class="check"><input id="f1on" type="checkbox" checked> Filter 1 (Polarisator)</label>
+          <div class="row"><label for="f1">Durchlassrichtung</label><output id="f1-out">0°</output></div>
+          <input id="f1" type="range" min="0" max="180" step="1" value="0">
+          <div class="chips" data-for="f1"><button data-v="0">0°</button><button data-v="45">45°</button><button data-v="90">90°</button></div>
+        </div>
+        <div class="ctrl" id="f3-ctrl">
+          <label class="check"><input id="f3on" type="checkbox"> Filter 3 in der Mitte <span class="sub">(für Schnelle)</span></label>
+          <div class="row"><label for="f3">Durchlassrichtung</label><output id="f3-out">45°</output></div>
+          <input id="f3" type="range" min="0" max="180" step="1" value="45">
+          <div class="chips" data-for="f3"><button data-v="0">0°</button><button data-v="45">45°</button><button data-v="90">90°</button></div>
+        </div>
+        <div class="ctrl" id="f2-ctrl">
+          <label class="check"><input id="f2on" type="checkbox"> Filter 2 (Analysator)</label>
+          <div class="row"><label for="f2">Durchlassrichtung</label><output id="f2-out">0°</output></div>
+          <input id="f2" type="range" min="0" max="180" step="1" value="0">
+          <div class="chips" data-for="f2"><button data-v="0">0°</button><button data-v="45">45°</button><button data-v="90">90°</button></div>
+        </div>
+        <label class="check"><input id="pct" type="checkbox"> Helligkeit in % anzeigen <span class="sub">(Zusatz)</span></label>
+        <p class="caption">Winkel: 0° = senkrecht, 90° = waagerecht. Die Filter lassen sich auch direkt im Bild drehen.</p>
+      </div>
+      <div class="card">
+        <h2>Arbeitsaufträge</h2>
+        <ol class="tasks">
+          <li>Lampe, nur Filter 1. Drehe den Filter. Ändert sich die Helligkeit auf dem Schirm?</li>
+          <li>Schalte Filter 2 dazu. Vergleiche die Helligkeit bei paralleler Stellung, bei gekreuzter Stellung (90°) und dazwischen.</li>
+          <li>Wähle das Tablet-Display und nur einen Filter. Drehe ihn. Was zeigt das über das Licht des Displays?</li>
+          <li>Wähle die Spiegelung. Welche Durchlassrichtung muss eine Sonnenbrille haben, damit die Spiegelung möglichst dunkel wird?</li>
+          <li>Für Schnelle: Stelle Filter 1 und Filter 2 gekreuzt (0° und 90°). Schalte Filter 3 in der Mitte dazu und drehe ihn. Was beobachtest du?</li>
+        </ol>
+        <details>
+          <summary>Ergebnisse prüfen</summary>
+          <ul>
+            <li>Mit einem Filter ist das Lampenlicht immer halb so hell wie ohne Filter – in jeder Stellung. Unpolarisiertes Licht hat keine Vorzugsrichtung.</li>
+            <li>Parallel: hell (das Licht hinter Filter 1 kommt ganz durch). Gekreuzt: dunkel. Dazwischen: abgeschwächt. Hinter Filter 1 ist das Licht linear polarisiert.</li>
+            <li>Das Display wird beim Drehen eines einzigen Filters ganz dunkel. Sein Licht ist also schon linear polarisiert – das Display enthält selbst einen Polarisator.</li>
+            <li>Das gespiegelte Licht schwingt vor allem waagerecht. Eine Sonnenbrille mit senkrechter Durchlassrichtung (0°) hält es weitgehend zurück.</li>
+            <li>Filter 3 bei 45° zwischen gekreuzten Filtern: Es kommt wieder Licht durch (12,5 % der Lampe). Jeder Filter lässt nur die Komponente in seiner Richtung durch – Filter 3 „dreht“ so einen Teil des Lichts in Richtung von Filter 2.</li>
+          </ul>
+        </details>
+        <p class="note" id="malus" hidden>Zusatz: Hinter einem Filter, der um den Winkel Δ gegen die Schwingungsrichtung gedreht ist, bleibt der Anteil cos²(Δ) der Helligkeit übrig (Gesetz von Malus – nicht gefordert).</p>
+      </div>
+    </div>
+    <div class="main">
+      <div class="card">
+        <h2>Strahlengang</h2>
+        <canvas id="cv2" aria-label="Lichtquelle, drei Polfilter und Schirm; Schwingungsrichtung des Lichts zwischen den Filtern"></canvas>
+        <p class="caption">Filter von vorn gesehen (Blick in Lichtrichtung), Striche = Durchlassrichtung. Kreise oben: Schwingungsrichtung des Lichts im jeweiligen Abschnitt. Viele Pfeile = unpolarisiert, ein Doppelpfeil = linear polarisiert.</p>
+        <dl class="facts" id="facts2"></dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Reiter 3: Zuordnung ===================== -->
+  <section id="view-zuordnung" role="tabpanel" aria-labelledby="tab-zuordnung" hidden>
+    <div class="card">
+      <h2>Polarisierbar – ja oder nein?</h2>
+      <p style="margin:0">Ziehe jede Karte in das passende Feld. Du kannst eine Karte auch antippen und dann das Feld antippen. Ordne zu und begründe drei Karten auf dem Arbeitsblatt (Aufgabe 6).</p>
+      <div class="pool" id="pool" aria-label="Noch nicht zugeordnete Karten"></div>
+      <div class="zones">
+        <div class="zone" id="zone-yes" data-zone="yes" role="button" tabindex="0" aria-label="Feld: polarisierbar">
+          <h3><span>polarisierbar</span><span class="sub" id="cnt-yes">0</span></h3>
+          <p class="hintz">Schwingung quer zur Ausbreitung</p>
+          <div class="list"></div>
+        </div>
+        <div class="zone" id="zone-no" data-zone="no" role="button" tabindex="0" aria-label="Feld: nicht polarisierbar">
+          <h3><span>nicht polarisierbar</span><span class="sub" id="cnt-no">0</span></h3>
+          <p class="hintz">Schwingung längs zur Ausbreitung</p>
+          <div class="list"></div>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button class="btn primary" id="check3">Prüfen</button>
+        <button class="btn" id="shuffle3">Neu mischen</button>
+        <button class="btn" id="back3" hidden>Ausgewählte Karte zurücklegen</button>
+      </div>
+      <p class="score" id="score3" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="linkrow">
+      <a href="weisslicht-am-gitter.html" target="_blank" rel="noopener">Simulation „Weißlicht am Gitter“ (Stunde 6)</a>
+      <a href="doppelspalt-zum-gitter.html" target="_blank" rel="noopener">Simulation „Vom Doppelspalt zum Gitter“ (Stunde 5)</a>
+    </div>
+    <span>Vereinfachtes Modell. Der Schlitz ist eine Analogie für die Durchlassrichtung eines Polfilters. Die Moleküle einer Polfolie wirken mikroskopisch anders – die Analogie gilt nur für die Durchlassrichtung. Helligkeiten in Reiter 2: ideale Filter, Spiegelung zu 80 % waagerecht polarisiert.</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const tok=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const de=(x,dig)=>x.toLocaleString('de-DE',{minimumFractionDigits:dig,maximumFractionDigits:dig});
+const RAD=Math.PI/180;
+const FONT_BODY='13px "Atkinson Hyperlegible", system-ui, sans-serif';
+const FONT_BOLD='700 13px "Atkinson Hyperlegible", system-ui, sans-serif';
+const reduce=(()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}})();
+
+function prep(cv){
+  const r=cv.getBoundingClientRect(); const dpr=window.devicePixelRatio||1;
+  const W=Math.max(1,Math.round(r.width*dpr)),H=Math.max(1,Math.round(r.height*dpr));
+  if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;}
+  const c=cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,r.width,r.height);
+  return {c,w:r.width,h:r.height};
+}
+const norm180=a=>((a%180)+180)%180;
+function angDiff(a,b){ let d=norm180(a-b); return d>90?180-d:d; }  // 0…90°
+
+/* ---------- Reiter-Steuerung ---------- */
+const TABS=['seil','filter','zuordnung'];
+let current='seil';
+function showTab(name){
+  if(!TABS.includes(name)) name='seil';
+  current=name;
+  TABS.forEach(t=>{ $('view-'+t).hidden=(t!==name); $('tab-'+t).setAttribute('aria-selected',String(t===name)); });
+  try{ localStorage.setItem('pol-tab',name);}catch(e){}
+  requestDraw(); loop();
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  const t=b.dataset.tab; try{ history.replaceState(null,'','#'+t);}catch(e){}
+  showTab(t);
+}));
+window.addEventListener('hashchange',()=>showTab(location.hash.slice(1)));
+let pending=false;
+function requestDraw(){ if(pending) return; pending=true; requestAnimationFrame(()=>{pending=false; if(current==='seil'){draw1();} else if(current==='filter'){draw2();} }); }
+window.addEventListener('resize',requestDraw);
+if(window.ResizeObserver){ const ro=new ResizeObserver(requestDraw); ['cv1','ins1','cv2'].forEach(id=>ro.observe($(id))); }
+try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',requestDraw);}catch(e){}
+new MutationObserver(requestDraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+/* Chips neben Reglern */
+function bindSlider(id,fmt,onChange){
+  const inp=$(id), out=$(id+'-out'), chips=document.querySelector(`.chips[data-for="${id}"]`);
+  const sync=()=>{ out.textContent=fmt(+inp.value);
+    if(chips) chips.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===+inp.value))); };
+  inp.addEventListener('input',()=>{sync(); onChange();});
+  if(chips) chips.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{inp.value=b.dataset.v; sync(); onChange();}));
+  sync();
+  return sync;
+}
+const fmtDeg=v=>Math.round(v)+'°';
+
+/* ======================================================================
+   Reiter 1: Seilwelle am Schlitz (Canvas mit eigener 3D-Projektion)
+   Welt: x = Ausbreitungsrichtung (0 … L), y = waagerecht quer, z = senkrecht
+   Schwingungsrichtung φ: 0° = senkrecht (z), 90° = waagerecht (y)
+   ====================================================================== */
+const L=12, XS1=4.2, XS2=8.2, A=0.7, LAMBDA=2.4, PERIOD=1.2; // Längen in „Seil-Einheiten“, Periode in s
+const C=LAMBDA/PERIOD, K=2*Math.PI/LAMBDA, W=2*Math.PI/PERIOD;
+const S={mode:'trans',phi:0,s1:true,th1:0,s2:false,th2:90,speed:1,play:!reduce,az:-38,el:22};
+let tSim=12,lastT=null,raf=null;
+
+// unpolarisiert: Richtung wechselt in Blöcken von 3 Halbperioden (beim Nulldurchgang → stetig)
+function hash(n){ let x=Math.sin(n*127.1+311.7)*43758.5453; return x-Math.floor(x); }
+function phiAt(te){
+  if(S.mode!=='unpol') return S.phi;
+  const b=Math.floor(te/(1.5*PERIOD));
+  return Math.floor(hash(b)*180);
+}
+// Auslenkung (Vektor in y,z) am Ort x zur Zeit t; bzw. Längsauslenkung bei Longitudinalwelle
+function disp(x,t){
+  const te=t-x/C;
+  if(te<0) return {y:0,z:0,amp:0,dir:null};
+  const s=A*Math.sin(W*te);
+  let dir=phiAt(te), amp=1;
+  if(S.mode==='long') return {y:0,z:0,amp:1,dir:null,lx:0.35*Math.sin(W*te)};
+  if(S.s1 && x>XS1){ amp*=Math.cos((dir-S.th1)*RAD); dir=S.th1; }
+  if(S.s2 && x>XS2){ amp*=Math.cos((dir-S.th2)*RAD); dir=S.th2; }
+  const v=s*amp;
+  let y=v*Math.sin(dir*RAD), z=v*Math.cos(dir*RAD);
+  // Kurz vor einem Schlitz wird die Komponente quer zum Schlitz gebremst (Seil bleibt stetig)
+  const fade=(xs,th)=>{ const g=Math.min(1,Math.max(0,(xs-x)/0.7)); const u=[Math.sin(th*RAD),Math.cos(th*RAD)];
+    const par=y*u[0]+z*u[1]; y=par*u[0]+(y-par*u[0])*g; z=par*u[1]+(z-par*u[1])*g; };
+  if(S.s1 && x<XS1) fade(XS1,S.th1);
+  else if(S.s2 && x<XS2) fade(XS2,S.th2);
+  return {y, z, amp:Math.abs(amp), dir};
+}
+// Projektion
+function makeProj(w,h){
+  const az=S.az*RAD, el=S.el*RAD;
+  const scale=Math.min(w/(L*1.08), h/5.2);
+  const D=26; const cx=w/2, cy=h*0.54;
+  return function(x,y,z){
+    const X=x-L/2;
+    const x1=X*Math.cos(az)-y*Math.sin(az);
+    const y1=X*Math.sin(az)+y*Math.cos(az);   // Tiefe (weg vom Betrachter positiv)
+    const up=z*Math.cos(el)+y1*Math.sin(el);
+    const depth=y1*Math.cos(el)-z*Math.sin(el);
+    const f=D/(D+depth);
+    return {x:cx+x1*scale*f, y:cy-up*scale*f, d:depth, f};
+  };
+}
+function depthSlopeX(){ return Math.sin(S.az*RAD)*Math.cos(S.el*RAD); }
+
+function drawPlate(c,P,xs,th,label,col,fg){
+  const H=1.45, SL=1.15, SW=0.2;          // halbe Plattenseite, halbe Schlitzlänge/-breite
+  const corner=[[-H,-H],[H,-H],[H,H],[-H,H]];
+  const u=[Math.sin(th*RAD),Math.cos(th*RAD)], n=[u[1],-u[0]];
+  const slot=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>[a*SL*u[0]+b*SW*n[0], a*SL*u[1]+b*SW*n[1]]);
+  c.beginPath();
+  corner.forEach(([y,z],i)=>{const p=P(xs,y,z); i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y);}); c.closePath();
+  slot.slice().reverse().forEach(([y,z],i)=>{const p=P(xs,y,z); i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y);}); c.closePath();
+  c.globalAlpha=0.55; c.fillStyle=col; c.fill('evenodd'); c.globalAlpha=1;
+  c.strokeStyle=col; c.lineWidth=1.5; c.stroke();
+  const t=P(xs,0,H+0.25);
+  c.fillStyle=fg; c.font=FONT_BOLD; c.textAlign='center'; c.textBaseline='bottom';
+  c.fillText(label,t.x,t.y-2);
+}
+function drawRopeSeg(c,P,x0,x1,t,col){
+  const N=Math.max(2,Math.round((x1-x0)/0.05));
+  c.beginPath();
+  for(let i=0;i<=N;i++){
+    const x=x0+(x1-x0)*i/N; const d=disp(x,t); const p=P(x,d.y,d.z);
+    i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y);
+  }
+  c.strokeStyle=col; c.lineWidth=3.2; c.lineJoin='round'; c.lineCap='round'; c.stroke();
+}
+function drawSpringSeg(c,P,x0,x1,t,col){
+  const R=0.24, step=0.16;
+  c.strokeStyle=col; c.lineWidth=1.6;
+  for(let xe=Math.ceil(x0/step)*step; xe<x1; xe+=step){
+    const d=disp(xe,t); const x=xe+(d.lx||0);
+    c.beginPath();
+    for(let k=0;k<=16;k++){ const a=k/16*2*Math.PI; const p=P(x,R*Math.sin(a),R*Math.cos(a)); k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y); }
+    c.stroke();
+  }
+}
+function draw1(){
+  const {c,w,h}=prep($('cv1'));
+  const P=makeProj(w,h);
+  const fg=tok('--fg'), muted=tok('--muted'), plate=tok('--plate'), rope=tok('--rope'), line=tok('--line');
+  const t=tSim;
+  // Ruhelage
+  c.setLineDash([4,5]); c.strokeStyle=line; c.lineWidth=1;
+  c.beginPath(); let p=P(0,0,0); c.moveTo(p.x,p.y); p=P(L,0,0); c.lineTo(p.x,p.y); c.stroke(); c.setLineDash([]);
+  // Bereiche und Platten nach Tiefe ordnen (fern → nah)
+  const regions=[[0,S.s1?XS1:null],[XS1,S.s2?XS2:null],[XS2,null]];
+  const bounds=[0,XS1,XS2,L];
+  const items=[];
+  for(let i=0;i<3;i++) items.push({kind:'seg',x0:bounds[i],x1:bounds[i+1],xm:(bounds[i]+bounds[i+1])/2});
+  if(S.s1) items.push({kind:'plate',xs:XS1,th:S.th1,label:'Schlitz 1',xm:XS1});
+  if(S.s2) items.push({kind:'plate',xs:XS2,th:S.th2,label:'Schlitz 2',xm:XS2});
+  const sl=depthSlopeX();
+  items.sort((a,b)=> sl>=0 ? b.xm-a.xm : a.xm-b.xm);
+  items.forEach(it=>{
+    if(it.kind==='plate') drawPlate(c,P,it.xs,it.th,it.label,plate,fg);
+    else if(S.mode==='long') drawSpringSeg(c,P,it.x0,it.x1,t,rope);
+    else drawRopeSeg(c,P,it.x0,it.x1,t,rope);
+  });
+  // Hand / Erreger
+  const d0=disp(0,t); const hp=P(d0.lx||0,d0.y,d0.z);
+  c.fillStyle=fg; c.beginPath(); c.arc(hp.x,hp.y,6,0,2*Math.PI); c.fill();
+  c.font=FONT_BOLD; c.textAlign='center'; c.textBaseline='top'; c.fillStyle=fg;
+  const hl=P(0,0,-1.3); c.fillText('Hand',hl.x,hl.y);
+  // Ausbreitungspfeil (unten rechts, Richtung wie die x-Achse in der aktuellen Ansicht)
+  const q0=P(0,0,0), q1=P(L,0,0); let ux=q1.x-q0.x, uy=q1.y-q0.y; const ul=Math.hypot(ux,uy)||1; ux/=ul; uy/=ul;
+  const ax=w-20-Math.max(0,ux)*60, ay=h-22-Math.max(0,uy)*60, bx=ax+ux*60, by2=ay+uy*60;
+  c.strokeStyle=muted; c.fillStyle=muted; c.lineWidth=1.5;
+  if(ul>20){
+    c.beginPath(); c.moveTo(ax,ay); c.lineTo(bx,by2); c.stroke();
+    const ang=Math.atan2(uy,ux);
+    c.beginPath(); c.moveTo(bx,by2); c.lineTo(bx-9*Math.cos(ang-0.4),by2-9*Math.sin(ang-0.4)); c.lineTo(bx-9*Math.cos(ang+0.4),by2-9*Math.sin(ang+0.4)); c.closePath(); c.fill();
+    c.font=FONT_BODY; c.textBaseline='middle'; c.textAlign='right'; c.fillText('Ausbreitung',Math.min(ax,bx)-8,(ay+by2)/2);
+  }
+  drawInset();
+  updateFacts1();
+}
+
+/* Querschnitts-Ansicht: drei Stellen */
+function sampleState(x){
+  // aktuelle Auslenkung und Richtungs-Spur der letzten Perioden an der Stelle x
+  const now=disp(x,tSim);
+  const trail=[];
+  if(S.mode!=='long'){
+    for(let k=0;k<60;k++){ const d=disp(x,tSim-k*PERIOD*0.1); if(d.dir!==null) trail.push(d); }
+  }
+  return {now,trail};
+}
+function drawInset(){
+  const {c,w,h}=prep($('ins1'));
+  const fg=tok('--fg'), muted=tok('--muted'), rope=tok('--rope'), line=tok('--line'), plate=tok('--plate');
+  const spots=[{x:XS1*0.55,t:'vor Schlitz 1',slot:null},{x:(XS1+XS2)/2,t:S.s1?'hinter Schlitz 1':'Mitte',slot:null},{x:XS2+(L-XS2)*0.5,t:S.s2?'hinter Schlitz 2':'rechts',slot:null}];
+  const cw=w/3; const R=Math.min(cw*0.32,(h-34)/2.1);
+  spots.forEach((sp,i)=>{
+    const cx=cw*(i+0.5), cy=18+R+6;
+    c.strokeStyle=line; c.lineWidth=1.2; c.beginPath(); c.arc(cx,cy,R,0,2*Math.PI); c.stroke();
+    // Schlitzrichtung(en) davor
+    const slots=[]; if(i>=1&&S.s1) slots.push(S.th1); if(i>=2&&S.s2) slots.push(S.th2);
+    c.setLineDash([5,4]); c.strokeStyle=plate; c.lineWidth=2;
+    slots.slice(-1).forEach(th=>{ const u=[Math.sin(th*RAD),Math.cos(th*RAD)]; c.beginPath(); c.moveTo(cx-u[0]*R,cy+u[1]*R); c.lineTo(cx+u[0]*R,cy-u[1]*R); c.stroke(); });
+    c.setLineDash([]);
+    const st=sampleState(sp.x);
+    if(S.mode==='long'){
+      c.fillStyle=rope; c.beginPath(); c.arc(cx,cy,4,0,2*Math.PI); c.fill();
+      c.fillStyle=muted; c.font=FONT_BODY; c.textAlign='center'; c.textBaseline='middle';
+      c.fillText('Schwingung längs',cx,cy+R*0.55);
+    } else {
+      // Spur (verblasst)
+      const sc=R*0.92/A;
+      st.trail.forEach((d,k)=>{ if(d.amp<0.02) return; const u=[Math.sin(d.dir*RAD),Math.cos(d.dir*RAD)]; const L2=A*d.amp*sc;
+        c.globalAlpha=0.06+0.25*(1-k/60); c.strokeStyle=rope; c.lineWidth=2;
+        c.beginPath(); c.moveTo(cx-u[0]*L2,cy+u[1]*L2); c.lineTo(cx+u[0]*L2,cy-u[1]*L2); c.stroke(); });
+      c.globalAlpha=1;
+      const d=st.now; const px=cx+d.y*sc, py=cy-d.z*sc;
+      c.strokeStyle=rope; c.lineWidth=2;
+      c.beginPath(); c.moveTo(cx,cy); c.lineTo(px,py); c.stroke();
+      c.fillStyle=rope; c.beginPath(); c.arc(px,py,5,0,2*Math.PI); c.fill();
+    }
+    c.fillStyle=fg; c.font=FONT_BOLD; c.textAlign='center'; c.textBaseline='top';
+    c.fillText(sp.t,cx,2);
+  });
+}
+function stateText(x){
+  if(S.mode==='long') return 'longitudinal – Schwingung in Ausbreitungsrichtung';
+  // varies = Amplitude schwankt (aus unpolarisierter Welle entstanden)
+  let unpol=(S.mode==='unpol'), dir=S.phi, amp=1, varies=false;
+  const slit=th=>{ if(unpol){unpol=false; varies=true; dir=th; amp=1;} else {amp*=Math.cos((dir-th)*RAD); dir=th;} };
+  if(S.s1 && x>XS1) slit(S.th1);
+  if(S.s2 && x>XS2) slit(S.th2);
+  if(unpol) return 'unpolarisiert – Richtung wechselt ständig';
+  if(Math.abs(amp)<0.03) return '<span class="state-dark">ausgelöscht – das Seil ist in Ruhe</span>';
+  if(varies) return `linear polarisiert, Richtung <span class="num">${Math.round(norm180(dir))}°</span>, Amplitude schwankt`;
+  const a=Math.abs(amp);
+  if(a<0.03) return '<span class="state-dark">ausgelöscht – das Seil ist in Ruhe</span>';
+  return `linear polarisiert, Richtung <span class="num">${Math.round(norm180(dir))}°</span>, Amplitude <span class="num">${Math.round(a*100)} %</span>`;
+}
+let lastFacts='';
+function updateFacts1(){
+  const parts=[['vor Schlitz 1',stateText(1)],[S.s1?'hinter Schlitz 1':'Mitte (kein Schlitz 1)',stateText((XS1+XS2)/2)],[S.s2?'hinter Schlitz 2':'rechts (kein Schlitz 2)',stateText(L-0.5)]];
+  const html=parts.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  if(html!==lastFacts){ $('facts1').innerHTML=html; lastFacts=html; }
+}
+
+function loop(){
+  if(raf) cancelAnimationFrame(raf), raf=null;
+  if(current!=='seil' || !S.play){ lastT=null; return; }
+  const step=(ts)=>{
+    if(current!=='seil'||!S.play){raf=null;lastT=null;return;}
+    if(lastT!==null) tSim+=Math.min(0.05,(ts-lastT)/1000)*S.speed;
+    lastT=ts; draw1(); raf=requestAnimationFrame(step);
+  };
+  raf=requestAnimationFrame(step);
+}
+// Bedienung Reiter 1
+const modeChips=$('mode-chips');
+function setMode(m){ S.mode=m; modeChips.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m)));
+  $('phi').disabled=(m!=='trans'); $('phi-ctrl').classList.toggle('off',m!=='trans'); lastFacts=''; requestDraw(); }
+modeChips.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.m)));
+bindSlider('phi',fmtDeg,()=>{S.phi=+$('phi').value; requestDraw();});
+bindSlider('th1',fmtDeg,()=>{S.th1=+$('th1').value; requestDraw();});
+bindSlider('th2',fmtDeg,()=>{S.th2=+$('th2').value; requestDraw();});
+bindSlider('speed',v=>de(v,1)+'×',()=>{S.speed=+$('speed').value;});
+function syncSlitOn(){ S.s1=$('s1on').checked; S.s2=$('s2on').checked;
+  $('th1').disabled=!S.s1; $('th2').disabled=!S.s2;
+  $('s1-ctrl').querySelectorAll('.row,.chips,input[type=range]').forEach(e=>e.classList.toggle('off',!S.s1));
+  $('s2-ctrl').querySelectorAll('.row,.chips,input[type=range]').forEach(e=>e.classList.toggle('off',!S.s2));
+  requestDraw(); }
+$('s1on').addEventListener('change',syncSlitOn); $('s2on').addEventListener('change',syncSlitOn);
+function syncPlay(){ $('play').textContent=S.play?'Pause':'Abspielen'; }
+$('play').addEventListener('click',()=>{S.play=!S.play; syncPlay(); loop(); requestDraw();});
+function setView(az,el){ S.az=az; S.el=el; $('view-chips').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.az===az&&+b.dataset.el===el))); requestDraw(); }
+$('view-chips').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setView(+b.dataset.az,+b.dataset.el)));
+$('viewreset').addEventListener('click',()=>setView(-38,22));
+// Ziehen dreht die Ansicht
+(function(){
+  const cv=$('cv1'); let drag=null;
+  cv.addEventListener('pointerdown',e=>{ drag={x:e.clientX,y:e.clientY,az:S.az,el:S.el}; cv.setPointerCapture(e.pointerId); cv.classList.add('drag'); });
+  cv.addEventListener('pointermove',e=>{ if(!drag) return;
+    const az=Math.max(-89,Math.min(89,drag.az+(e.clientX-drag.x)*0.4));
+    const el=Math.max(-10,Math.min(88,drag.el+(e.clientY-drag.y)*0.4));
+    setView(Math.round(az),Math.round(el)); });
+  const end=()=>{drag=null; cv.classList.remove('drag');};
+  cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end);
+})();
+
+/* ======================================================================
+   Reiter 2: Polarisator und Analysator
+   Lichtzustand: unpolarisierter Anteil Iu, polarisierter Anteil Ip mit Richtung psi
+   ====================================================================== */
+const F={src:'lamp',f1:{on:true,a:0},f3:{on:false,a:45},f2:{on:false,a:0},pct:false};
+const SRC={
+  lamp:{name:'Lampe',Iu:1,Ip:0,psi:0},
+  tablet:{name:'Tablet-Display',Iu:0,Ip:1,psi:45},
+  mirror:{name:'Spiegelung',Iu:0.2,Ip:0.8,psi:90}
+};
+function through(st,a){ return {Iu:0, Ip:st.Iu/2+st.Ip*Math.cos((st.psi-a)*RAD)**2, psi:a}; }
+function chain(){
+  const s0=SRC[F.src]; let st={Iu:s0.Iu,Ip:s0.Ip,psi:s0.psi}; const seq=[st];
+  [F.f1,F.f3,F.f2].forEach(f=>{ if(f.on) st=through(st,f.a); seq.push(st); });
+  return seq; // 4 Abschnitte
+}
+function Imax(){
+  const s0=SRC[F.src]; const any=F.f1.on||F.f2.on||F.f3.on;
+  return any ? s0.Iu/2+s0.Ip : 1;
+}
+function qual(I){ const r=I/Imax(); if(I<0.03) return ['dunkel','state-dark']; if(r>0.8) return ['hell','state-ok']; if(r<0.2) return ['fast dunkel','state-dark']; return ['abgeschwächt','state-weak']; }
+function polText(st){
+  const I=st.Iu+st.Ip; if(I<0.005) return 'kein Licht';
+  if(st.Ip<0.005) return 'unpolarisiert';
+  if(st.Iu<0.005) return `linear polarisiert, Richtung <span class="num">${Math.round(norm180(st.psi))}°</span>`;
+  return `teilweise polarisiert, vor allem <span class="num">${Math.round(norm180(st.psi))}°</span>`;
+}
+let geo2=null;
+function draw2(){
+  const {c,w,h}=prep($('cv2'));
+  const sf=tok('--stage-fg');
+  const seq=chain();
+  const R=Math.max(20,Math.min(46,w/13));
+  const by=h*0.64;
+  const xs={src:w*0.08,f1:w*0.30,f3:w*0.50,f2:w*0.70,scr:w*0.91};
+  const order=['src','f1','f3','f2','scr'];
+  // Strahl-Abschnitte
+  const lightCol=(I)=>`rgba(255,236,170,${(0.04+0.9*Math.min(1,I)).toFixed(3)})`;
+  for(let i=0;i<4;i++){
+    const st=seq[i]; const I=st.Iu+st.Ip;
+    const x0=xs[order[i]], x1=xs[order[i+1]];
+    c.fillStyle=lightCol(I); c.fillRect(x0,by-R*0.38,x1-x0,R*0.76);
+  }
+  // Quelle
+  const sx=xs.src; c.fillStyle='#ffe9a8'; c.strokeStyle='#ffe9a8'; c.lineWidth=2;
+  if(F.src==='lamp'){ c.beginPath(); c.arc(sx,by,R*0.42,0,2*Math.PI); c.fill();
+    for(let k=0;k<8;k++){const a=k*Math.PI/4; c.beginPath(); c.moveTo(sx+Math.cos(a)*R*0.55,by+Math.sin(a)*R*0.55); c.lineTo(sx+Math.cos(a)*R*0.78,by+Math.sin(a)*R*0.78); c.stroke();} }
+  else if(F.src==='tablet'){ c.fillStyle='#9fb4c8'; c.fillRect(sx-R*0.42,by-R*0.7,R*0.84,R*1.4); c.fillStyle='#f4f8ff'; c.fillRect(sx-R*0.34,by-R*0.6,R*0.68,R*1.2); }
+  else { c.strokeStyle='#8fc3ff'; for(let k=0;k<3;k++){ c.beginPath(); for(let j=0;j<=20;j++){ const x=sx-R*0.6+j*R*0.06; const y=by+R*(-0.35+k*0.35)+Math.sin(j*0.9)*R*0.08; j?c.lineTo(x,y):c.moveTo(x,y);} c.stroke(); } }
+  c.fillStyle=sf; c.font=FONT_BOLD; c.textAlign='center'; c.textBaseline='top';
+  c.fillText(SRC[F.src].name,sx+ (w<520?R*0.3:0),by+R+8);
+  // Filter
+  const fl=[['f1','Filter 1','Polarisator'],['f3','Filter 3','Mitte'],['f2','Filter 2','Analysator']];
+  geo2={R,by,xs};
+  fl.forEach(([k,n1,n2])=>{
+    const f=F[k], cx=xs[k];
+    c.globalAlpha=f.on?1:0.28;
+    c.fillStyle='rgba(120,135,150,0.35)'; c.beginPath(); c.arc(cx,by,R,0,2*Math.PI); c.fill();
+    c.strokeStyle=sf; c.lineWidth=2; c.stroke();
+    c.save(); c.beginPath(); c.arc(cx,by,R-2,0,2*Math.PI); c.clip();
+    const u=[Math.sin(f.a*RAD),-Math.cos(f.a*RAD)], n=[-u[1],u[0]];
+    c.strokeStyle='rgba(215,222,230,0.55)'; c.lineWidth=1.3;
+    for(let j=-5;j<=5;j++){ const ox=cx+n[0]*j*R/5.5, oy=by+n[1]*j*R/5.5; c.beginPath(); c.moveTo(ox-u[0]*R,oy-u[1]*R); c.lineTo(ox+u[0]*R,oy+u[1]*R); c.stroke(); }
+    c.restore();
+    // Griff
+    const hx=cx+u[0]*R, hy=by+u[1]*R; c.fillStyle=sf; c.beginPath(); c.arc(hx,hy,5,0,2*Math.PI); c.fill();
+    c.globalAlpha=1;
+    c.fillStyle=sf; c.font=FONT_BOLD; c.textAlign='center'; c.textBaseline='top';
+    c.fillText(n1+(f.on?'':' (aus)'),cx,by+R+8);
+    c.font=FONT_BODY; c.fillText(f.on?(n2+' · '+Math.round(f.a)+'°'):n2,cx,by+R+24);
+  });
+  // Schirm
+  const last=seq[3]; const I=last.Iu+last.Ip;
+  const scx=xs.scr, sw=Math.min(R*1.3,w-scx-6);
+  c.fillStyle='#1c232b'; c.fillRect(scx-sw/2,by-R*1.1,sw,R*2.2); c.fillStyle=lightCol(I); c.fillRect(scx-sw/2,by-R*1.1,sw,R*2.2);
+  c.strokeStyle=sf; c.lineWidth=1.5; c.strokeRect(scx-sw/2,by-R*1.1,sw,R*2.2);
+  const [q]=qual(I);
+  c.fillStyle=sf; c.font=FONT_BOLD; c.textAlign='center'; c.textBaseline='top';
+  c.fillText('Schirm',scx,by+R*1.1+8);
+  c.font=FONT_BODY; c.fillText(q+(F.pct?' · '+Math.round(I*100)+' %':''),scx,by+R*1.1+24);
+  // Polarisations-Symbole über den Abschnitten
+  const g=Math.max(14,Math.min(28,w/24)); const gy=Math.max(g+6,by-R-g-18);
+  for(let i=0;i<4;i++){
+    const st=seq[i]; const x=(xs[order[i]]+xs[order[i+1]])/2; drawGlyph(c,x,gy,g,st,sf);
+  }
+}
+function arrow2(c,x,y,dx,dy){ // Doppelpfeil
+  const L2=Math.hypot(dx,dy); if(L2<2) return; const ux=dx/L2, uy=dy/L2, hs=Math.min(6,L2*0.45);
+  c.beginPath(); c.moveTo(x-dx,y-dy); c.lineTo(x+dx,y+dy); c.stroke();
+  [[1],[-1]].forEach(([s])=>{ const tx=x+s*dx, ty=y+s*dy; c.beginPath(); c.moveTo(tx,ty);
+    c.lineTo(tx-s*ux*hs+uy*hs*0.6, ty-s*uy*hs-ux*hs*0.6); c.lineTo(tx-s*ux*hs-uy*hs*0.6, ty-s*uy*hs+ux*hs*0.6); c.closePath(); c.fill(); });
+}
+function drawGlyph(c,x,y,g,st,sf){
+  c.strokeStyle='rgba(215,222,230,0.4)'; c.lineWidth=1; c.beginPath(); c.arc(x,y,g,0,2*Math.PI); c.stroke();
+  c.strokeStyle='#ffe08a'; c.fillStyle='#ffe08a'; c.lineWidth=2;
+  const amp=a=>g*0.85*Math.sqrt(Math.max(0,a));
+  if(st.Iu>0.005){ const r=amp(st.Iu)*0.95; for(let k=0;k<4;k++){ const a=k*Math.PI/4; arrow2(c,x,y,Math.sin(a)*r,-Math.cos(a)*r);} }
+  if(st.Ip>0.005){ const r=amp(st.Ip+st.Iu*0)+0; arrow2(c,x,y,Math.sin(st.psi*RAD)*r,-Math.cos(st.psi*RAD)*r); }
+  if(st.Iu+st.Ip<0.005){ c.fillStyle='rgba(215,222,230,0.6)'; c.font=FONT_BODY; c.textAlign='center'; c.textBaseline='middle'; c.fillText('–',x,y); }
+}
+function updateFacts2(){
+  const seq=chain(); const last=seq[3]; const I=last.Iu+last.Ip; const [q,cls]=qual(I);
+  const parts=[
+    ['Helligkeit am Schirm',`<span class="${cls}">${q}</span>`+(F.pct?` <span class="num">(${de(I*100,1)} % der Quelle)</span>`:'')],
+    ['Licht am Schirm',polText(last)],
+    ['Licht von der Quelle',polText(seq[0])]
+  ];
+  $('facts2').innerHTML=parts.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  $('malus').hidden=!F.pct;
+}
+const syncF={};
+['f1','f2','f3'].forEach(k=>{
+  syncF[k]=bindSlider(k,fmtDeg,()=>{F[k].a=+$(k).value; upd2();});
+  $(k+'on').addEventListener('change',()=>{F[k].on=$(k+'on').checked; syncFOn(); upd2();});
+});
+function syncFOn(){ ['f1','f2','f3'].forEach(k=>{ $(k).disabled=!F[k].on; $(k+'-ctrl').querySelectorAll('.row,.chips,input[type=range]').forEach(e=>e.classList.toggle('off',!F[k].on)); }); }
+$('src').addEventListener('change',()=>{F.src=$('src').value; upd2();});
+$('pct').addEventListener('change',()=>{F.pct=$('pct').checked; upd2();});
+function upd2(){ updateFacts2(); requestDraw(); }
+// Filter im Bild drehen
+(function(){
+  const cv=$('cv2'); let drag=null;
+  function hit(e){ if(!geo2) return null; const r=cv.getBoundingClientRect(); const x=e.clientX-r.left, y=e.clientY-r.top;
+    for(const k of ['f1','f3','f2']){ if(Math.hypot(x-geo2.xs[k],y-geo2.by)<=geo2.R+8 && F[k].on) return {k,x,y}; } return null; }
+  function setFrom(e,k){ const r=cv.getBoundingClientRect(); const x=e.clientX-r.left-geo2.xs[k], y=e.clientY-r.top-geo2.by;
+    if(Math.hypot(x,y)<4) return; let a=Math.atan2(x,-y)/RAD; a=Math.round(norm180(a)); if(a===180)a=0;
+    F[k].a=a; $(k).value=a; syncF[k](); upd2(); }
+  cv.addEventListener('pointerdown',e=>{ const h=hit(e); if(!h) return; drag=h.k; cv.setPointerCapture(e.pointerId); cv.style.touchAction='none'; setFrom(e,drag); e.preventDefault(); });
+  cv.addEventListener('pointermove',e=>{ if(drag) setFrom(e,drag); else cv.style.cursor=hit(e)?'grab':'default'; });
+  const end=()=>{drag=null; cv.style.touchAction='';};
+  cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end);
+  // auf Touch-Geräten: Ziehen über einem Filter soll nicht scrollen
+  cv.addEventListener('touchstart',e=>{ const t=e.touches[0]; if(t && hit({clientX:t.clientX,clientY:t.clientY})) e.preventDefault(); },{passive:false});
+})();
+
+/* ======================================================================
+   Reiter 3: Polarisierbar – ja oder nein?
+   ====================================================================== */
+const CARDS=[
+  {id:'seil',t:'Seilwelle (Hand bewegt sich auf und ab)',yes:true,why:'Das Seil schwingt quer zur Ausbreitung – Transversalwelle.'},
+  {id:'schall',t:'Schallwelle in Luft',yes:false,why:'Die Luft schwingt in Ausbreitungsrichtung hin und her (Verdichtungen) – Longitudinalwelle.'},
+  {id:'feder',t:'Schraubenfeder, in Längsrichtung angestoßen',yes:false,why:'Die Windungen schwingen längs zur Ausbreitung – Longitudinalwelle.'},
+  {id:'lampe',t:'Licht einer Glühlampe',yes:true,why:'Licht ist eine Transversalwelle. Das Lampenlicht ist unpolarisiert, lässt sich aber mit einem Polfilter polarisieren.'},
+  {id:'tablet',t:'Licht vom Tablet-Display',yes:true,why:'Transversalwelle – das Licht ist sogar schon linear polarisiert.'},
+  {id:'ultra',t:'Ultraschall im Körper (Sonografie)',yes:false,why:'Schall im Gewebe ist eine Druckwelle – longitudinal.'},
+  {id:'funk',t:'Radiowellen / WLAN',yes:true,why:'Elektromagnetische Wellen wie Licht – transversal. Antennen senden polarisiert.'},
+  {id:'pwelle',t:'Erdbeben: P-Welle (Druckwelle)',yes:false,why:'Das Gestein wird in Ausbreitungsrichtung gestaucht und gedehnt – longitudinal.'},
+  {id:'swelle',t:'Erdbeben: S-Welle (Scherwelle)',yes:true,why:'Das Gestein schwingt quer zur Ausbreitung – transversal.'},
+  {id:'maschine',t:'Wellenmaschine (Stäbe schwingen quer)',yes:true,why:'Die Stäbe schwingen quer zur Ausbreitung – transversal.'}
+];
+const place={}; let selected=null, checked=false;
+function cardEl(cd){
+  const b=document.createElement('button'); b.type='button'; b.className='wcard'; b.dataset.id=cd.id; b.setAttribute('aria-pressed','false');
+  b.innerHTML=`<span>${cd.t}</span><span class="why" hidden></span>`; return b;
+}
+const cardNodes={}; CARDS.forEach(cd=>cardNodes[cd.id]=cardEl(cd));
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function reset3(){ CARDS.forEach(cd=>place[cd.id]='pool'); selected=null; checked=false; render3(shuffle(CARDS.map(c=>c.id))); $('score3').textContent=''; $('score3').className='score'; }
+let poolOrder=[];
+function render3(order){
+  if(order) poolOrder=order;
+  const pool=$('pool'), ly=$('zone-yes').querySelector('.list'), ln=$('zone-no').querySelector('.list');
+  poolOrder.forEach(id=>{ const n=cardNodes[id]; const tgt=place[id]==='pool'?pool:place[id]==='yes'?ly:ln; if(n.parentNode!==tgt) tgt.appendChild(n); });
+  // Reihenfolge in Zonen: Zuordnungsreihenfolge beibehalten (append)
+  CARDS.forEach(cd=>{ const n=cardNodes[cd.id]; n.setAttribute('aria-pressed',String(selected===cd.id));
+    const why=n.querySelector('.why'); n.classList.remove('ok','bad');
+    if(checked && place[cd.id]!=='pool'){ const right=(place[cd.id]==='yes')===cd.yes; n.classList.add(right?'ok':'bad');
+      why.hidden=false; why.textContent=(right?'Richtig: ':'Nicht ganz: ')+(cd.yes?'polarisierbar, weil ':'nicht polarisierbar, weil ')+cd.why.charAt(0).toLowerCase()+cd.why.slice(1); }
+    else why.hidden=true; });
+  $('cnt-yes').textContent=ly.children.length; $('cnt-no').textContent=ln.children.length;
+  if(!pool.children.length){ const p=document.createElement('p'); p.className='caption'; p.textContent='Alle Karten sind zugeordnet. Tippe auf „Prüfen“.'; p.dataset.ph='1'; pool.appendChild(p); }
+  else { pool.querySelectorAll('[data-ph]').forEach(p=>{ if(pool.children.length>1) p.remove(); }); }
+  $('back3').hidden=!(selected && place[selected]!=='pool');
+}
+function moveTo(id,zone){ if(place[id]===zone) return; place[id]=zone; const n=cardNodes[id];
+  const tgt=zone==='pool'?$('pool'):$('zone-'+zone).querySelector('.list'); tgt.appendChild(n);
+  $('pool').querySelectorAll('[data-ph]').forEach(p=>p.remove());
+  if(checked){ checked=false; $('score3').textContent=''; }
+  selected=null; render3(); }
+// Pointer-Ziehen + Antippen
+(function(){
+  let drag=null;
+  function zoneAt(x,y){ const el=document.elementFromPoint(x,y); if(!el) return null; const z=el.closest('.zone'); if(z) return z.dataset.zone; if(el.closest('#pool')) return 'pool'; return null; }
+  document.addEventListener('pointerdown',e=>{ const card=e.target.closest('.wcard'); if(!card) return;
+    drag={id:card.dataset.id,x:e.clientX,y:e.clientY,moved:false,ghost:null,node:card,pid:e.pointerId};
+    try{card.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  document.addEventListener('pointermove',e=>{ if(!drag||e.pointerId!==drag.pid) return;
+    if(!drag.moved && Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>6){ drag.moved=true;
+      const g=drag.node.cloneNode(true); g.classList.add('ghost'); g.style.width=drag.node.getBoundingClientRect().width+'px'; document.body.appendChild(g); drag.ghost=g; drag.node.style.opacity='.35'; }
+    if(drag.moved){ drag.ghost.style.left=e.clientX+'px'; drag.ghost.style.top=e.clientY+'px';
+      const z=zoneAt(e.clientX,e.clientY); document.querySelectorAll('.zone').forEach(n=>n.classList.toggle('hot',n.dataset.zone===z)); }
+  });
+  function finish(e,cancel){ if(!drag||e.pointerId!==drag.pid) return; const d=drag; drag=null;
+    document.querySelectorAll('.zone').forEach(n=>n.classList.remove('hot'));
+    if(d.moved){ d.ghost.remove(); d.node.style.opacity=''; if(!cancel){ const z=zoneAt(e.clientX,e.clientY); if(z) moveTo(d.id,z); } }
+    else if(!cancel){ selected=(selected===d.id)?null:d.id; render3(); }
+  }
+  document.addEventListener('pointerup',e=>finish(e,false));
+  document.addEventListener('pointercancel',e=>finish(e,true));
+  document.querySelectorAll('.zone').forEach(z=>{
+    const go=()=>{ if(selected) moveTo(selected,z.dataset.zone); };
+    z.addEventListener('click',e=>{ if(e.target.closest('.wcard')) return; go(); });
+    z.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+  });
+  $('pool').addEventListener('click',e=>{ if(e.target.closest('.wcard')) return; if(selected) moveTo(selected,'pool'); });
+  // Tastatur: Karte mit Enter auswählen
+  document.addEventListener('keydown',e=>{ const card=e.target.closest&&e.target.closest('.wcard'); if(!card) return; if(e.key==='Enter'||e.key===' '){ e.preventDefault(); selected=(selected===card.dataset.id)?null:card.dataset.id; render3(); } });
+})();
+$('back3').addEventListener('click',()=>{ if(selected) moveTo(selected,'pool'); });
+$('shuffle3').addEventListener('click',reset3);
+$('check3').addEventListener('click',()=>{
+  checked=true; selected=null; render3();
+  const placed=CARDS.filter(cd=>place[cd.id]!=='pool'); const right=placed.filter(cd=>(place[cd.id]==='yes')===cd.yes).length;
+  const open=CARDS.length-placed.length; const s=$('score3');
+  s.textContent=`${right} von ${placed.length} zugeordneten Karten richtig.`+(open?` Noch ${open} ${open===1?'Karte':'Karten'} offen.`:(right===CARDS.length?' Alles richtig: Polarisierbar sind genau die Transversalwellen.':''));
+  s.className='score '+(right===CARDS.length?'ok':'warn');
+});
+
+/* ---------- Start ---------- */
+syncSlitOn(); syncFOn(); syncPlay(); setMode('trans'); setView(-38,22); reset3(); updateFacts2();
+let startTab=location.hash.slice(1);
+if(!TABS.includes(startTab)){ try{ startTab=localStorage.getItem('pol-tab')||'seil'; }catch(e){ startTab='seil'; } }
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(requestDraw);
+showTab(startTab);
+})();
+</script>
+</body>
+</html>

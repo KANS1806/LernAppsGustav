@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vom Doppelspalt zum Gitter</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/bricolage-grotesque.css">
+<link rel="stylesheet" href="../fonts/jetbrains-mono.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: Kopf mit Reitern; darunter je Reiter eine Arbeitsfläche – links Regler und Aufträge, rechts Schirm, Diagramm und Messwerte; schmal: gestapelt */
+:root{
+  --bg:#edf0f3;
+  --panel:#ffffff;
+  --line:#d3d9e1;
+  --fg:#15202b;
+  --muted:#556272;
+  --accent:#2b4ea8;
+  --accent-soft:#e2e8f8;
+  --ok:#1b7443;
+  --warn:#9a5208;
+  --bad:#b0271f;
+  --wl-shade:0.8;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1319;--panel:#161d26;--line:#2a3542;--fg:#e4e9ef;--muted:#97a4b3;
+    --accent:#93acff;--accent-soft:#1f2a44;--ok:#5fd08e;--warn:#f0b35c;--bad:#ff8a80;--wl-shade:1;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1319;--panel:#161d26;--line:#2a3542;--fg:#e4e9ef;--muted:#97a4b3;
+  --accent:#93acff;--accent-soft:#1f2a44;--ok:#5fd08e;--warn:#f0b35c;--bad:#ff8a80;--wl-shade:1;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+h1{font-family:var(--f-display);font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-0.01em}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:700;border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.work{display:grid;grid-template-columns:minmax(260px,320px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.work{grid-template-columns:1fr}}
+.side,.main{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{font-family:var(--f-display);font-size:1.12rem;margin:0}
+h3{font-size:.8rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+.ctrl{display:flex;flex-direction:column;gap:4px}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctrl label{font-weight:700}
+output,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:.92rem}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select,input[type=number],input[type=text]{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button,.btn{font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:6px;padding:4px 10px;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:700}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel);font-weight:700}
+.check{display:flex;gap:8px;align-items:center}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+canvas{display:block;width:100%;touch-action:pan-y}
+#cv1{height:400px}
+#diag2{height:340px}
+#strip2{height:96px}
+#cv3{height:140px;cursor:ew-resize}
+@media (max-width:520px){#cv1{height:340px}#diag2{height:280px}}
+.caption{font-size:.85rem;color:var(--muted);margin:0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 18px;margin:0}
+.facts div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.facts dt{font-size:.85rem;color:var(--muted)}
+.facts dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:1rem}
+ol.tasks{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:8px}
+details{border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-weight:700;color:var(--accent)}
+details ul{margin:8px 0 0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem}
+th,td{text-align:right;padding:6px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:center}
+th{font-weight:700;color:var(--muted);font-size:.82rem}
+td{font-family:var(--f-mono)}
+tr.no td{color:var(--bad);font-family:var(--f-body)}
+.formula{font-family:var(--f-mono);background:var(--accent-soft);color:var(--fg);padding:8px 10px;border-radius:6px;font-size:.95rem}
+.answer{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.answer input{width:120px}
+.fb{font-weight:700;min-height:1.5em;margin:0}
+.fb.ok{color:var(--ok)}.fb.warn{color:var(--warn)}.fb.bad{color:var(--bad)}
+ol.hints{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+.marker{font-family:var(--f-mono);font-size:1.05rem}
+footer{font-size:.8rem;color:var(--muted)}
+sub,sup{line-height:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Physik GK Q1 · Wellenoptik · Stunde 5</p>
+      <h1>Vom Doppelspalt zum Gitter</h1>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Bereiche">
+      <button id="tab-mehrfachspalt" role="tab" aria-selected="true" data-tab="mehrfachspalt">1 · Mehrfachspalt</button>
+      <button id="tab-gitter" role="tab" aria-selected="false" data-tab="gitter">2 · Gitter</button>
+      <button id="tab-uebung" role="tab" aria-selected="false" data-tab="uebung">3 · Übung</button>
+    </nav>
+  </header>
+
+  <!-- ===================== Reiter 1 ===================== -->
+  <section id="view-mehrfachspalt" class="work" role="tabpanel" aria-labelledby="tab-mehrfachspalt">
+    <div class="side">
+      <div class="card">
+        <h2>Einstellungen</h2>
+        <div class="ctrl">
+          <div class="row"><label for="n">Anzahl der Spalte N</label><output id="n-out">2</output></div>
+          <input id="n" type="range" min="2" max="100" step="1" value="2">
+          <div class="chips" id="n-chips">
+            <button data-n="2">2</button><button data-n="3">3</button><button data-n="4">4</button><button data-n="5">5</button><button data-n="10">10</button><button data-n="20">20</button><button data-n="100">100</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><label for="lam1">Wellenlänge λ</label><output id="lam1-out">650 nm</output></div>
+          <input id="lam1" type="range" min="400" max="700" step="5" value="650">
+        </div>
+        <div class="ctrl">
+          <div class="row"><label for="d1">Spaltabstand d</label></div>
+          <select id="d1">
+            <option value="0.10">0,10 mm</option>
+            <option value="0.25" selected>0,25 mm</option>
+            <option value="0.50">0,50 mm</option>
+          </select>
+        </div>
+        <div class="ctrl">
+          <div class="row"><label for="e1">Schirmabstand e</label><output id="e1-out">4,0 m</output></div>
+          <input id="e1" type="range" min="2" max="5" step="0.1" value="4">
+        </div>
+        <label class="check"><input id="lupe" type="checkbox"> Lupe: nur von 0. bis 1. Hauptmaximum</label>
+        <label class="check"><input id="cmp" type="checkbox"> Doppelspalt zum Vergleich einblenden</label>
+        <label class="check"><input id="env" type="checkbox"> Beugung am einzelnen Spalt berücksichtigen</label>
+        <div class="ctrl" id="b-ctrl" hidden>
+          <div class="row"><label for="b1">Spaltbreite b</label><output id="b1-out">0,08 mm</output></div>
+          <input id="b1" type="range" min="0.02" max="0.15" step="0.01" value="0.08">
+        </div>
+      </div>
+      <div class="card">
+        <h2>Arbeitsaufträge</h2>
+        <ol class="tasks">
+          <li>Starte mit N = 2 (Doppelspalt) und erhöhe auf 3, 5, 10 und 100. Beschreibe, wie sich <b>Lage</b>, <b>Breite</b> und <b>Helligkeit</b> der hellen Streifen ändern.</li>
+          <li>Schalte die Lupe ein. Zähle für N = 3, 4 und 5 die kleinen Nebenmaxima zwischen zwei Hauptmaxima. Stelle eine Regel auf.</li>
+          <li>Verändere bei N = 100 die Wellenlänge und den Spaltabstand. Gelten die Je-desto-Aussagen vom Doppelspalt weiter?</li>
+          <li>Begründe, warum man die Wellenlänge mit einem Gitter genauer messen kann als mit einem Doppelspalt.</li>
+        </ol>
+        <details>
+          <summary>Ergebnisse prüfen</summary>
+          <ul>
+            <li>Die Hauptmaxima bleiben an derselben Stelle: Es gilt weiter d · sin α<sub>k</sub> = k · λ.</li>
+            <li>Mit wachsendem N werden die Hauptmaxima schmaler (Breite ∼ 1/N) und heller (Helligkeit ∼ N²).</li>
+            <li>Zwischen zwei Hauptmaxima liegen N − 1 Minima und N − 2 Nebenmaxima. Die Nebenmaxima werden immer schwächer, dazwischen ist es fast dunkel.</li>
+            <li>Je größer λ und je kleiner d, desto weiter liegen die Maxima auseinander – wie beim Doppelspalt.</li>
+            <li>Scharfe, helle Maxima lassen sich viel genauer ablesen als die breiten, verwaschenen Streifen des Doppelspalts.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+    <div class="main">
+      <div class="card">
+        <div class="row" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <h2>Schirmbild und Intensitätsverlauf</h2>
+          <span class="caption" id="cv1-range"></span>
+        </div>
+        <canvas id="cv1" aria-label="Oben das Schirmbild, darunter die relative Intensität über dem Ort auf dem Schirm"></canvas>
+        <p class="caption">Oben: so sieht das Muster auf dem Schirm aus. Unten: Intensität relativ zum Hauptmaximum. Gestrichelte Linien: Lage der Hauptmaxima k.</p>
+      </div>
+      <div class="card">
+        <h3>Messwerte zur aktuellen Einstellung</h3>
+        <dl class="facts">
+          <div><dt>Abstand benachbarter Hauptmaxima Δa ≈ λ · e / d</dt><dd id="f-da">–</dd></div>
+          <div><dt>Breite eines Hauptmaximums (Minimum bis Minimum)</dt><dd id="f-w">–</dd></div>
+          <div><dt>Nebenmaxima zwischen zwei Hauptmaxima</dt><dd id="f-nm">–</dd></div>
+          <div><dt>Helligkeit eines Hauptmaximums</dt><dd id="f-I">–</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Reiter 2 ===================== -->
+  <section id="view-gitter" class="work" role="tabpanel" aria-labelledby="tab-gitter" hidden>
+    <div class="side">
+      <div class="card">
+        <h2>Einstellungen</h2>
+        <div class="ctrl">
+          <div class="row"><label for="L2">Linien pro mm</label><output id="L2-out">300</output></div>
+          <input id="L2" type="range" min="50" max="2000" step="10" value="300">
+          <div class="chips" id="L-chips">
+            <button data-l="100">100</button><button data-l="300">300</button><button data-l="600">600</button><button data-l="1000">1000</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><label for="lam2">Wellenlänge λ</label><output id="lam2-out">650 nm</output></div>
+          <input id="lam2" type="range" min="400" max="700" step="5" value="650">
+        </div>
+        <div class="ctrl">
+          <div class="row"><label for="e2">Schirmabstand e</label><output id="e2-out">1,00 m</output></div>
+          <input id="e2" type="range" min="0.5" max="2" step="0.05" value="1">
+        </div>
+        <div class="formula">g · sin α<sub>k</sub> = k · λ<br>tan α<sub>k</sub> = a<sub>k</sub> / e</div>
+      </div>
+      <div class="card">
+        <h2>Arbeitsaufträge</h2>
+        <ol class="tasks">
+          <li>Stelle 300 Linien/mm, λ = 650 nm und e = 1,00 m ein. Berechne α<sub>1</sub> und a<sub>1</sub> und vergleiche mit der Tabelle.</li>
+          <li>Erhöhe auf 600 Linien/mm. Was passiert mit den Ablenkwinkeln und mit der Zahl der Ordnungen?</li>
+          <li>Vergleiche in der Tabelle a<sub>k</sub> exakt mit der Kleinwinkelnäherung. Warum darf man am Gitter nicht nähern?</li>
+          <li>Ab welcher Linienzahl gibt es für rotes Licht (650 nm) keine 1. Ordnung mehr? Begründe mit sin α ≤ 1.</li>
+        </ol>
+        <details>
+          <summary>Ergebnisse prüfen</summary>
+          <ul>
+            <li>300/mm: g ≈ 3,33 µm, α<sub>1</sub> ≈ 11,3°, a<sub>1</sub> ≈ 19,9 cm.</li>
+            <li>600/mm: g halbiert sich, die Winkel werden größer (α<sub>1</sub> ≈ 23,0°), es gibt nur noch die Ordnungen bis k = 2.</li>
+            <li>Die Winkel sind am Gitter groß. Schon bei der 1. Ordnung weicht die Näherung um etwa 2 % (300/mm) bzw. fast 9 % (600/mm) ab, bei höheren Ordnungen viel stärker.</li>
+            <li>Eine 1. Ordnung gibt es nur, wenn λ / g ≤ 1 ist, also g ≥ λ. Für 650 nm heißt das höchstens 1 mm / 650 nm ≈ 1538 Linien/mm.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+    <div class="main">
+      <div class="card">
+        <h2>Strahlengang von oben</h2>
+        <canvas id="diag2" aria-label="Draufsicht: Laser, Gitter und Schirm mit den Richtungen der Beugungsordnungen"></canvas>
+        <p class="caption">Links Laser und Gitter, rechts der Schirm. Winkel maßstabsgetreu. Strahlen, die oben oder unten aus dem Bild laufen, treffen den Schirm weiter außen oder gar nicht – „daneben“ heißt: am 2 m breiten Schirm vorbei.</p>
+      </div>
+      <div class="card">
+        <h3>Blick auf den Schirm</h3>
+        <canvas id="strip2" aria-label="Schirm von −1 m bis +1 m mit den Lichtpunkten der Ordnungen"></canvas>
+      </div>
+      <div class="card">
+        <dl class="facts">
+          <div><dt>Gitterkonstante g = 1 mm / Linienzahl</dt><dd id="g-g">–</dd></div>
+          <div><dt>g / λ</dt><dd id="g-ratio">–</dd></div>
+          <div><dt>Höchste Ordnung (sin α ≤ 1)</dt><dd id="g-kmax">–</dd></div>
+        </dl>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>k</th><th>sin α<sub>k</sub> = k·λ/g</th><th>α<sub>k</sub></th><th>a<sub>k</sub> = e · tan α<sub>k</sub></th><th>Näherung k·λ·e/g</th><th>Abweichung</th></tr></thead>
+            <tbody id="g-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Reiter 3 ===================== -->
+  <section id="view-uebung" class="work" role="tabpanel" aria-labelledby="tab-uebung" hidden>
+    <div class="side">
+      <div class="card">
+        <h2>Aufgabe</h2>
+        <p id="u-text" style="margin:0"></p>
+        <div class="formula" id="u-data"></div>
+        <button class="btn" id="u-new">Neue Aufgabe</button>
+      </div>
+      <div class="card">
+        <h2>Hilfen</h2>
+        <ol class="hints" id="u-hints"></ol>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="u-hint">Nächste Hilfe</button>
+          <button class="btn" id="u-sol">Lösung zeigen</button>
+        </div>
+        <div id="u-solution" hidden></div>
+      </div>
+    </div>
+    <div class="main">
+      <div class="card">
+        <h2>Schirm mit Maßband</h2>
+        <canvas id="cv3" aria-label="Schirm mit Lichtpunkten und Maßband; Messmarke durch Ziehen verschieben"></canvas>
+        <div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between">
+          <span class="marker">Messmarke: <span id="u-mark">0,0 cm</span></span>
+          <span class="caption">Ziehe auf dem Schirm, um die Messmarke zu verschieben. Feinjustierung:</span>
+          <span style="display:flex;gap:6px"><button class="btn" id="u-m1">− 0,1 cm</button><button class="btn" id="u-p1">+ 0,1 cm</button></span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>a) Wellenlänge des Lasers</h3>
+        <div class="answer">
+          <label for="u-lam">λ =</label><input id="u-lam" type="number" inputmode="decimal" step="1" placeholder="z. B. 600"><span>nm</span>
+          <button class="btn primary" id="u-check1">Prüfen</button>
+        </div>
+        <p class="fb" id="u-fb1" aria-live="polite"></p>
+        <h3>b) Höchste Ordnung, die auftreten kann</h3>
+        <div class="answer">
+          <label for="u-k">k<sub>max</sub> =</label><input id="u-k" type="number" inputmode="numeric" step="1" placeholder="z. B. 3">
+          <button class="btn primary" id="u-check2">Prüfen</button>
+        </div>
+        <p class="fb" id="u-fb2" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <footer>Modell: N gleiche, sehr schmale Spalte im Abstand d (bzw. g), paralleles Licht einer Wellenlänge, ebener Schirm. Intensität I ∼ [sin(N·φ/2) / sin(φ/2)]² mit φ = 2π · d · sin α / λ; optional mit Einzelspalt-Einhüllender.</footer>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const tok=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const de=(x,dig)=>x.toLocaleString('de-DE',{minimumFractionDigits:dig,maximumFractionDigits:dig});
+
+/* ---------- Farbe aus Wellenlänge ---------- */
+function wlRGB(w){
+  let r=0,g=0,b=0;
+  if(w<440){r=-(w-440)/60;b=1}
+  else if(w<490){g=(w-440)/50;b=1}
+  else if(w<510){g=1;b=-(w-510)/20}
+  else if(w<580){r=(w-510)/70;g=1}
+  else if(w<645){r=1;g=-(w-645)/65}
+  else {r=1}
+  let f=1; if(w<420)f=0.3+0.7*(w-380)/40;
+  return [r*f,g*f,b*f];
+}
+function wlCss(w,a,shade){
+  const s=shade==null?1:shade; const [r,g,b]=wlRGB(w);
+  return `rgba(${Math.round(255*r*s)},${Math.round(255*g*s)},${Math.round(255*b*s)},${a})`;
+}
+
+/* ---------- Canvas ---------- */
+function prep(cv){
+  const r=cv.getBoundingClientRect(); const dpr=window.devicePixelRatio||1;
+  const W=Math.max(1,Math.round(r.width*dpr)),H=Math.max(1,Math.round(r.height*dpr));
+  if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;}
+  const c=cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,r.width,r.height);
+  return {c,w:r.width,h:r.height};
+}
+function niceStep(raw){
+  const p=Math.pow(10,Math.floor(Math.log10(raw))); const f=raw/p;
+  return (f<=1?1:f<=2?2:f<=5?5:10)*p;
+}
+const FONT_MONO='12px "JetBrains Mono", ui-monospace, monospace';
+const FONT_BODY='13px "Atkinson Hyperlegible", system-ui, sans-serif';
+
+/* ---------- Reiter ---------- */
+const TABS=['mehrfachspalt','gitter','uebung'];
+let current='mehrfachspalt';
+function showTab(name){
+  if(!TABS.includes(name)) name='mehrfachspalt';
+  current=name;
+  TABS.forEach(t=>{ $('view-'+t).hidden=(t!==name); $('tab-'+t).setAttribute('aria-selected',String(t===name)); });
+  requestDraw();
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  const t=b.dataset.tab; try{ history.replaceState(null,'','#'+t);}catch(e){}
+  showTab(t);
+}));
+window.addEventListener('hashchange',()=>showTab(location.hash.slice(1)));
+
+let pending=false;
+function requestDraw(){ if(pending) return; pending=true; requestAnimationFrame(()=>{pending=false; if(current==='mehrfachspalt')draw1(); else if(current==='gitter')draw2(); else draw3();}); }
+window.addEventListener('resize',requestDraw);
+if(window.ResizeObserver){ const ro=new ResizeObserver(requestDraw); ['cv1','diag2','strip2','cv3'].forEach(id=>ro.observe($(id))); }
+try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',requestDraw);}catch(e){}
+new MutationObserver(requestDraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+/* =====================================================
+   Reiter 1: Mehrfachspalt
+   ===================================================== */
+function intensity(sinA,N,d,lam,env,b){
+  const h=Math.PI*d*sinA/lam;           // halbe Phasendifferenz φ/2
+  const s=Math.sin(h); let I;
+  if(Math.abs(s)<1e-12) I=N*N; else { const t=Math.sin(N*h)/s; I=t*t; }
+  if(env){ const be=Math.PI*b*sinA/lam; const sc=Math.abs(be)<1e-12?1:Math.sin(be)/be; I*=sc*sc; }
+  return I/(N*N);
+}
+function sampleCols(n,xmin,xmax,e,N,d,lam,env,b){
+  const out=new Float32Array(n); const da=lam*e/d; const range=xmax-xmin;
+  const fringesPerCol=(range/da)*N/n;
+  const sub=Math.min(96,Math.max(3,Math.ceil(fringesPerCol*8)));
+  for(let i=0;i<n;i++){
+    let m=0;
+    for(let j=0;j<sub;j++){
+      const x=xmin+(i+(j+0.5)/sub)*range/n;
+      const v=intensity(x/Math.hypot(x,e),N,d,lam,env,b); if(v>m)m=v;
+    }
+    out[i]=m;
+  }
+  return out;
+}
+function syncChips(container,attr,val){
+  container.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset[attr]===val)));
+}
+$('n-chips').addEventListener('click',ev=>{const b=ev.target.closest('button'); if(!b)return; $('n').value=b.dataset.n; requestDraw();});
+['n','lam1','d1','e1','b1','lupe','cmp','env'].forEach(id=>$(id).addEventListener('input',requestDraw));
+$('env').addEventListener('change',()=>{$('b-ctrl').hidden=!$('env').checked; requestDraw();});
+
+function draw1(){
+  const N=+$('n').value, lamNm=+$('lam1').value, lam=lamNm*1e-9, d=+$('d1').value*1e-3, e=+$('e1').value;
+  const env=$('env').checked, lupe=$('lupe').checked, cmp=$('cmp').checked;
+  const b=Math.min(+$('b1').value*1e-3,0.9*d);
+  $('n-out').textContent=N; $('lam1-out').textContent=lamNm+' nm'; $('e1-out').textContent=de(e,1)+' m';
+  $('b1-out').textContent=de(b*1e3,2)+' mm'; syncChips($('n-chips'),'n',N);
+
+  const da=lam*e/d;
+  let xmin,xmax; if(lupe){xmin=-0.15*da;xmax=1.15*da;} else {xmin=-0.06;xmax=0.06;}
+  $('cv1-range').textContent=lupe?'Lupe: Ausschnitt um zwei Hauptmaxima':'Ausschnitt: −60 mm bis +60 mm';
+
+  const P=prep($('cv1')); const c=P.c;
+  const fg=tok('--fg'), muted=tok('--muted'), line=tok('--line'), shade=parseFloat(tok('--wl-shade'))||1;
+  const ml=48,mr=14,stripTop=4,stripH=60,gTop=stripTop+stripH+28,mb=40;
+  const pw=Math.max(10,P.w-ml-mr), ph=Math.max(10,P.h-gTop-mb);
+  const n=Math.round(pw);
+  const X=x=>ml+(x-xmin)/(xmax-xmin)*pw;
+  const data=sampleCols(n,xmin,xmax,e,N,d,lam,env,b);
+
+  // Schirmbild (immer dunkler Raum)
+  c.fillStyle='#05070a'; c.fillRect(ml,stripTop,pw,stripH);
+  const [r,g,bb]=wlRGB(lamNm);
+  for(let i=0;i<n;i++){
+    const v=Math.pow(data[i],0.5);
+    if(v<0.004) continue;
+    c.fillStyle=`rgb(${Math.round(255*r*v)},${Math.round(255*g*v)},${Math.round(255*bb*v)})`;
+    c.fillRect(ml+i,stripTop,1.05,stripH);
+  }
+
+  // Raster
+  c.strokeStyle=line; c.lineWidth=1;
+  [0,0.5,1].forEach(t=>{const y=gTop+ph*(1-t); c.beginPath(); c.moveTo(ml,y); c.lineTo(ml+pw,y); c.stroke();});
+  c.fillStyle=muted; c.font=FONT_MONO; c.textAlign='right'; c.textBaseline='middle';
+  [[0,'0'],[0.5,'0,5'],[1,'1']].forEach(([t,s])=>c.fillText(s,ml-6,gTop+ph*(1-t)));
+
+  // Hauptmaxima-Linien
+  const kmin=Math.ceil((xmin-1e-12)/da-0.05), kmx=Math.floor(xmax/da+0.05);
+  c.font=FONT_MONO; const spacing=da/(xmax-xmin)*pw; const every=Math.max(1,Math.ceil((c.measureText('k = −10').width+10)/spacing));
+  c.setLineDash([3,4]); c.strokeStyle=muted; c.globalAlpha=0.55;
+  const ks=[];
+  for(let k=kmin;k<=kmx;k++){ const s=k*lam/d; if(Math.abs(s)>=1)continue; const xk=e*Math.tan(Math.asin(s)); if(xk<xmin||xk>xmax)continue; ks.push([k,xk]);
+    const px=X(xk); c.beginPath(); c.moveTo(px,gTop); c.lineTo(px,gTop+ph); c.stroke(); }
+  c.setLineDash([]); c.globalAlpha=1;
+  c.fillStyle=fg; c.font=FONT_MONO; c.textAlign='center'; c.textBaseline='middle';
+  ks.forEach(([k,xk])=>{ if(k%every===0) c.fillText('k = '+(k<0?'−'+(-k):k), X(xk), stripTop+stripH+14); });
+
+  // Vergleichskurve Doppelspalt
+  if(cmp && N!==2){
+    const d2=sampleCols(n,xmin,xmax,e,2,d,lam,env,b);
+    c.strokeStyle=muted; c.lineWidth=1.5; c.setLineDash([5,4]); c.beginPath();
+    for(let i=0;i<n;i++){const y=gTop+ph*(1-d2[i]); if(i===0)c.moveTo(ml+i+0.5,y); else c.lineTo(ml+i+0.5,y);} c.stroke(); c.setLineDash([]);
+  }
+  // Intensitätskurve
+  c.beginPath(); c.moveTo(ml,gTop+ph);
+  for(let i=0;i<n;i++) c.lineTo(ml+i+0.5,gTop+ph*(1-data[i]));
+  c.lineTo(ml+pw,gTop+ph); c.closePath(); c.fillStyle=wlCss(lamNm,0.18,shade); c.fill();
+  c.beginPath(); for(let i=0;i<n;i++){const y=gTop+ph*(1-data[i]); if(i===0)c.moveTo(ml+0.5,y); else c.lineTo(ml+i+0.5,y);}
+  c.strokeStyle=wlCss(lamNm,1,shade); c.lineWidth=1.8; c.stroke();
+
+  // x-Achse in mm
+  c.strokeStyle=muted; c.lineWidth=1; c.beginPath(); c.moveTo(ml,gTop+ph); c.lineTo(ml+pw,gTop+ph); c.stroke();
+  const rmm=(xmax-xmin)*1e3; const step=niceStep(rmm/Math.max(3,pw/80));
+  c.fillStyle=muted; c.textAlign='center'; c.textBaseline='top'; c.font=FONT_MONO;
+  for(let t=Math.ceil(xmin*1e3/step)*step;t<=xmax*1e3+1e-9;t+=step){
+    const px=X(t/1e3); c.beginPath(); c.moveTo(px,gTop+ph); c.lineTo(px,gTop+ph+4); c.stroke();
+    const dig=step<1?(step<0.1?2:1):0; const tv=Math.abs(t)<step*1e-6?0:t; c.fillText(de(tv,dig).replace('-','−'),px,gTop+ph+6);
+  }
+  c.font=FONT_BODY; c.textAlign='right'; c.fillText('Ort x auf dem Schirm in mm',ml+pw,gTop+ph+22);
+  c.save(); c.translate(14,gTop+ph/2); c.rotate(-Math.PI/2); c.textAlign='center'; c.textBaseline='middle'; c.fillText('I / I_max',0,0); c.restore();
+
+  // Messwerte
+  $('f-da').textContent=de(da*1e3,da*1e3<10?2:1)+' mm';
+  $('f-w').textContent='≈ 2·Δa/N = '+de(2*da*1e3/N,2*da*1e3/N<1?3:2)+' mm';
+  $('f-nm').textContent='N − 2 = '+(N-2);
+  $('f-I').textContent=de(N*N,0)+'-fach eines Spalts ('+de(N*N/4,N*N/4<10?2:0)+' × Doppelspalt)';
+}
+
+/* =====================================================
+   Reiter 2: Gitter
+   ===================================================== */
+$('L-chips').addEventListener('click',ev=>{const b=ev.target.closest('button'); if(!b)return; $('L2').value=b.dataset.l; requestDraw();});
+['L2','lam2','e2'].forEach(id=>$(id).addEventListener('input',requestDraw));
+const SCREEN_HALF=1.0; // m
+
+function draw2(){
+  const L=+$('L2').value, lamNm=+$('lam2').value, lam=lamNm*1e-9, e=+$('e2').value;
+  const g=1e-3/L, ratio=g/lam, kmax=Math.floor(ratio-1e-9);
+  $('L2-out').textContent=L; $('lam2-out').textContent=lamNm+' nm'; $('e2-out').textContent=de(e,2)+' m';
+  syncChips($('L-chips'),'l',L);
+  const fg=tok('--fg'), muted=tok('--muted'), line=tok('--line'), shade=parseFloat(tok('--wl-shade'))||1;
+
+  // --- Draufsicht ---
+  const D=prep($('diag2')); const c=D.c;
+  const x0=52, xs=D.w-62, sc=(xs-x0)/e, yc=D.h/2-6;
+  // Schirm
+  c.strokeStyle=fg; c.lineWidth=4; c.beginPath(); c.moveTo(xs,Math.max(0,yc-SCREEN_HALF*sc)); c.lineTo(xs,Math.min(D.h,yc+SCREEN_HALF*sc)); c.stroke();
+  c.fillStyle=muted; c.font=FONT_BODY; c.textAlign='left'; c.textBaseline='top';
+  // Laser
+  c.fillStyle=muted; c.fillRect(4,yc-7,22,14);
+  c.strokeStyle=wlCss(lamNm,1,shade); c.lineWidth=3; c.beginPath(); c.moveTo(26,yc); c.lineTo(x0,yc); c.stroke();
+  // Strahlen
+  const rays=[];
+  for(let k=-kmax;k<=kmax;k++){
+    const a=Math.asin(k*lam/g), y=e*Math.tan(a);
+    const onScreen=Math.abs(y)<=SCREEN_HALF;
+    const R=4000;
+    let ex,ey;
+    if(onScreen){ex=xs;ey=yc-y*sc;} else {ex=x0+Math.cos(a)*R; ey=yc-Math.sin(a)*R;}
+    c.strokeStyle=wlCss(lamNm,k===0?1:0.85,shade); c.lineWidth=k===0?2.4:1.6;
+    c.beginPath(); c.moveTo(x0,yc); c.lineTo(ex,ey); c.stroke();
+    rays.push({k,a,y,onScreen});
+  }
+  // Gitter
+  c.fillStyle=tok('--panel'); c.fillRect(x0-4,yc-46,8,92);
+  c.strokeStyle=fg; c.lineWidth=1.5; c.strokeRect(x0-4,yc-46,8,92);
+  c.lineWidth=1; for(let t=-42;t<=42;t+=6){c.beginPath(); c.moveTo(x0-4,yc+t); c.lineTo(x0+4,yc+t); c.stroke();}
+  c.fillStyle=muted; c.font=FONT_BODY; c.textAlign='center'; c.textBaseline='top'; c.fillText('Gitter',x0,yc+50);
+  // Beschriftung der Ordnungen (dicht liegende Beschriftungen werden ausgelassen)
+  c.font=FONT_MONO; c.textBaseline='middle';
+  const top=12, bot=D.h-30; const usedY=[], usedX=[], usedY2=[];
+  const free=(arr,v,min)=>arr.every(u=>Math.abs(u-v)>=min);
+  rays.slice().sort((p,q)=>Math.abs(p.k)-Math.abs(q.k)).forEach(({k,a,y,onScreen})=>{
+    const label='k = '+(k<0?'−'+(-k):k);
+    const py=yc-y*sc;
+    if(onScreen && py>=top && py<=bot){
+      c.fillStyle=wlCss(lamNm,1,shade); c.beginPath(); c.arc(xs,py,4,0,2*Math.PI); c.fill();
+      if(free(usedY,py,15)){ usedY.push(py); c.fillStyle=fg; c.textAlign='left'; c.fillText(label,xs+8,py); }
+    } else if(k!==0){
+      const yEdge=k>0?top:bot; const px=x0+(k>0?yc-top:bot-yc)/Math.tan(Math.abs(a));
+      if(px<xs-10){
+        const txt=label+(onScreen?'':' (daneben)'); const tw=c.measureText(txt).width;
+        const right=px+tw+12>xs; const x1=right?px-6-tw:px+6, x2=x1+tw;
+        const side=k>0?usedX:usedY2;
+        if(side.every(([u1,u2])=>x2+8<u1||x1-8>u2)){
+          side.push([x1,x2]); c.fillStyle=fg; c.textAlign='left'; c.fillText(txt,x1,yEdge+(k>0?6:-6));
+        }
+      }
+    }
+  });
+  // Winkel α1
+  if(kmax>=1){
+    const a1=Math.asin(lam/g), rr=Math.min(70,(xs-x0)*0.3);
+    c.strokeStyle=fg; c.lineWidth=1.2; c.beginPath(); c.arc(x0,yc,rr,-a1,0); c.stroke();
+    c.setLineDash([3,3]); c.strokeStyle=muted; c.beginPath(); c.moveTo(x0,yc); c.lineTo(xs,yc); c.stroke(); c.setLineDash([]);
+    c.fillStyle=fg; c.font=FONT_MONO; c.textAlign='left'; c.textBaseline='middle';
+    const mid=-a1/2; c.fillText('α₁ = '+de(a1*180/Math.PI,1)+'°',x0+Math.cos(mid)*(rr+8),yc+Math.sin(mid)*(rr+8)-(a1<0.25?10:0));
+    // a1 Maß am Schirm
+    const y1=e*Math.tan(a1)*sc;
+    if(yc-y1>=top){
+      c.strokeStyle=muted; c.lineWidth=1; c.beginPath(); c.moveTo(xs-14,yc); c.lineTo(xs-14,yc-y1); c.stroke();
+      c.beginPath(); c.moveTo(xs-18,yc); c.lineTo(xs-10,yc); c.moveTo(xs-18,yc-y1); c.lineTo(xs-10,yc-y1); c.stroke();
+      c.fillStyle=muted; c.textAlign='right'; c.fillText('a₁',xs-20,yc-y1/2);
+    }
+  }
+  // e-Maß
+  const ye=D.h-12; c.strokeStyle=muted; c.lineWidth=1; c.beginPath(); c.moveTo(x0,ye); c.lineTo(xs,ye);
+  c.moveTo(x0,ye-5); c.lineTo(x0,ye+5); c.moveTo(xs,ye-5); c.lineTo(xs,ye+5); c.stroke();
+  c.fillStyle=tok('--panel'); const lbl='e = '+de(e,2)+' m'; c.font=FONT_MONO; const tw=c.measureText(lbl).width+10;
+  c.fillRect((x0+xs)/2-tw/2,ye-9,tw,18); c.fillStyle=muted; c.textAlign='center'; c.textBaseline='middle'; c.fillText(lbl,(x0+xs)/2,ye);
+
+  // --- Schirmansicht ---
+  const S=prep($('strip2')); const s=S.c; const sl=18,sr=18,bandH=54, sw=S.w-sl-sr;
+  const SX=y=>sl+(y+SCREEN_HALF)/(2*SCREEN_HALF)*sw;
+  s.fillStyle='#05070a'; s.fillRect(sl,0,sw,bandH);
+  const usedS=[];
+  rays.slice().sort((p,q)=>Math.abs(p.k)-Math.abs(q.k)).forEach(({k,y,onScreen})=>{ if(!onScreen)return; const px=SX(y);
+    const gr=s.createRadialGradient(px,bandH/2,0,px,bandH/2,16); gr.addColorStop(0,wlCss(lamNm,1)); gr.addColorStop(0.25,wlCss(lamNm,0.9)); gr.addColorStop(1,wlCss(lamNm,0));
+    s.fillStyle=gr; s.beginPath(); s.arc(px,bandH/2,16,0,2*Math.PI); s.fill();
+    if(usedS.every(u=>Math.abs(u-px)>=18)){ usedS.push(px); s.fillStyle='#d8dee6'; s.font=FONT_MONO; s.textAlign='center'; s.textBaseline='top'; s.fillText(k<0?'−'+(-k):String(k),px,3); }
+  });
+  s.strokeStyle=muted; s.fillStyle=muted; s.lineWidth=1; s.font=FONT_MONO; s.textAlign='center'; s.textBaseline='top';
+  for(let cm=-100;cm<=100;cm+=10){ const px=SX(cm/100); const big=cm%50===0; s.beginPath(); s.moveTo(px,bandH); s.lineTo(px,bandH+(big?10:5)); s.stroke();
+    if(sw>520?cm%20===0:big) s.fillText((cm<0?'−'+(-cm):cm)+(cm===0?' cm':''),px,bandH+12); }
+
+  // --- Kennwerte & Tabelle ---
+  $('g-g').textContent=de(g*1e6,g*1e6<10?2:1)+' µm';
+  $('g-ratio').textContent=de(ratio,2);
+  $('g-kmax').textContent=kmax<1?'keine 1. Ordnung (g < λ)':'k = '+kmax;
+  let html='';
+  for(let k=0;k<=kmax;k++){
+    const sA=k*lam/g, a=Math.asin(sA), ax=e*Math.tan(a), an=k*lam*e/g;
+    const dev=k===0?'–':'+'+de((ax-an)/an*100,1)+' %';
+    const where=Math.abs(ax)>SCREEN_HALF?' <span style="font-family:var(--f-body);color:var(--warn)">(neben dem Schirm)</span>':'';
+    html+=`<tr><td>${k}</td><td>${de(sA,3)}</td><td>${de(a*180/Math.PI,1)}°</td><td>${de(ax*100,1)} cm${where}</td><td>${de(an*100,1)} cm</td><td>${dev}</td></tr>`;
+  }
+  const kn=kmax+1;
+  html+=`<tr class="no"><td style="font-family:var(--f-mono)">${kn}</td><td style="font-family:var(--f-mono)">${de(kn*lam/g,3)}</td><td colspan="4" style="text-align:left">sin α > 1 – diese Ordnung gibt es nicht.</td></tr>`;
+  $('g-table').innerHTML=html;
+}
+
+/* =====================================================
+   Reiter 3: Übung
+   ===================================================== */
+let task=null, markX=0, hintStep=0;
+const HINTS=[
+  'Lies mit der Messmarke den Abstand a₁ zwischen dem 0. und dem 1. Maximum ab. Genauer: Miss von der −1. bis zur +1. Ordnung und halbiere.',
+  'Berechne den Ablenkwinkel mit tan α₁ = a₁ / e, also α₁ = arctan(a₁ / e). Taschenrechner auf Grad (DEG) stellen.',
+  'Berechne die Gitterkonstante g = 1 mm / Linienzahl und setze in die Gittergleichung ein: λ = g · sin α₁ (k = 1).',
+  'Für b): Es muss sin α ≤ 1 gelten. Aus k · λ / g ≤ 1 folgt k ≤ g / λ. Die größte ganze Zahl ist k_max.'
+];
+function rnd(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function newTask(){
+  task={L:rnd([100,200,300,500,600]), e:rnd([0.8,1.0,1.2,1.5]), lamNm:420+Math.floor(Math.random()*261)};
+  markX=0; hintStep=0;
+  $('u-lam').value=''; $('u-k').value=''; $('u-fb1').textContent=''; $('u-fb2').textContent=''; $('u-fb1').className='fb'; $('u-fb2').className='fb';
+  $('u-hints').innerHTML=''; $('u-solution').hidden=true; $('u-solution').innerHTML=''; $('u-hint').disabled=false;
+  $('u-text').textContent='Ein Laser beleuchtet senkrecht ein Gitter. Auf dem Schirm entstehen die abgebildeten Lichtpunkte. Bestimme die Wellenlänge des Lasers.';
+  $('u-data').innerHTML=`Gitter: ${task.L} Linien pro mm<br>Schirmabstand: e = ${de(task.e,2)} m`;
+  requestDraw();
+}
+function taskOrders(){
+  const lam=task.lamNm*1e-9, g=1e-3/task.L, kmax=Math.floor(g/lam-1e-9); const res=[];
+  for(let k=-kmax;k<=kmax;k++){const y=task.e*Math.tan(Math.asin(k*lam/g)); if(Math.abs(y)<=SCREEN_HALF) res.push({k,y});}
+  return {res,kmax,g,lam};
+}
+let geom3=null;
+function draw3(){
+  if(!task) return;
+  const muted=tok('--muted'), fg=tok('--fg');
+  const P=prep($('cv3')); const c=P.c; const sl=12,sr=12,bandH=66,sw=P.w-sl-sr;
+  const SX=y=>sl+(y+SCREEN_HALF)/(2*SCREEN_HALF)*sw; geom3={sl,sw};
+  c.fillStyle='#05070a'; c.fillRect(sl,0,sw,bandH);
+  const {res}=taskOrders();
+  res.forEach(({y})=>{ const px=SX(y);
+    const gr=c.createRadialGradient(px,bandH/2,0,px,bandH/2,14); gr.addColorStop(0,wlCss(task.lamNm,1)); gr.addColorStop(0.22,wlCss(task.lamNm,0.9)); gr.addColorStop(1,wlCss(task.lamNm,0));
+    c.fillStyle=gr; c.beginPath(); c.arc(px,bandH/2,14,0,2*Math.PI); c.fill(); });
+  // Maßband
+  const pxPerCm=sw/200;
+  c.strokeStyle=muted; c.fillStyle=muted; c.lineWidth=1; c.font=FONT_MONO; c.textAlign='center'; c.textBaseline='top';
+  for(let cm=-100;cm<=100;cm++){
+    const ten=cm%10===0, five=cm%5===0;
+    if(!ten&&!five&&pxPerCm<3) continue; if(!ten&&pxPerCm<1.6) continue;
+    const px=SX(cm/100); c.beginPath(); c.moveTo(px,bandH); c.lineTo(px,bandH+(ten?14:five?9:5)); c.stroke();
+    const labelEvery=pxPerCm*10<34?20:10;
+    if(ten&&cm%labelEvery===0) c.fillText(cm<0?'−'+(-cm):String(cm),px,bandH+16);
+  }
+  c.font=FONT_BODY; c.textAlign='right'; c.fillText('cm',sl+sw,bandH+34);
+  // Messmarke
+  const mx=SX(markX); c.strokeStyle='#ffffff'; c.lineWidth=1.5; c.setLineDash([4,3]); c.beginPath(); c.moveTo(mx,0); c.lineTo(mx,bandH); c.stroke(); c.setLineDash([]);
+  c.fillStyle=tok('--accent'); c.beginPath(); c.moveTo(mx,bandH+2); c.lineTo(mx-8,bandH+16); c.lineTo(mx+8,bandH+16); c.closePath(); c.fill();
+  c.fillStyle=fg; c.font=FONT_MONO; c.textAlign='center'; c.textBaseline='top';
+  c.fillText(de(markX*100,1).replace('-','−')+' cm',Math.min(Math.max(mx,sl+34),sl+sw-34),bandH+50);
+  $('u-mark').textContent=de(markX*100,1).replace('-','−')+' cm';
+}
+function setMarkFromEvent(ev){
+  if(!geom3) return; const r=$('cv3').getBoundingClientRect();
+  const x=ev.clientX-r.left; const y=((x-geom3.sl)/geom3.sw)*2*SCREEN_HALF-SCREEN_HALF;
+  markX=Math.round(Math.max(-SCREEN_HALF,Math.min(SCREEN_HALF,y))*1000)/1000; requestDraw();
+}
+let dragging=false;
+$('cv3').addEventListener('pointerdown',ev=>{dragging=true; try{$('cv3').setPointerCapture(ev.pointerId);}catch(e){} setMarkFromEvent(ev);});
+$('cv3').addEventListener('pointermove',ev=>{if(dragging)setMarkFromEvent(ev);});
+['pointerup','pointercancel'].forEach(t=>$('cv3').addEventListener(t,()=>dragging=false));
+$('u-m1').addEventListener('click',()=>{markX=Math.max(-SCREEN_HALF,Math.round((markX-0.001)*1000)/1000); requestDraw();});
+$('u-p1').addEventListener('click',()=>{markX=Math.min(SCREEN_HALF,Math.round((markX+0.001)*1000)/1000); requestDraw();});
+$('u-new').addEventListener('click',newTask);
+$('u-hint').addEventListener('click',()=>{ if(hintStep<HINTS.length){ const li=document.createElement('li'); li.textContent=HINTS[hintStep++]; $('u-hints').appendChild(li);} if(hintStep>=HINTS.length)$('u-hint').disabled=true; });
+$('u-sol').addEventListener('click',()=>{
+  const {kmax,g,lam}=taskOrders(); const a1=Math.asin(lam/g), y1=task.e*Math.tan(a1);
+  $('u-solution').innerHTML=`<div class="formula">g = 1 mm / ${task.L} = ${de(g*1e6,2)} µm<br>a₁ = ${de(y1*100,1)} cm<br>α₁ = arctan(${de(y1*100,1)} cm / ${de(task.e*100,0)} cm) = ${de(a1*180/Math.PI,2)}°<br>λ = g · sin α₁ = ${task.lamNm} nm<br>k_max: g / λ = ${de(g/lam,2)} ⇒ k_max = ${kmax}</div>`;
+  $('u-solution').hidden=false;
+});
+function parseNum(s){return parseFloat(String(s).replace(',','.'));}
+$('u-check1').addEventListener('click',()=>{
+  const v=parseNum($('u-lam').value), fb=$('u-fb1');
+  if(!isFinite(v)){fb.className='fb bad'; fb.textContent='Gib eine Zahl in nm ein.'; return;}
+  const err=Math.abs(v-task.lamNm)/task.lamNm;
+  if(v<1){fb.className='fb warn'; fb.textContent='Achte auf die Einheit: Gesucht ist λ in Nanometern (z. B. 600).';}
+  else if(err<=0.02){fb.className='fb ok'; fb.textContent='Richtig! Abweichung '+de(err*100,1)+' % – im Rahmen der Ablesegenauigkeit.';}
+  else if(err<=0.06){fb.className='fb warn'; fb.textContent='Fast. Prüfe die Ablesung von a₁ (besser 2·a₁ messen und halbieren).';}
+  else {fb.className='fb bad'; fb.textContent='Noch nicht. Hast du a₁ und e in derselben Einheit eingesetzt und den Rechner auf Grad gestellt?';}
+});
+$('u-check2').addEventListener('click',()=>{
+  const v=parseNum($('u-k').value), fb=$('u-fb2'); const {kmax}=taskOrders();
+  if(!isFinite(v)){fb.className='fb bad'; fb.textContent='Gib eine ganze Zahl ein.'; return;}
+  if(v===kmax){fb.className='fb ok'; fb.textContent='Richtig! Höhere Ordnungen würden sin α > 1 erfordern.';}
+  else {fb.className='fb bad'; fb.textContent='Noch nicht. Berechne g / λ mit deiner Wellenlänge und runde ab.';}
+});
+
+/* ---------- Start ---------- */
+newTask();
+showTab(location.hash.slice(1));
+})();
+</script>
+</body>
+</html>

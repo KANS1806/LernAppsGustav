@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Überschlag-Detektiv</title>
+<link rel="stylesheet" href="../fonts/atkinson-hyperlegible.css">
+<link rel="stylesheet" href="../fonts/lexend.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: eine Heftseite – Aufgabe oben, darunter nummerierte Schritte; Kästchenpapier als Grund. Gleiche Familie wie der Kommastellen-Trainer. */
+:root{
+  --paper:#F6F8FC; --grid:rgba(43,79,168,.085); --surface:#FFFFFF; --line:#D3DBEA;
+  --ink:#1B2540; --muted:#56627C; --accent:#2B4FA8; --accent-ink:#FFFFFF; --accent-soft:#E5EBFA;
+  --est:#6B3FA0; --est-soft:#EFE7F8; --comma:#D2233A;
+  --good:#22814F; --good-soft:#DDF3E7; --warn:#9A6600; --warn-soft:#FFF1CC; --help:#B4462E; --help-soft:#FBE3DC;
+  --scrim:rgba(12,18,34,.5);
+  --font-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+    --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+    --est:#C9A6F5; --est-soft:#33274A; --comma:#FF6B7D;
+    --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+    --scrim:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+  --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-ink:#0E1424; --accent-soft:#222E4E;
+  --est:#C9A6F5; --est-soft:#33274A; --comma:#FF6B7D;
+  --good:#5BCB8F; --good-soft:#173A2A; --warn:#F2C14E; --warn-soft:#3B3116; --help:#FF8F74; --help-soft:#432421;
+  --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink); font-family:var(--font-body); font-size:18px; line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{
+  max-width:780px; margin:0 auto; display:flex; flex-direction:column; gap:14px;
+  padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+button{font:inherit; color:inherit}
+
+.top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.top h1{font-family:var(--font-display); font-weight:700; font-size:clamp(1.5rem,4.5vw,2rem); margin:0; letter-spacing:-.01em; text-wrap:balance}
+.top h1 .ap{color:var(--est)}
+.top p{margin:0; color:var(--muted)}
+.tipbtn{border:2px solid var(--accent); background:var(--surface); color:var(--accent); border-radius:999px; padding:10px 18px; min-height:48px; font-family:var(--font-display); font-weight:600; cursor:pointer}
+.tipbtn:hover{background:var(--accent-soft)}
+
+.stufen{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.stufen button{text-align:left; padding:10px 12px; border:2px solid var(--line); background:var(--surface); border-radius:12px; cursor:pointer; display:flex; flex-direction:column; gap:1px; min-height:68px}
+.stufen button:hover{border-color:var(--accent)}
+.stufen button[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+.lvl{font-size:.8rem; letter-spacing:.2em; color:var(--accent)}
+.stufen b{font-family:var(--font-display); font-weight:600}
+.stufen small{color:var(--muted); font-size:.82rem; line-height:1.25}
+
+.progress{display:flex; gap:6px; align-items:center}
+.pd{flex:1; height:9px; border-radius:5px; background:var(--line)}
+.pd.cur{background:var(--accent)}
+.pd.good{background:var(--good)} .pd.ok{background:var(--warn)} .pd.help{background:var(--help)}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:20px}
+.eyebrow{font-family:var(--font-display); font-size:.82rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.story{margin:8px 0 0; font-size:1.12rem; max-width:60ch}
+.term{font-weight:700; font-size:clamp(2.1rem,8vw,3.2rem); line-height:1.15; margin:6px 0 0; font-variant-numeric:tabular-nums; display:flex; flex-wrap:wrap; align-items:baseline; gap:.28em}
+.term.small{font-size:clamp(1.6rem,6vw,2.3rem)}
+.op,.q{color:var(--muted); font-weight:400}
+.res{color:var(--accent)}
+.claim{color:var(--muted)}
+.claim.bad{text-decoration:line-through; text-decoration-color:var(--help); text-decoration-thickness:4px}
+.cm{color:var(--comma)}
+.ap{color:var(--est); font-weight:700}
+.estline{display:inline-block; font-size:1.12rem; padding:8px 12px; background:var(--est-soft); border-radius:10px; font-variant-numeric:tabular-nums}
+.estline b{color:var(--est)}
+
+.steps{margin-top:14px; border-top:2px dashed var(--line)}
+.step{display:grid; grid-template-columns:38px minmax(0,1fr); gap:12px; padding:16px 0; border-bottom:2px dashed var(--line)}
+.step:last-child{border-bottom:0; padding-bottom:0}
+.sn{width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-family:var(--font-display); font-weight:700; background:var(--accent-soft); color:var(--accent)}
+.step.is-done .sn{background:var(--good-soft); color:var(--good)}
+.step.is-todo{opacity:.5}
+.step h2{font-family:var(--font-display); font-size:1.08rem; font-weight:600; margin:5px 0 8px}
+.step p{margin:0}
+.hint{color:var(--muted); font-size:.95rem; margin-top:4px!important}
+
+.ask{display:flex; flex-direction:column; gap:8px; margin-bottom:14px}
+.ask:last-child{margin-bottom:0}
+.ask .num{font-weight:700; font-size:1.25rem}
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{min-width:64px; height:58px; padding:0 14px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; font-size:1.4rem; cursor:pointer; font-variant-numeric:tabular-nums}
+.chip.wide{font-size:1.2rem}
+.chip.word{font-family:var(--font-display); font-weight:600; font-size:1.05rem}
+.chip:hover:not(:disabled){border-color:var(--accent)}
+.chip:disabled{cursor:default}
+.chip:disabled:not(.right){opacity:.4}
+.chip.right{background:var(--good-soft); border-color:var(--good); color:var(--good)}
+.chip.wrong{background:var(--help-soft); border-color:var(--help); color:var(--help)}
+.sum{display:inline-block; font-size:1.12rem; padding:8px 12px; background:var(--accent-soft); border-radius:10px; font-variant-numeric:tabular-nums}
+
+.tiles{display:flex; align-items:stretch; margin:10px 0 6px; overflow-x:auto; padding:2px 2px 4px}
+.tile{flex:none; position:relative; width:clamp(34px,9vw,60px); height:clamp(60px,13vw,78px); display:grid; place-items:center; font-weight:700; font-size:clamp(2rem,6vw,2.8rem); line-height:1; background:var(--surface); border:2px solid var(--line); border-radius:10px; font-variant-numeric:tabular-nums}
+.gap{flex:none; position:relative; width:clamp(18px,5vw,38px); border:0; padding:0; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center}
+.gap::after{content:""; position:absolute; left:50%; top:20%; bottom:20%; border-left:3px dotted var(--line); transform:translateX(-1px)}
+.gap:hover::after,.gap:focus-visible::after{border-color:var(--accent)}
+.gap.on::after{display:none}
+.gap.static{width:5px; cursor:default}
+.gap.static.on{width:clamp(20px,4.5vw,28px)}
+.gap.static::after{display:none}
+.comma{font-weight:700; font-size:clamp(2.6rem,7.5vw,3.4rem); line-height:1; color:var(--comma); transform:translateY(.3em); animation:pop .18s ease-out}
+@keyframes pop{from{transform:translateY(.3em) scale(.4); opacity:0}to{transform:translateY(.3em) scale(1); opacity:1}}
+.live{font-size:1rem; color:var(--muted)} .live b{color:var(--ink)}
+
+.tools{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center}
+.btn{font-family:var(--font-display); font-weight:600; font-size:1rem; padding:12px 18px; min-height:50px; border-radius:12px; border:2px solid var(--line); background:var(--surface); cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.4; cursor:default}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); margin-left:auto}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08)}
+
+.fb{margin-top:12px; padding:10px 14px; border-radius:10px; font-size:1rem}
+.fb b{font-family:var(--font-display); font-weight:600}
+.fb.bad{background:var(--help-soft)} .fb.info{background:var(--warn-soft)} .fb.good{background:var(--good-soft)}
+
+.donebox{margin-top:16px; padding:16px; border-radius:12px; background:var(--good-soft); display:flex; flex-direction:column; gap:10px}
+.donebox.ok{background:var(--warn-soft)} .donebox.help{background:var(--help-soft)}
+.donebox .big{font-family:var(--font-display); font-weight:600; font-size:1.15rem; margin:0}
+.donebox p{margin:0}
+.path{font-size:1.1rem; font-variant-numeric:tabular-nums}
+.path .arr{color:var(--muted); padding:0 .15em}
+.donebox .btn.primary{align-self:flex-end}
+
+.inrow{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.display{font-weight:700; font-size:2.3rem; min-height:76px; min-width:0; flex:0 1 300px; border:2px solid var(--line); border-radius:12px; padding:8px 18px; display:flex; align-items:center; background:var(--paper); font-variant-numeric:tabular-nums; overflow-x:auto}
+.display .ph{font-size:1.1rem; font-weight:400; color:var(--muted)}
+.unit{font-weight:700; font-size:1.6rem; color:var(--muted)}
+.pre{font-weight:700; font-size:2rem; color:var(--est)}
+.keys{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; max-width:340px; margin-top:10px}
+.key{height:62px; border-radius:12px; border:2px solid var(--line); background:var(--surface); font-weight:700; font-size:1.6rem; cursor:pointer}
+.key:hover{border-color:var(--accent)}
+.key:active{background:var(--accent-soft)}
+.key.ck{color:var(--comma); font-size:2.2rem; line-height:.6}
+.key.del{font-size:1.05rem; font-family:var(--font-display); font-weight:600}
+
+.summary h2{font-family:var(--font-display); font-size:clamp(1.5rem,5vw,2rem); margin:4px 0 6px; text-wrap:balance}
+.stats{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:14px 0}
+.stat{border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:2px}
+.stat b{font-family:var(--font-display); font-size:1.9rem; line-height:1.1}
+.stat span{font-size:.92rem}
+.stat.good{background:var(--good-soft)} .stat.good b{color:var(--good)}
+.stat.ok{background:var(--warn-soft)} .stat.ok b{color:var(--warn)}
+.stat.help{background:var(--help-soft)} .stat.help b{color:var(--help)}
+.summary .tools .btn.primary{margin-left:0}
+
+.sheet[hidden]{display:none!important}
+.sheet{position:fixed; inset:0; z-index:30; background:var(--scrim); display:flex; align-items:flex-end; justify-content:center}
+.sheet-in{background:var(--surface); width:100%; max-width:780px; max-height:86vh; overflow:auto; border-radius:18px 18px 0 0; padding:20px;
+  padding-left:max(20px,env(safe-area-inset-left,0px)); padding-right:max(20px,env(safe-area-inset-right,0px)); padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
+.sheet-head h2{font-family:var(--font-display); margin:0; font-size:1.3rem}
+.tipgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px}
+.tipcard{border:2px solid var(--line); border-radius:12px; padding:12px 14px}
+.tipcard.focus{border-color:var(--accent); background:var(--accent-soft)}
+.tipcard h3{font-family:var(--font-display); font-size:1rem; font-weight:600; margin:0 0 4px}
+.tipcard p{margin:0; font-size:.98rem}
+.tipcard .ex{margin-top:6px; font-weight:700; font-variant-numeric:tabular-nums}
+
+.credit{margin-top:18px; text-align:center; font-size:.85rem; color:var(--muted)}
+
+@media (max-width:520px){
+  .stufen small{display:none}
+  .stats{grid-template-columns:1fr}
+  .card{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Überschlag<span class="ap">≈</span>Detektiv</h1>
+      <p>Prüfe Produkte mit einem Überschlag</p>
+    </div>
+    <button class="tipbtn" type="button" data-action="tips" id="tipbtn">Tippkarten</button>
+  </header>
+
+  <nav class="stufen" aria-label="Stufe wählen">
+    <button type="button" id="st1" data-action="stufe" data-s="1" aria-pressed="true"><span class="lvl">●○○</span><b>Stufe 1</b><small>Runden und Ergebnis finden</small></button>
+    <button type="button" id="st2" data-action="stufe" data-s="2" aria-pressed="false"><span class="lvl">●●○</span><b>Stufe 2</b><small>Komma-Detektiv</small></button>
+    <button type="button" id="st3" data-action="stufe" data-s="3" aria-pressed="false"><span class="lvl">●●●</span><b>Stufe 3</b><small>Selbst überschlagen und rechnen</small></button>
+  </nav>
+
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <main id="app"></main>
+  <footer class="credit">Erstellt mit KI von Christoph Kansy</footer>
+</div>
+
+<div class="sheet" id="tips" hidden>
+  <div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="tipsTitle">
+    <div class="sheet-head">
+      <h2 id="tipsTitle">Tippkarten</h2>
+      <button class="btn" type="button" data-action="tipsclose" id="tipsclose">Schließen</button>
+    </div>
+    <div class="tipgrid">
+      <div class="tipcard" data-tip="1"><h3>1 · Überschlag machen</h3><p>1. Runde die Faktoren auf einfache Zahlen (auf Einer oder Zehner). 2. Rechne im Kopf. 3. Vergleiche mit deinem Ergebnis.</p><p class="ex">4,8 · 21 ≈ 5 · 20 = 100<br>100,8 passt ✓ · 1008 ist viel zu groß ✗</p></div>
+      <div class="tipcard" data-tip="2"><h3>2 · Komma mit dem Überschlag setzen</h3><p>Rechne den Überschlag. Welche Zahl liegt in der Nähe?</p><p class="ex">5,2 · 6,8 → ohne Komma 3536<br>Überschlag: 5 · 7 = 35<br>3,536 · <u>35,36</u> · 353,6 → 35,36 ✓</p></div>
+      <div class="tipcard" data-tip="3"><h3>3 · Zahlen kleiner als 1</h3><p>Runde nicht auf 0! Nimm 0,5 (die Hälfte) oder 1. Mit einer Zahl kleiner als 1 wird das Ergebnis kleiner.</p><p class="ex">0,6 · 52 ≈ 0,5 · 50 = 25<br>31,2 passt ✓ · 3,12 ist viel zu klein ✗</p></div>
+      <div class="tipcard" data-tip="4"><h3>4 · Schreibweise im Gitter</h3><p>Rechne ohne Komma. Erst mit der Zehnerstelle, dann mit der Einerstelle. Addieren, dann Stellen zählen.</p><p class="ex">1,9 · 2,1 → 19 · 21 = 399<br>2 Stellen → 3,99 · Überschlag 2 · 2 = 4 ✓</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const N = 8;
+const S = { stufe:1, tasks:[], idx:0, results:[], finished:false, justDone:false };
+const $app = document.getElementById('app');
+const $prog = document.getElementById('progress');
+const $tips = document.getElementById('tips');
+
+/* ---------- Zahlen als {i,p}: Wert = i / 10^p ---------- */
+function rnd(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(a){ for(let k=a.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [a[k],a[j]]=[a[j],a[k]]; } return a; }
+function simplify(n){ let i=n.i,p=n.p; while(p>0 && i%10===0){ i=i/10; p--; } return {i:i,p:p}; }
+function fmt(n){ const s=String(n.i).padStart(n.p+1,'0'); return n.p ? s.slice(0,s.length-n.p)+','+s.slice(s.length-n.p) : s; }
+function fs(n){ return fmt(simplify(n)); }
+function val(n){ return n.i/Math.pow(10,n.p); }
+function mul(a,b){ return {i:a.i*b.i, p:a.p+b.p}; }
+function eq(a,b){ return fs(a)===fs(b); }
+function cm(s){ return String(s).replace(',', '<span class="cm">,</span>'); }
+function st(n){ return n===1 ? '1 Stelle' : n+' Stellen'; }
+function dec(min,max,p){ let i; do{ i=rnd(min,max); }while(i%10===0); return {i:i,p:p}; }
+
+/* Runden auf eine einfache Zahl */
+function isPlainSmall(n){ return n.p===0 && n.i<10; }
+function roundSimple(n){
+  if(isPlainSmall(n)) return {i:n.i,p:0};
+  const v=val(n);
+  if(v<1) return v<0.75 ? {i:5,p:1} : {i:1,p:0};
+  if(v<10) return {i:Math.round(v),p:0};
+  if(v<100) return {i:Math.round(v/10)*10,p:0};
+  return {i:Math.round(v/100)*100,p:0};
+}
+function borderline(n){
+  if(isPlainSmall(n)) return false;
+  const v=val(n);
+  if(v<1) return v>0.68 && v<0.82;
+  if(v<10){ const f=v-Math.floor(v); return f>0.42 && f<0.58; }
+  if(v<100){ const m=v%10; return m>4.2 && m<5.8; }
+  return true;
+}
+function roundOptions(n){
+  const v=val(n);
+  if(v<1) return [{i:0,p:0},{i:5,p:1},{i:1,p:0}];
+  if(v<10){ const f=Math.floor(v); return [{i:f,p:0},{i:f+1,p:0},{i:(f+1)*10,p:0}]; }
+  const t=Math.floor(v/10); return [{i:t,p:0},{i:t*10,p:0},{i:(t+1)*10,p:0}];
+}
+
+function makeTask(a,b,kind,extra){
+  const E=mul(a,b);
+  const ra=roundSimple(a), rb=roundSimple(b);
+  const t={ a:a, b:b, kind:kind, E:E, P:E.p, digits:String(E.i), ra:ra, rb:rb, R:simplify(mul(ra,rb)),
+    errors:0, stepErr:0, revealed:false, wrong:null, msg:null,
+    ansA:null, ansB:null, ansM:null, ansR:null, ansX:null, ansS:null, comma:null, input:'', estInput:'', est:null };
+  if(extra) Object.assign(t,extra);
+  if(kind==='round') t.step = isPlainSmall(a) ? (isPlainSmall(b)?'mental':'roundB') : 'roundA';
+  else if(kind==='comma' || kind==='claim') t.step='expr';
+  else t.step='est';
+  if(kind==='round'){ if(isPlainSmall(a)) t.ansA=fs(a); if(isPlainSmall(b)) t.ansB=fs(b); }
+  return t;
+}
+function ratioOk(a,b,lo,hi){ const E=val(mul(a,b)), R=val(mul(roundSimple(a),roundSimple(b))); if(R===0) return false; const q=E/R; return q>=lo && q<=hi; }
+
+const SACH=[
+  {a:{i:4,p:0}, b:{i:135,p:2}, unit:'€', text:'Ein Heft kostet 1,35 €. Lea kauft 4 Hefte. Wie viel muss sie bezahlen?'},
+  {a:{i:24,p:0}, b:{i:119,p:2}, unit:'€', text:'Ein Liter Milch kostet 1,19 €. Die Schulmensa kauft 24 Liter. Wie viel kostet die Milch?'},
+  {a:{i:25,p:1}, b:{i:18,p:1}, unit:'€', text:'1 kg Äpfel kostet 1,80 €. Tim kauft 2,5 kg. Wie viel muss er bezahlen?'},
+  {a:{i:6,p:0}, b:{i:45,p:2}, unit:'€', text:'Ein Brötchen kostet 0,45 €. Mia kauft 6 Brötchen. Wie viel muss sie bezahlen?'},
+  {a:{i:3,p:0}, b:{i:179,p:2}, unit:'€', text:'Eine Flasche Saft kostet 1,79 €. Papa kauft 3 Flaschen. Wie viel kostet der Saft?'},
+  {a:{i:28,p:0}, b:{i:65,p:2}, unit:'€', text:'Ein Bleistift kostet 0,65 €. Die Klasse kauft 28 Bleistifte. Wie viel kosten sie zusammen?'},
+  {a:{i:35,p:1}, b:{i:49,p:1}, unit:'€', text:'1 m Stoff kostet 4,90 €. Oma kauft 3,5 m Stoff. Wie viel muss sie bezahlen?'},
+  {a:{i:6,p:0}, b:{i:125,p:1}, unit:'km', text:'Ein Schulbus fährt an einem Tag 12,5 km. Wie weit fährt er in 6 Tagen?'},
+  {a:{i:15,p:0}, b:{i:24,p:1}, unit:'kg', text:'Ein Paket Papier wiegt 2,4 kg. Wie schwer sind 15 Pakete?'}
+];
+
+function generate(stufe){
+  const keys=new Set(); const out=[];
+  function key(a,b){ return a.i+'/'+a.p+'x'+b.i+'/'+b.p; }
+  function add(t){ const k=key(t.a,t.b), k2=key(t.b,t.a); if(keys.has(k)||keys.has(k2)) return false; keys.add(k); out.push(t); return true; }
+  function tryMake(gen, ok, kind, extraFn){
+    for(let n=0;n<1000;n++){
+      const ab=gen(); const a=ab[0], b=ab[1];
+      if(borderline(a)||borderline(b)) continue;
+      if(!ok(a,b)) continue;
+      if(add(makeTask(a,b,kind, extraFn ? extraFn(a,b) : null))) return true;
+    }
+    return false;
+  }
+  const swap=(a,b)=> Math.random()<.5 ? [a,b] : [b,a];
+  const noTrail=(a,b)=> mul(a,b).i%10!==0;
+
+  if(stufe===1){
+    add(makeTask({i:39,p:1},{i:21,p:1},'round'));      // 3,9 · 2,1 ≈ 4 · 2 = 8
+    const g=()=>{ const a=dec(11,98,1); const b= Math.random()<.4 ? {i:rnd(2,9),p:0} : dec(11,98,1); return swap(a,b); };
+    const ok=(a,b)=> noTrail(a,b) && ratioOk(a,b,.6,1.6) && String(mul(a,b).i).length>mul(a,b).p;
+    while(out.length<N) tryMake(g,ok,'round');
+    return [out[0]].concat(shuffle(out.slice(1)));
+  }
+  if(stufe===2){
+    // Einstieg der Stunde: Ali rechnet 4,8 · 21 = 1008
+    add(makeTask({i:48,p:1},{i:21,p:0},'claim',{shift:1}));
+    const smalls=[{i:4,p:1},{i:6,p:1},{i:9,p:1},{i:45,p:2},{i:55,p:2},{i:95,p:2},{i:35,p:2},{i:85,p:2}];
+    const gens=[
+      ()=>[dec(101,999,2), {i:rnd(11,49),p:0}],                 // 4,85 · 12
+      ()=>swap(dec(11,98,1), dec(11,98,1)),                      // 6,4 · 3,8
+      ()=>[dec(101,499,1), dec(11,98,1)],                        // 12,5 · 3,9
+      ()=>[pick(smalls), {i:rnd(12,89),p:0}],                    // 0,6 · 52
+      ()=>[dec(101,999,2), dec(11,49,1)]                         // 8,25 · 2,1
+    ];
+    const okC=(a,b)=>{ const E=mul(a,b), L=String(E.i).length; return noTrail(a,b) && L>E.p && L<=5 && ratioOk(a,b,.65,1.5) && mul(a,b).i%10!==0 && (b.p===0? b.i%10!==0 : true); };
+    const order=shuffle([0,1,2,3,4]);
+    for(let k=0;k<5;k++) tryMake(gens[order[k]], okC, 'comma');
+    const shifts=shuffle([1,-1,0]);
+    for(let k=0;k<2;k++){ const s=shifts[k]; tryMake(gens[pick([0,1,2,3])], (a,b)=> okC(a,b) && (s!==1 || mul(a,b).p>=1), 'claim', ()=>({shift:s})); }
+    while(out.length<N) tryMake(gens[pick([1,2])], okC, 'comma');
+    return [out[0]].concat(shuffle(out.slice(1)));
+  }
+  // Stufe 3
+  const gens3=[
+    ()=>[dec(101,999,2), {i:rnd(3,29),p:0}],
+    ()=>swap(dec(11,98,1), dec(11,98,1)),
+    ()=>[dec(101,499,1), dec(11,98,1)],
+    ()=>[pick([{i:4,p:1},{i:6,p:1},{i:9,p:1},{i:45,p:2},{i:35,p:2}]), dec(11,98,1)],
+    ()=>[dec(101,999,2), dec(11,39,1)]
+  ];
+  const ok3=(a,b)=>{ const E=mul(a,b); return E.p<=3 && String(E.i).length<=5 && ratioOk(a,b,.5,2); };
+  const o3=shuffle([0,1,2,3,4,pick([0,1,2])]);
+  for(let k=0;k<6;k++) tryMake(gens3[o3[k]], ok3, 'calc');
+  shuffle(SACH.slice()).slice(0,2).forEach(s=>{ add(makeTask(s.a,s.b,'calc',{sach:s.text, unit:s.unit})); });
+  while(out.length<N) tryMake(gens3[pick([0,1,2])], ok3, 'calc');
+  return shuffle(out);
+}
+
+function newRound(){ S.tasks=generate(S.stufe); S.idx=0; S.results=[]; S.finished=false; S.justDone=false; render(); }
+
+/* ---------- Hilfen für die Anzeige ---------- */
+function claimNum(t){ return {i:t.E.i, p:t.E.p - t.shift}; }   // shift 1 → 10-mal zu groß
+function claimTrue(t){ return t.shift===0; }
+function exprStr(x,y){ return cm(fs(x))+' · '+cm(fs(y))+' = '+cm(fs(mul(x,y))); }
+function estHtml(t){ return '<span class="estline">Überschlag: '+cm(fs(t.a))+' · '+cm(fs(t.b))+' <b>≈</b> '+cm(fs(t.ra))+' · '+cm(fs(t.rb))+' = <b>'+cm(fs(t.R))+'</b></span>'; }
+function chip(action,v,label,answer,active,t,cls){
+  let c='chip'+(cls?' '+cls:'');
+  if(answer===v) c+=' right';
+  else if(active && t.wrong && t.wrong.step===action && t.wrong.v===v) c+=' wrong';
+  return '<button type="button" class="'+c+'" data-action="'+action+'" data-v="'+v+'"'+(active?'':' disabled')+'>'+label+'</button>';
+}
+function msgHtml(t){ return t.msg ? '<div class="fb '+t.msg.kind+'" role="status">'+t.msg.text+'</div>' : ''; }
+function stepCls(s){ return 'step is-'+s; }
+function sn(s,n){ return '<div class="sn" aria-hidden="true">'+(s==='done'?'✓':n)+'</div>'; }
+function tilesHtml(digits, commaAt, interactive){
+  let h='<div class="tiles">';
+  for(let g=0; g<=digits.length; g++){
+    const has=commaAt===g;
+    if(interactive){
+      const lab = g===0 ? 'Komma ganz vorne' : (g===digits.length ? 'Kein Komma, ganz hinten' : 'Komma nach der '+g+'. Ziffer');
+      h+='<button type="button" class="gap'+(has?' on':'')+'" data-action="gap" data-g="'+g+'" aria-label="'+lab+'" aria-pressed="'+has+'">'+(has?'<span class="comma">,</span>':'')+'</button>';
+    } else h+='<span class="gap static'+(has?' on':'')+'">'+(has?'<span class="comma">,</span>':'')+'</span>';
+    if(g<digits.length) h+='<span class="tile">'+digits[g]+'</span>';
+  }
+  return h+'</div>';
+}
+function placed(t){ return {i:Number(t.digits), p:t.digits.length-t.comma}; }
+
+/* ---------- Anzeige ---------- */
+function render(){
+  for(let s=1;s<=3;s++) document.getElementById('st'+s).setAttribute('aria-pressed', String(S.stufe===s));
+  let p='';
+  for(let k=0;k<N;k++){ const r=S.results[k]; p+='<span class="pd'+(r?' '+r:(k===S.idx && !S.finished?' cur':''))+'"></span>'; }
+  $prog.innerHTML=p;
+  if(S.finished){ renderSummary(); return; }
+  const t=S.tasks[S.idx];
+  let h='<div class="card">'+headHtml(t)+'<div class="steps">';
+  if(t.kind==='round') h+=stepsRound(t);
+  else if(t.kind==='comma') h+=stepsComma(t);
+  else if(t.kind==='claim') h+=stepsClaim(t);
+  else h+=stepsCalc(t);
+  h+='</div>';
+  if(t.step==='done') h+=doneBox(t);
+  h+='</div>';
+  $app.innerHTML=h;
+  if(S.justDone){
+    S.justDone=false;
+    const box=document.querySelector('.donebox');
+    if(box && box.scrollIntoView) box.scrollIntoView({block:'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+  }
+}
+
+function headHtml(t){
+  const done=t.step==='done';
+  let h='<span class="eyebrow">Aufgabe '+(S.idx+1)+' von '+N+(t.kind==='claim'?' · Stimmt das?':'')+(t.sach?' · Sachaufgabe':'')+'</span>';
+  if(t.sach){
+    h+='<p class="story">'+cm(t.sach).replace(/(\d),(\d)/g,'$1<span class="cm">,</span>$2')+'</p>';
+    h+='<p class="term small"><span>'+cm(fs(t.a))+'</span><span class="op">·</span><span>'+cm(fs(t.b))+' '+t.unit+'</span><span class="op">=</span>'+(done?'<span class="res">'+cm(fs(t.E))+' '+t.unit+'</span>':'<span class="q">?</span>')+'</p>';
+    return h;
+  }
+  if(t.kind==='claim'){
+    const c=fmt(claimNum(t));
+    const crossed = done && !claimTrue(t);
+    h+='<p class="term"><span>'+cm(fs(t.a))+'</span><span class="op">·</span><span>'+cm(fs(t.b))+'</span><span class="op">=</span><span class="claim'+(crossed?' bad':'')+'">'+cm(c)+'</span>'+(crossed?'<span class="res">'+cm(fs(t.E))+'</span>':'')+'</p>';
+    if(!done) h+='<p class="hint">Ein Kind hat so gerechnet. Prüfe mit einem Überschlag.</p>';
+    return h;
+  }
+  h+='<p class="term"><span>'+cm(fs(t.a))+'</span><span class="op">·</span><span>'+cm(fs(t.b))+'</span><span class="op">=</span>'+(done?'<span class="res">'+cm(fs(t.E))+'</span>':'<span class="q">?</span>')+'</p>';
+  return h;
+}
+
+function stepsRound(t){
+  const order=['roundA','roundB','mental','result','done'];
+  const pos=order.indexOf(t.step);
+  const s1 = pos<=1 ? 'active' : 'done';
+  let h='<section class="'+stepCls(s1)+'">'+sn(s1,1)+'<div><h2>Faktoren runden</h2>';
+  [['roundA',t.a,t.ansA,t.ra],['roundB',t.b,t.ansB,t.rb]].forEach(function(x){
+    const action=x[0], n=x[1], ans=x[2];
+    const active = t.step===action;
+    const dim = action==='roundB' && t.ansA==null;
+    h+='<div class="ask"'+(dim?' style="opacity:.45"':'')+'><p>Runde <span class="num">'+cm(fs(n))+'</span> auf eine einfache Zahl:</p>';
+    if(isPlainSmall(n)) h+='<p class="hint">'+fs(n)+' ist schon eine einfache Zahl. Sie bleibt so.</p>';
+    else h+='<div class="chips">'+roundOptions(n).map(o=>chip(action,fs(o),cm(fs(o)),ans,active,t)).join('')+'</div>';
+    h+='</div>';
+  });
+  if(pos<=1) h+=msgHtml(t);
+  h+='</div></section>';
+
+  const s2 = pos<2 ? 'todo' : (pos===2 ? 'active' : 'done');
+  h+='<section class="'+stepCls(s2)+'">'+sn(s2,2)+'<div><h2>Im Kopf rechnen</h2>';
+  if(pos<2) h+='<p class="hint">Zuerst Schritt 1.</p>';
+  else {
+    h+='<div class="ask"><p class="num">'+cm(fs(t.ra))+' · '+cm(fs(t.rb))+' = ?</p><div class="chips">'+mentalOptions(t).map(o=>chip('mental',o,cm(o),t.ansM,t.step==='mental',t)).join('')+'</div></div>';
+    if(pos===2) h+=msgHtml(t);
+  }
+  h+='</div></section>';
+
+  const s3 = pos<3 ? 'todo' : (pos===3 ? 'active' : 'done');
+  h+='<section class="'+stepCls(s3)+'">'+sn(s3,3)+'<div><h2>Passendes Ergebnis finden</h2>';
+  if(pos<3) h+='<p class="hint">Ohne Komma kommt <b>'+t.digits+'</b> heraus. Wo gehört das Komma hin? Das sagt dir der Überschlag.</p>';
+  else {
+    h+='<div class="ask"><p>Ohne Komma: <b>'+t.digits+'</b>. Welches Ergebnis liegt in der Nähe von <span class="ap">'+cm(fs(t.R))+'</span>?</p><div class="chips">'+
+      resultOptions(t).map(o=>chip('result',o,cm(o),t.ansR,t.step==='result',t)).join('')+'</div></div>';
+    if(pos===3) h+=msgHtml(t);
+  }
+  h+='</div></section>';
+  return h;
+}
+function mentalOptions(t){
+  if(t._mo) return t._mo;
+  const R=t.R, cand=[fs(R), fs({i:R.i*10,p:R.p})];
+  const sum=fs({i:t.ra.i*Math.pow(10,t.rb.p)+t.rb.i*Math.pow(10,t.ra.p), p:t.ra.p+t.rb.p});
+  if(cand.indexOf(sum)<0) cand.push(sum); else cand.push(fs({i:R.i,p:R.p+1}));
+  t._mo=cand.sort((x,y)=>parseFloat(x.replace(',','.'))-parseFloat(y.replace(',','.')));
+  return t._mo;
+}
+function resultOptions(t){
+  if(t._ro) return t._ro;
+  const E=t.E;
+  t._ro=[fs({i:E.i,p:E.p+1}), fs(E), fs({i:E.i*10,p:E.p})];
+  return t._ro;
+}
+function exprOptions(t){
+  if(t._eo) return t._eo;
+  const list=[{v:'ok', label:exprStr(t.ra,t.rb)}];
+  function alt(n){ const v=val(n); if(v<1) return {i:0,p:0}; const r=roundSimple(n); return v<10 ? {i:r.i*10,p:0} : {i:Math.max(1,Math.round(r.i/10)),p:0}; }
+  const aa=alt(t.a), bb=alt(t.b);
+  const l1=exprStr(aa,t.rb), l2=exprStr(t.ra,bb);
+  if(l1!==list[0].label) list.push({v:'a', label:l1});
+  if(l2!==list[0].label && l2!==l1) list.push({v:'b', label:l2});
+  t._eo=shuffle(list);
+  return t._eo;
+}
+function exprStep(t, active, n){
+  const s = active ? 'active' : 'done';
+  let h='<section class="'+stepCls(s)+'">'+sn(s,n)+'<div><h2>Welcher Überschlag passt?</h2>';
+  h+='<div class="ask"><p>Runde beide Faktoren und rechne im Kopf.</p><div class="chips">'+
+     exprOptions(t).map(o=>chip('expr',o.v,o.label,t.ansX,active,t,'wide')).join('')+'</div></div>';
+  if(active) h+=msgHtml(t);
+  if(!active) h+=estHtml(t);
+  h+='</div></section>';
+  return h;
+}
+function commaStep(t, n, title){
+  const s = t.step==='done' ? 'done' : (t.step==='place' ? 'active' : 'todo');
+  let h='<section class="'+stepCls(s)+'">'+sn(s,n)+'<div><h2>'+title+'</h2>';
+  if(s==='todo') h+=tilesHtml(t.digits,null,false)+'<p class="hint">Zuerst den Überschlag.</p>';
+  else if(s==='active'){
+    h+='<p>Ohne Komma: <b>'+t.digits+'</b>. Tippe in die Lücke, in die das Komma gehört. Das Ergebnis muss ungefähr <span class="ap">'+cm(fs(t.R))+'</span> sein.</p>'+tilesHtml(t.digits,t.comma,true);
+    h+= t.comma==null ? '<p class="live">Noch kein Komma gesetzt.</p>' : '<p class="live">Dein Ergebnis: <b>'+cm(fmt(placed(t)))+'</b></p>';
+    h+='<div class="tools"><button type="button" class="btn primary" data-action="check" id="checkbtn">Prüfen</button></div>'+msgHtml(t);
+  } else {
+    h+=tilesHtml(t.digits,t.digits.length-t.P,false)+
+       '<p class="sum">Probe mit den Stellen: '+cm(fs(t.a))+' hat '+st(t.a.p)+', '+cm(fs(t.b))+' hat '+st(t.b.p)+' → zusammen '+st(t.P)+' ✓</p>';
+  }
+  h+='</div></section>';
+  return h;
+}
+function stepsComma(t){ return exprStep(t, t.step==='expr', 1) + commaStep(t, 2, 'Komma setzen'); }
+function stepsClaim(t){
+  let h=exprStep(t, t.step==='expr', 1);
+  const s2 = t.step==='expr' ? 'todo' : (t.step==='judge' ? 'active' : 'done');
+  h+='<section class="'+stepCls(s2)+'">'+sn(s2,2)+'<div><h2>Stimmt das Ergebnis?</h2>';
+  if(s2==='todo') h+='<p class="hint">Zuerst den Überschlag.</p>';
+  else {
+    h+='<div class="ask"><p>Ist '+cm(fmt(claimNum(t)))+' ungefähr <span class="ap">'+cm(fs(t.R))+'</span>?</p><div class="chips">'+
+       chip('judge','ja','✓ Das stimmt',t.ansS,s2==='active',t,'word')+chip('judge','nein','✗ Das stimmt nicht',t.ansS,s2==='active',t,'word')+'</div></div>';
+    if(s2==='active') h+=msgHtml(t);
+  }
+  h+='</div></section>';
+  if(!claimTrue(t)) h+=commaStep(t, 3, 'Komma richtig setzen');
+  return h;
+}
+function keypad(action){
+  return '<div class="keys">'+
+    ['7','8','9','4','5','6','1','2','3'].map(k=>'<button type="button" class="key" data-action="'+action+'" data-k="'+k+'">'+k+'</button>').join('')+
+    '<button type="button" class="key ck" data-action="'+action+'" data-k="," aria-label="Komma">,</button>'+
+    '<button type="button" class="key" data-action="'+action+'" data-k="0">0</button>'+
+    '<button type="button" class="key del" data-action="'+action+'" data-k="del" aria-label="Löschen">⌫ Löschen</button></div>';
+}
+function stepsCalc(t){
+  const u = t.unit ? '<span class="unit">'+t.unit+'</span>' : '';
+  const s1 = t.step==='est' ? 'active' : 'done';
+  let h='<section class="'+stepCls(s1)+'">'+sn(s1,1)+'<div><h2>Überschlag im Kopf</h2>';
+  if(s1==='active'){
+    h+='<p>Runde die Faktoren auf einfache Zahlen. Rechne im Kopf. Tippe deinen Überschlag ein.</p>'+
+       '<div class="inrow"><span class="pre">≈</span><div class="display" aria-live="polite" aria-label="Dein Überschlag">'+(t.estInput?cm(t.estInput):'<span class="ph">Überschlag</span>')+'</div>'+u+'</div>'+
+       keypad('ekey')+'<div class="tools" style="max-width:340px"><button type="button" class="btn primary" data-action="checkest" id="checkest">Prüfen</button></div>'+msgHtml(t);
+  } else {
+    h+='<p class="estline">Dein Überschlag: <b>≈ '+cm(fs(t.est))+(t.unit?' '+t.unit:'')+'</b></p>';
+  }
+  h+='</div></section>';
+  const s2 = t.step==='est' ? 'todo' : (t.step==='input' ? 'active' : 'done');
+  h+='<section class="'+stepCls(s2)+'">'+sn(s2,2)+'<div><h2>Genau rechnen</h2>';
+  if(s2==='todo') h+='<p class="hint">Zuerst der Überschlag.</p>';
+  else if(s2==='active'){
+    h+='<p>Rechne schriftlich im Heft. Tippe das Ergebnis ein.</p>'+
+       '<div class="inrow"><div class="display" aria-live="polite" aria-label="Dein Ergebnis">'+(t.input?cm(t.input):'<span class="ph">Ergebnis</span>')+'</div>'+u+'</div>'+
+       keypad('key')+'<div class="tools" style="max-width:340px"><button type="button" class="btn primary" data-action="check3" id="check3">Prüfen</button></div>'+msgHtml(t);
+  } else {
+    h+='<p class="sum">Ergebnis '+cm(fs(t.E))+(t.unit?' '+t.unit:'')+' · Überschlag ≈ '+cm(fs(t.est))+' → passt ✓</p>';
+  }
+  h+='</div></section>';
+  return h;
+}
+
+function doneBox(t){
+  const cat=S.results[S.idx];
+  const praise = cat==='good' ? 'Super! Alles sofort richtig.' : (cat==='ok' ? 'Richtig! Du hast deinen Fehler selbst verbessert.' : 'Schau dir die Lösung genau an. Die nächste schaffst du!');
+  const last = S.idx===N-1;
+  let path='Überschlag: '+cm(fs(t.ra))+' · '+cm(fs(t.rb))+' = '+cm(fs(t.R))+'<span class="arr">→</span>Ergebnis: '+cm(fs(t.E))+(t.unit?' '+t.unit:'')+' passt ✓';
+  if(t.kind==='claim') path = claimTrue(t) ? 'Das Ergebnis '+cm(fmt(claimNum(t)))+' stimmt. Es liegt nah am Überschlag '+cm(fs(t.R))+'.' :
+    cm(fmt(claimNum(t)))+' ist viel zu '+(t.shift>0?'groß':'klein')+'. Überschlag '+cm(fs(t.R))+'<span class="arr">→</span>richtig: '+cm(fs(t.E));
+  return '<div class="donebox '+cat+'"><p class="big">'+praise+'</p>'+(t.msg?'<p>'+t.msg.text+'</p>':'')+
+    '<p class="path">'+path+'</p>'+
+    '<button type="button" class="btn primary" data-action="next" id="nextbtn">'+(last?'Zur Auswertung':'Nächste Aufgabe')+' →</button></div>';
+}
+
+function renderSummary(){
+  const c={good:0,ok:0,help:0}; S.results.forEach(r=>{ c[r]++; });
+  const strong=c.good>=6;
+  let advice;
+  if(S.stufe<3) advice = strong ? 'Stark! Mach weiter mit Stufe '+(S.stufe+1)+'.' : 'Übe Stufe '+S.stufe+' noch einmal. Die Tippkarten helfen dir.';
+  else advice = strong ? 'Du bist Überschlag-Profi! Schaffst du in einer neuen Runde alle 8 sofort richtig?' : 'Übe Stufe 3 noch einmal. Rechne im Heft ganz sorgfältig.';
+  let h='<div class="card summary"><span class="eyebrow">Auswertung</span><h2>Stufe '+S.stufe+' geschafft!</h2><p>'+advice+'</p>'+
+    '<div class="stats"><div class="stat good"><b>'+c.good+'</b><span>sofort richtig</span></div>'+
+    '<div class="stat ok"><b>'+c.ok+'</b><span>nach Verbessern richtig</span></div>'+
+    '<div class="stat help"><b>'+c.help+'</b><span>mit Lösung</span></div></div>'+
+    '<p class="hint">Zeige dieses Ergebnis deiner Lehrkraft.</p><div class="tools">';
+  if(S.stufe<3) h+='<button type="button" class="btn primary" data-action="stufe" data-s="'+(S.stufe+1)+'" id="nextstufe">Weiter mit Stufe '+(S.stufe+1)+'</button>';
+  h+='<button type="button" class="btn'+(S.stufe===3?' primary':'')+'" data-action="again" id="againbtn">Noch einmal Stufe '+S.stufe+'</button></div></div>';
+  $app.innerHTML=h;
+}
+
+/* ---------- Logik ---------- */
+function finish(t){ t.step='done'; S.results[S.idx] = t.revealed ? 'help' : (t.errors===0 ? 'good' : 'ok'); S.justDone=true; }
+function wrongStep(t,action,v){ t.errors++; t.stepErr++; t.wrong={step:action,v:v}; }
+function nextStep(t,step){ t.step=step; t.stepErr=0; t.wrong=null; }
+
+function onRound(t,which,v){
+  const n = which==='roundA' ? t.a : t.b, r = which==='roundA' ? t.ra : t.rb;
+  const go=()=>{ if(which==='roundA'){ t.ansA=fs(r); nextStep(t, isPlainSmall(t.b) ? 'mental' : 'roundB'); } else { t.ansB=fs(r); nextStep(t,'mental'); } };
+  if(v===fs(r)){ t.msg=null; go(); return; }
+  wrongStep(t,which,v);
+  const vv=val(n);
+  if(t.stepErr>=2){ t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> '+cm(fs(n))+' ≈ '+cm(fs(r))+'.'+(vv<1?' Zahlen kleiner als 1 rundest du auf 0,5 oder 1.':'')}; go(); return; }
+  if(v==='0') t.msg={kind:'bad', text:'<b>Nicht auf 0 runden!</b> Dann ist der Überschlag immer 0. Nimm 0,5 (die Hälfte) oder 1.'};
+  else if(vv<1) t.msg={kind:'bad', text:'<b>Noch nicht.</b> Liegt '+cm(fs(n))+' näher an 0,5 oder näher an 1?'};
+  else if(vv<10 && Number(v)>=10) t.msg={kind:'bad', text:'<b>Achte auf das Komma.</b> '+cm(fs(n))+' liegt zwischen '+Math.floor(vv)+' und '+(Math.floor(vv)+1)+'.'};
+  else if(vv>=10 && Number(v)<10) t.msg={kind:'bad', text:'<b>Noch nicht.</b> '+cm(fs(n))+' ist größer als 10. Runde auf Zehner.'};
+  else t.msg={kind:'bad', text:'<b>Noch nicht.</b> Welche Zahl liegt näher an '+cm(fs(n))+'? Schau auf die erste Stelle nach '+(vv<10?'dem Komma':'den Zehnern')+'.'};
+}
+function onMental(t,v){
+  if(v===fs(t.R)){ t.ansM=v; t.msg=null; nextStep(t,'result'); return; }
+  wrongStep(t,'mental',v);
+  if(t.stepErr>=2){ t.ansM=fs(t.R); t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> '+cm(fs(t.ra))+' · '+cm(fs(t.rb))+' = '+cm(fs(t.R))+'.'}; nextStep(t,'result'); return; }
+  const sum=fs({i:t.ra.i*Math.pow(10,t.rb.p)+t.rb.i*Math.pow(10,t.ra.p), p:t.ra.p+t.rb.p});
+  t.msg={kind:'bad', text: v===sum ? '<b>Achtung:</b> Du hast addiert. Hier wird multipliziert.' : '<b>Noch nicht.</b> Rechne '+cm(fs(t.ra))+' · '+cm(fs(t.rb))+' im Kopf. Nimm die Einmaleins-Tafel zur Hilfe.'};
+}
+function onResult(t,v){
+  if(v===fs(t.E)){ t.ansR=v; t.msg=null; finish(t); return; }
+  wrongStep(t,'result',v);
+  if(t.stepErr>=2){ t.ansR=fs(t.E); t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> '+cm(fs(t.E))+' liegt nah am Überschlag '+cm(fs(t.R))+'.'}; finish(t); return; }
+  const big = parseFloat(v.replace(',','.')) > val(t.E);
+  t.msg={kind:'bad', text:'<b>Noch nicht.</b> '+cm(v)+' ist viel zu '+(big?'groß':'klein')+'. Der Überschlag ist '+cm(fs(t.R))+'.'};
+}
+function onExpr(t,v){
+  const next = t.kind==='claim' ? 'judge' : 'place';
+  if(v==='ok'){ t.ansX='ok'; t.msg=null; nextStep(t,next); return; }
+  wrongStep(t,'expr',v);
+  if(t.stepErr>=2){ t.ansX='ok'; t.revealed=true; t.msg=null; nextStep(t,next); t.msg={kind:'info', text:'<b>So geht es:</b> '+cm(fs(t.a))+' ≈ '+cm(fs(t.ra))+' und '+cm(fs(t.b))+' ≈ '+cm(fs(t.rb))+'.'}; return; }
+  const n = v==='a' ? t.a : t.b;
+  t.msg={kind:'bad', text: val(n)<1 ? '<b>Nicht auf 0 runden!</b> '+cm(fs(n))+' ist ungefähr '+cm(fs(roundSimple(n)))+'.' : '<b>Noch nicht.</b> Schau genau auf '+cm(fs(n))+': Wie viele Stellen hat die Zahl vor dem Komma?'};
+}
+function onJudge(t,v){
+  const right = claimTrue(t) ? 'ja' : 'nein';
+  if(v===right){ t.ansS=v; t.msg=null; if(claimTrue(t)) finish(t); else nextStep(t,'place'); return; }
+  wrongStep(t,'judge',v);
+  if(t.stepErr>=2){ t.ansS=right; t.revealed=true;
+    t.msg={kind:'info', text: claimTrue(t) ? '<b>So geht es:</b> '+cm(fmt(claimNum(t)))+' liegt nah am Überschlag '+cm(fs(t.R))+'. Es stimmt.' : '<b>So geht es:</b> '+cm(fmt(claimNum(t)))+' ist viel zu '+(t.shift>0?'groß':'klein')+'. Der Überschlag ist '+cm(fs(t.R))+'.'};
+    if(claimTrue(t)) finish(t); else nextStep(t,'place'); return; }
+  t.msg={kind:'bad', text: claimTrue(t) ? '<b>Schau noch einmal.</b> Ist '+cm(fmt(claimNum(t)))+' nicht ungefähr '+cm(fs(t.R))+'?' : '<b>Schau noch einmal.</b> Vergleiche '+cm(fmt(claimNum(t)))+' mit dem Überschlag '+cm(fs(t.R))+'. Ist das ungefähr gleich groß?'};
+}
+function onPlace(t){
+  if(t.comma==null){ t.msg={kind:'info', text:'Tippe zuerst eine Lücke an, um das Komma zu setzen.'}; return; }
+  if(t.comma===0){ t.msg={kind:'bad', text:'<b>Fast.</b> Vor dem Komma muss mindestens eine Ziffer stehen.'}; return; }
+  const v=placed(t);
+  if(eq(v,t.E)){ if(!(t.kind==='claim' && t.revealed && t.msg && t.msg.kind==='info')) t.msg=null; finish(t); return; }
+  t.errors++; t.stepErr++;
+  if(t.stepErr>=2){ t.comma=t.digits.length-t.P; t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Der Überschlag ist '+cm(fs(t.R))+'. Am nächsten dran ist '+cm(fs(t.E))+'.'}; finish(t); return; }
+  const big = val(v) > val(t.E);
+  t.msg={kind:'bad', text:'<b>Noch nicht.</b> '+cm(fmt(v))+' ist viel zu '+(big?'groß':'klein')+'. Der Überschlag ist '+cm(fs(t.R))+'. Schiebe das Komma.'};
+}
+function press(t,field,k){
+  let s=t[field];
+  if(k==='del') s=s.slice(0,-1);
+  else if(k===','){ if(!s.includes(',') && s.length<9) s+=','; }
+  else if(s.length<9) s+=k;
+  t[field]=s; t.msg=null;
+}
+function parseIn(s){ const parts=s.split(','); const l=parts[0]||'0', r=parts[1]||''; return {i:Number((l+r).replace(/^0+(?=\d)/,'')), p:r.length}; }
+function onCheckEst(t){
+  const s=t.estInput;
+  if(!s){ t.msg={kind:'info', text:'Tippe zuerst deinen Überschlag ein.'}; return; }
+  if(s.endsWith(',')||s.startsWith(',')){ t.msg={kind:'info', text:'Prüfe das Komma in deinem Überschlag.'}; return; }
+  const est=parseIn(s), ev=val(est), E=val(t.E);
+  const q = ev>0 ? E/ev : 0;
+  if(ev>0 && q>=0.5 && q<=2){
+    t.est=simplify(est); t.msg = eq(est,t.E) ? {kind:'good', text:'Das ist schon das genaue Ergebnis. Ein Überschlag geht schneller, z. B. '+cm(fs(t.ra))+' · '+cm(fs(t.rb))+' = '+cm(fs(t.R))+'.'} : null;
+    nextStep(t,'input'); return;
+  }
+  t.errors++; t.stepErr++;
+  if(t.stepErr>=2){ t.est=t.R; t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> '+cm(fs(t.a))+' · '+cm(fs(t.b))+' ≈ '+cm(fs(t.ra))+' · '+cm(fs(t.rb))+' = '+cm(fs(t.R))+'.'}; nextStep(t,'input'); return; }
+  if(ev===0) t.msg={kind:'bad', text:'<b>Ein Überschlag von 0 hilft nicht.</b> Runde Zahlen kleiner als 1 auf 0,5 oder 1.'};
+  else if(q>=5) t.msg={kind:'bad', text:'<b>Dein Überschlag ist viel zu klein</b> – etwa 10-mal. Prüfe beim Runden die Stellen vor dem Komma.'};
+  else if(q<=0.2) t.msg={kind:'bad', text:'<b>Dein Überschlag ist viel zu groß</b> – etwa 10-mal. Prüfe beim Runden die Stellen vor dem Komma.'};
+  else t.msg={kind:'bad', text:'<b>Noch nicht.</b> Runde jeden Faktor auf eine einfache Zahl und multipliziere im Kopf.'};
+}
+function onCheck3(t){
+  const s=t.input;
+  if(!s){ t.msg={kind:'info', text:'Tippe zuerst dein Ergebnis ein.'}; return; }
+  if(s.endsWith(',')){ t.msg={kind:'info', text:'Nach dem Komma fehlt noch etwas.'}; return; }
+  if(s.startsWith(',')){ t.errors++; t.stepErr++; if(t.stepErr>=2){ reveal3(t); return; } t.msg={kind:'bad', text:'<b>Fast.</b> Vor dem Komma muss eine Ziffer stehen. Schreibe eine 0 davor.'}; return; }
+  const parts=s.split(','); const l=parts[0], r=parts[1]||''; const q=r.length;
+  const ok = BigInt(l+r)*(10n**BigInt(t.P)) === BigInt(t.E.i)*(10n**BigInt(q));
+  if(ok){
+    const norm=s.replace(/^0+(?=\d)/,'');
+    t.msg = (norm!==fs(t.E) && q>0 && /0$/.test(r)) ? {kind:'good', text: t.unit==='€' ? 'Richtig! Bei Euro schreibt man zwei Stellen: '+cm(fmt({i:Math.round(val(t.E)*100),p:2}))+' €.' : 'Nullen am Ende nach dem Komma darfst du weglassen: '+cm(fs(t.E))+'.'} :
+            (t.unit==='€' && fs(t.E).split(',')[1] && fs(t.E).split(',')[1].length===1 ? {kind:'good', text:'Bei Euro schreibt man zwei Stellen: '+cm(fmt({i:Math.round(val(t.E)*100),p:2}))+' €.'} : null);
+    finish(t); return;
+  }
+  t.errors++; t.stepErr++;
+  if(t.stepErr>=2){ reveal3(t); return; }
+  const strip=x=>x.replace(/^0+/,'').replace(/0+$/,'');
+  if(strip(l+r)===strip(t.digits)){
+    const big = parseFloat(s.replace(',','.')) > val(t.E);
+    t.msg={kind:'bad', text:'<b>Die Ziffern stimmen!</b> Aber dein Ergebnis ist viel zu '+(big?'groß':'klein')+'. Vergleiche mit deinem Überschlag '+cm(fs(t.est))+' und zähle die Stellen nach dem Komma.'};
+  } else {
+    t.msg={kind:'bad', text:'<b>Noch nicht.</b> Rechne im Heft noch einmal ohne Komma: '+t.a.i+' · '+t.b.i+'.'};
+  }
+}
+function reveal3(t){ t.revealed=true; t.msg={kind:'info', text:'<b>So geht es:</b> Ohne Komma: '+t.a.i+' · '+t.b.i+' = '+t.digits+'. Dann '+st(t.P)+' nach dem Komma.'}; finish(t); }
+function next(){
+  if(S.idx>=N-1) S.finished=true; else S.idx++;
+  render(); window.scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+}
+
+/* ---------- Tippkarten ---------- */
+function tipFocus(){
+  if(S.finished) return 0;
+  const t=S.tasks[S.idx];
+  const small = val(t.a)<1 || val(t.b)<1;
+  if(t.step==='roundA'||t.step==='roundB'||t.step==='expr'||t.step==='est') return small ? 3 : 1;
+  if(t.step==='mental'||t.step==='judge') return 1;
+  if(t.step==='result'||t.step==='place') return 2;
+  if(t.step==='input') return 4;
+  return 1;
+}
+function toggleTips(open){
+  $tips.hidden=!open;
+  if(open){ const f=tipFocus(); $tips.querySelectorAll('.tipcard').forEach(c=>c.classList.toggle('focus', Number(c.dataset.tip)===f)); document.getElementById('tipsclose').focus(); }
+  else document.getElementById('tipbtn').focus();
+}
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click', function(e){
+  if(e.target===$tips){ toggleTips(false); return; }
+  const el=e.target.closest('[data-action]'); if(!el || el.disabled) return;
+  const a=el.dataset.action;
+  if(a==='tips'){ toggleTips(true); return; }
+  if(a==='tipsclose'){ toggleTips(false); return; }
+  if(a==='stufe'){ S.stufe=Number(el.dataset.s); newRound(); window.scrollTo({top:0}); return; }
+  if(a==='again'){ newRound(); window.scrollTo({top:0}); return; }
+  if(S.finished) return;
+  const t=S.tasks[S.idx], v=el.dataset.v;
+  if(a==='roundA'||a==='roundB'){ if(t.step===a) onRound(t,a,v); }
+  else if(a==='mental'){ if(t.step==='mental') onMental(t,v); }
+  else if(a==='result'){ if(t.step==='result') onResult(t,v); }
+  else if(a==='expr'){ if(t.step==='expr') onExpr(t,v); }
+  else if(a==='judge'){ if(t.step==='judge') onJudge(t,v); }
+  else if(a==='gap'){ if(t.step==='place'){ const g=Number(el.dataset.g); t.comma = t.comma===g ? null : g; t.msg=null; } }
+  else if(a==='check'){ if(t.step==='place') onPlace(t); }
+  else if(a==='ekey'){ if(t.step==='est') press(t,'estInput',el.dataset.k); }
+  else if(a==='checkest'){ if(t.step==='est') onCheckEst(t); }
+  else if(a==='key'){ if(t.step==='input') press(t,'input',el.dataset.k); }
+  else if(a==='check3'){ if(t.step==='input') onCheck3(t); }
+  else if(a==='next'){ next(); return; }
+  render();
+});
+document.addEventListener('keydown', function(e){
+  if(!$tips.hidden){ if(e.key==='Escape') toggleTips(false); return; }
+  if(S.finished) return;
+  const t=S.tasks[S.idx];
+  const field = t.step==='est' ? 'estInput' : (t.step==='input' ? 'input' : null);
+  if(field){
+    if(/^[0-9]$/.test(e.key)){ press(t,field,e.key); render(); e.preventDefault(); }
+    else if(e.key===','||e.key==='.'){ press(t,field,','); render(); e.preventDefault(); }
+    else if(e.key==='Backspace'){ press(t,field,'del'); render(); e.preventDefault(); }
+    else if(e.key==='Enter'){ if(field==='estInput') onCheckEst(t); else onCheck3(t); render(); e.preventDefault(); }
+  } else if(t.step==='done' && e.key==='Enter' && !(e.target instanceof HTMLButtonElement)){ next(); e.preventDefault(); }
+});
+
+window.__UD = { S:S, generate:generate, fs:fs, val:val };
+newRound();
+})();
+</script>
+</body>
+</html>
