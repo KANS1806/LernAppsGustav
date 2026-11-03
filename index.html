@@ -43,6 +43,9 @@ a.app{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:inhe
   border:2px solid var(--line);border-radius:var(--r);padding:12px 16px;transition:border-color .15s}
 a.app:hover{border-color:var(--accent)}
 a.app.ov{border-color:var(--accent);background:var(--accent-soft)}
+a.app.vid{border-color:var(--est);background:var(--est-soft)}
+a.app.vid:hover{border-color:var(--accent)}
+.lead a{color:var(--accent)}
 .app .name{font-family:var(--font-display);font-weight:600;font-size:1.05rem;color:var(--accent)}
 .app .what{margin:0;font-size:.95rem;color:var(--muted)}
 .badge{align-self:flex-start;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--est)}
@@ -54,7 +57,7 @@ a.app.ov{border-color:var(--accent);background:var(--accent-soft)}
 </head>
 <body>
 <div class="wrap">
-<header><h1>Unterrichts-<span class="ap">Apps</span></h1><p class="lead">Alle Übungs-Apps nach Fach und Kurs. Tippe auf eine App – sie öffnet sich in einem neuen Tab.</p></header>
+<header><h1>Unterrichts-<span class="ap">Apps</span></h1><p class="lead">Alle Übungs-Apps nach Fach und Kurs. Tippe auf eine App – sie öffnet sich in einem neuen Tab. Die <a href="videos.html">Erklärvideos zu den Reihen</a> findest du beim jeweiligen Kurs.</p></header>
 <section class="grp" aria-labelledby="g-mathe6"><div><h2 id="g-mathe6">Mathematik Klasse 6</h2><p class="sub">Dezimalzahlen multiplizieren, Figuren und Flächen</p></div><div class="apps">
 <a class="app ov" href="mathe6/index.html" target="_blank" rel="noopener"><span class=badge>Übersicht</span><span class="name">Mathe-Apps Klasse 6</span><p class="what">Übersichtsseite für die Schülerinnen und Schüler</p></a>
 <a class="app" href="mathe6/zehnerzahlen-trainer.html" target="_blank" rel="noopener"><span class="name">Zehnerzahlen-Trainer</span><p class="what">Mit 10, 100, 1 000 multiplizieren und dividieren</p></a>
@@ -73,13 +76,15 @@ a.app.ov{border-color:var(--accent);background:var(--accent-soft)}
 <a class="app" href="nw6/aurora-6.html" target="_blank" rel="noopener"><span class="name">AURORA-6 Bodenstation</span><p class="what">Escape Room mit Beamer- und Team-Ansicht</p></a>
 </div></section>
 <section class="grp" aria-labelledby="g-mathe-ef"><div><h2 id="g-mathe-ef">Mathematik EF</h2><p class="sub">Transformationen und Eigenschaften von Funktionen</p></div><div class="apps">
+<a class="app vid" href="videos.html#mathe-ef" target="_blank" rel="noopener"><span class=badge>Erklärvideos</span><span class="name">Erklärvideos EF</span><p class="what">Eigenschaften und Transformationen von Funktionen – je ca. 10 Minuten</p></a>
 <a class="app" href="mathe-ef/transformationen-labor.html" target="_blank" rel="noopener"><span class="name">Transformationen-Labor</span><p class="what">Verschieben, Strecken, Spiegeln</p></a>
 <a class="app" href="mathe-ef/sinus-werkstatt.html" target="_blank" rel="noopener"><span class="name">Sinus-Werkstatt</span><p class="what">Tageslänge, Parameter, Fünf-Punkte-Methode</p></a>
 <a class="app" href="mathe-ef/extrempunkte.html" target="_blank" rel="noopener"><span class="name">Extrempunkte Stunde 11</span><p class="what">Lokale Extrempunkte entdecken und üben</p></a>
 <a class="app" href="mathe-ef/vielfachheit.html" target="_blank" rel="noopener"><span class="name">Vielfachheit Stunde 13</span><p class="what">Vielfachheit von Nullstellen</p></a>
 </div></section>
-<section class="grp" aria-labelledby="g-mathe-lk"><div><h2 id="g-mathe-lk">Mathematik LK Q1</h2><p class="sub">Steckbriefaufgaben</p></div><div class="apps">
+<section class="grp" aria-labelledby="g-mathe-lk"><div><h2 id="g-mathe-lk">Mathematik LK Q1</h2><p class="sub">Optimierungsprobleme und Steckbriefaufgaben</p></div><div class="apps">
 <a class="app ov" href="mathe-lk/index.html" target="_blank" rel="noopener"><span class=badge>Übersicht</span><span class="name">Mathe-Apps LK</span><p class="what">Übersichtsseite mit Checklisten-Filter</p></a>
+<a class="app vid" href="videos.html#mathe-lk" target="_blank" rel="noopener"><span class=badge>Erklärvideos</span><span class="name">Erklärvideos LK</span><p class="what">Optimierungsprobleme, Steckbriefaufgaben und Probeklausur</p></a>
 <a class="app" href="mathe-lk/steckbrief-uebersetzer.html" target="_blank" rel="noopener"><span class="name">Steckbrief-Übersetzer Stunde 2</span><p class="what">Bedingungen aufstellen</p></a>
 <a class="app" href="mathe-lk/gauss-werkstatt.html" target="_blank" rel="noopener"><span class="name">Gauß-Werkstatt Stunde 5</span><p class="what">Gauß-Algorithmus und Fehlersuche</p></a>
 <a class="app" href="mathe-lk/trassierungs-labor.html" target="_blank" rel="noopener"><span class="name">Trassierungs-Labor Stunde 8</span><p class="what">Knickfrei oder ruckfrei?</p></a>
@@ -87,12 +92,14 @@ a.app.ov{border-color:var(--accent);background:var(--accent-soft)}
 <a class="app" href="mathe-lk/sinusparameter.html" target="_blank" rel="noopener"><span class="name">Sinusparameter Stunde 13</span><p class="what">Sinusmodelle aufstellen</p></a>
 <a class="app" href="mathe-lk/abschluss-quiz.html" target="_blank" rel="noopener"><span class="name">Abschluss-Quiz Stunde 15</span><p class="what">Quiz zur ganzen Reihe</p></a>
 </div></section>
-<section class="grp" aria-labelledby="g-mathe-q2"><div><h2 id="g-mathe-q2">Mathematik GK Q2</h2><p class="sub">Zusammengesetzte Funktionen und Ableitungsregeln</p></div><div class="apps">
+<section class="grp" aria-labelledby="g-mathe-q2"><div><h2 id="g-mathe-q2">Mathematik GK Q2</h2><p class="sub">Exponentialfunktionen, zusammengesetzte Funktionen und Ableitungsregeln</p></div><div class="apps">
+<a class="app vid" href="videos.html#mathe-q2" target="_blank" rel="noopener"><span class=badge>Erklärvideos</span><span class="name">Erklärvideos GK Q2</span><p class="what">Exponentialfunktionen und zusammengesetzte Funktionen</p></a>
 <a class="app" href="mathe-q2/ableitungstraining.html" target="_blank" rel="noopener"><span class="name">Ableitungstraining Stunde 1</span><p class="what">Produkt- und Kettenregel</p></a>
 <a class="app" href="mathe-q2/wendepunkte.html" target="_blank" rel="noopener"><span class="name">Wendepunkte Stunde 5</span><p class="what">Wendepunkte und Krümmung</p></a>
 <a class="app" href="mathe-q2/groesstes-rechteck.html" target="_blank" rel="noopener"><span class="name">Größtes Rechteck Stunde 7</span><p class="what">Extremwertproblem entdecken</p></a>
 </div></section>
-<section class="grp" aria-labelledby="g-physik-q1"><div><h2 id="g-physik-q1">Physik GK Q1</h2><p class="sub">Wellenoptik</p></div><div class="apps">
+<section class="grp" aria-labelledby="g-physik-q1"><div><h2 id="g-physik-q1">Physik GK Q1</h2><p class="sub">Schwingungen und Wellen, Wellenoptik</p></div><div class="apps">
+<a class="app vid" href="videos.html#physik-q1" target="_blank" rel="noopener"><span class=badge>Erklärvideos</span><span class="name">Erklärvideo Physik</span><p class="what">Schwingungen und Wellen – die Reihe in 15 Minuten</p></a>
 <a class="app" href="physik-q1/doppelspalt-zum-gitter.html" target="_blank" rel="noopener"><span class="name">Vom Doppelspalt zum Gitter</span><p class="what">Mehrfachspalt und Gitter – Stunde 5</p></a>
 <a class="app" href="physik-q1/weisslicht-am-gitter.html" target="_blank" rel="noopener"><span class="name">Weißlicht am Gitter</span><p class="what">Spektren am Gitter – Stunde 6</p></a>
 <a class="app" href="physik-q1/polarisation.html" target="_blank" rel="noopener"><span class="name">Polarisation</span><p class="what">Polarisation – Stunde 7</p></a>

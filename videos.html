@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Erklärvideos</title>
+<link rel="stylesheet" href="fonts/lexend.css">
+<link rel="stylesheet" href="fonts/atkinson-hyperlegible.css">
+<style>
+:root{
+  --paper:#F6F8FC; --grid:rgba(43,79,168,.085); --surface:#FFFFFF; --line:#D3DBEA;
+  --ink:#1B2540; --muted:#56627C; --accent:#2B4FA8; --accent-soft:#E5EBFA; --est:#6B3FA0; --est-soft:#EFE7F8;
+  --good:#22814F; --good-soft:#DDF3E7;
+  --font-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --font-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif; --r:14px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+    --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-soft:#222E4E; --est:#C9A6F5; --est-soft:#33274A;
+    --good:#5BCB8F; --good-soft:#173A2A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#121826; --grid:rgba(150,175,255,.07); --surface:#1A2234; --line:#2E3A55;
+  --ink:#E7ECF6; --muted:#9CA8C1; --accent:#88A6FF; --accent-soft:#222E4E; --est:#C9A6F5; --est-soft:#33274A;
+  --good:#5BCB8F; --good-soft:#173A2A; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;color:var(--ink);font-family:var(--font-body);font-size:18px;line-height:1.45}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:22px;
+  padding-block:22px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(1.6rem,5vw,2.2rem);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 .ap{color:var(--est)}
+.lead{margin:4px 0 0;color:var(--muted)}
+.back{display:inline-block;margin-bottom:6px;font-size:.95rem;color:var(--accent)}
+h2{font-family:var(--font-display);font-size:1.2rem;font-weight:600;margin:0}
+.sub{margin:0;color:var(--muted);font-size:.95rem}
+nav.jump{display:flex;flex-wrap:wrap;gap:8px}
+nav.jump a{font-size:.95rem;text-decoration:none;color:var(--accent);background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:6px 14px}
+nav.jump a:hover{border-color:var(--accent)}
+section.grp{display:flex;flex-direction:column;gap:12px;scroll-margin-top:12px}
+.vid{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:12px;min-width:0}
+.vid:target{border-color:var(--accent)}
+.vid .badge{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--est)}
+.vid h3{margin:0;font-family:var(--font-display);font-weight:600;font-size:1.1rem;color:var(--accent);text-wrap:balance}
+.vid .meta{margin:0;font-size:.95rem;color:var(--muted)}
+.vid video{width:100%;aspect-ratio:16/9;background:#0E1626;border-radius:10px;display:block}
+details.kap>summary{cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center;gap:8px;list-style:none;color:var(--ink)}
+details.kap>summary::-webkit-details-marker{display:none}
+details.kap>summary::before{content:"▸";color:var(--est);transition:transform .15s}
+details.kap[open]>summary::before{transform:rotate(90deg)}
+.kap ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.kap button{width:100%;display:grid;grid-template-columns:3.4em 1fr;gap:10px;align-items:baseline;text-align:left;font:inherit;font-size:.98rem;
+  color:var(--ink);background:transparent;border:1.5px solid transparent;border-radius:8px;padding:7px 10px;cursor:pointer;min-height:40px}
+.kap button:hover{background:var(--accent-soft)}
+.kap button.now{border-color:var(--accent);background:var(--accent-soft)}
+.kap .t{font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.note{margin:0;font-size:.95rem;color:var(--muted)}
+.credit{margin-top:12px;text-align:center;font-size:.85rem;color:var(--muted)}
+.credit a{color:inherit}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="back" href="./">← Zur Startseite mit allen Apps</a>
+  <h1>Erklär<span class="ap">videos</span></h1>
+  <p class="lead">Jedes Video fasst eine ganze Reihe zusammen. Tippe auf ein Kapitel – das Video springt direkt an die Stelle.</p>
+</header>
+<nav class="jump" id="jump" aria-label="Kurse"></nav>
+<div id="list" style="display:flex;flex-direction:column;gap:26px"></div>
+<p class="note">Tipp: Mit Kopfhörern schauen. Das Video lädt erst, wenn du auf Abspielen tippst.</p>
+<footer class="credit">Erstellt mit KI von Christoph Kansy · <a href="./">Zur Startseite</a></footer>
+</div>
+<script>
+/* ===== Inhalte =====
+   Neues Video: MP4 (max. 25 MB) und Vorschaubild (JPG) in den Ordner „videos“ legen
+   und hier beim passenden Kurs einen Eintrag ergänzen. id = Dateiname ohne Endung.
+   kapitel: [Startsekunde, "Titel"] – leer lassen, wenn das Video keine Kapitel hat. */
+const KURSE = [
+  {id: "mathe-ef", titel: "Mathematik EF", sub: "Eigenschaften und Transformationen von Funktionen", videos: [
+    {id: "mathe-ef-eigenschaften-von-funktionen", badge: "Reihe 1", titel: "Eigenschaften von Funktionen – die Reihe in zehn Minuten", dauer: "8:25", kapitel: [[0, "1 · Potenzfunktionen"], [63, "2 · Ganzrationale Funktionen"], [108.6, "3 · Nullstellen berechnen"], [160.6, "4 · Verhalten im Unendlichen und Symmetrie"], [219.5, "5 · Monotonie"], [281.7, "6 · Lokale Extrempunkte"], [352, "7 · Linearfaktordarstellung"], [400.4, "8 · Vielfachheit von Nullstellen"], [452.5, "Typische Fehler"], [480.4, "Das kannst du jetzt"]]},
+    {id: "mathe-ef-transformationen-von-funktionen", badge: "Reihe 2", titel: "Transformationen von Funktionen – die Reihe in zehn Minuten", dauer: "11:11", kapitel: [[0, "1 · Periodische Vorgänge und die Sinusfunktion"], [77.1, "2 · Bogenmaß und Steckbrief der Sinusfunktion"], [146.9, "3 · Verschieben und Strecken: die Punktregel"], [307.6, "4 · Spiegelungen an den Koordinatenachsen"], [430.9, "5 · Transformationen der Sinusfunktion"], [524, "6 · Ein Sinusmodell für die Tageslänge"], [616.6, "Typische Fehler"], [645.9, "Das kannst du jetzt"]]}
+  ]},
+  {id: "mathe-lk", titel: "Mathematik LK Q1", sub: "Optimierungsprobleme und Steckbriefaufgaben", videos: [
+    {id: "mathe-lk-optimierungsprobleme", badge: "Reihe 1", titel: "Optimierungsprobleme – die Reihe in zehn Minuten", dauer: "8:35", kapitel: [[0, "1 · Biquadratische Gleichungen"], [54.4, "2 · Das Grundschema: Optimieren ohne Rand"], [127, "3 · Randextrema und Kandidatenverfahren"], [201.4, "4 · Gebrochenrationale Zielfunktion und MMS"], [271.5, "5 · Optimieren mit Parameter"], [341.5, "6 · Funktionenscharen"], [421.6, "7 · Die Schachtel-Schar: Der Bogen schließt sich"], [467.2, "Typische Fehler"], [488.7, "Das kannst du jetzt"]]},
+    {id: "mathe-lk-probeklausur-aufgabe5-paket", badge: "Reihe 1 · Probeklausur", titel: "Probeklausur Aufgabe 5: Das Paket", dauer: "3:56", kapitel: []},
+    {id: "mathe-lk-steckbriefaufgaben", badge: "Reihe 2", titel: "Steckbriefaufgaben – die Reihe in zehn Minuten", dauer: "11:46", kapitel: [[0, "1 · Vom Steckbrief zum Gleichungssystem"], [88.7, "2 · Geschickt ansetzen: Lage des Koordinatensystems"], [154.3, "3 · Der Gauß-Algorithmus"], [217, "4 · Was die Stufenform verrät"], [296.3, "5 · Knickfreie und ruckfreie Übergänge"], [383.2, "6 · Modellieren mit realen Daten"], [439, "7 · Unterbestimmte Steckbriefe: Funktionenscharen"], [500.1, "8 · Bedingungen mit Parameter"], [561, "9 · Sinusfunktion und Sinusmodelle"], [650.2, "Typische Fehler"], [678.8, "Das kannst du jetzt"]]}
+  ]},
+  {id: "mathe-q2", titel: "Mathematik GK Q2", sub: "Exponentialfunktionen und zusammengesetzte Funktionen", videos: [
+    {id: "mathe-gk-exponentialfunktionen", badge: "Reihe 1", titel: "Exponentialfunktionen – die Reihe in zehn Minuten", dauer: "9:01", kapitel: [[0, "1 · Die allgemeine Exponentialfunktion"], [91.8, "2 · Der Logarithmus"], [152.5, "3 · Die Eulersche Zahl e und der natürliche Logarithmus"], [207.1, "4 · Umschreiben auf die Basis e"], [265.9, "5 · Ableiten von e-Funktionen"], [334.4, "6 · Halbwertszeit und Verdopplungszeit"], [400.3, "7 · Begrenztes Wachstum und begrenzte Abnahme"], [495.5, "Typische Fehler"], [515.1, "Das kannst du jetzt"]]},
+    {id: "mathe-gk-zusammengesetzte-funktionen", badge: "Reihe 2", titel: "Zusammengesetzte Funktionen – die Reihe in zehn Minuten", dauer: "10:55", kapitel: [[0, "1 · Produktregel und Kettenregel"], [88.6, "2 · Was die Bausteine verraten"], [154.3, "3 · Verhalten für x → ±∞: „eˣ gewinnt“"], [233.3, "4 · Extrempunkte und Monotonie"], [328.8, "5 · Krümmung und Wendepunkte"], [425.3, "6 · Ableiten rückwärts: Stammfunktionen"], [508.1, "7 · Anwenden: das größte Rechteck"], [599.3, "Typische Fehler"], [623.5, "Das kannst du jetzt"]]}
+  ]},
+  {id: "physik-q1", titel: "Physik GK Q1", sub: "Schwingungen und Wellen", videos: [
+    {id: "physik-gk-schwingungen-und-wellen", badge: "Reihe 1", titel: "Schwingungen und Wellen – die Reihe in fünfzehn Minuten", dauer: "14:03", kapitel: [[0, "1 · Die harmonische Schwingung"], [112, "2 · Wovon hängt die Periodendauer ab?"], [199.2, "3 · Energieumwandlung beim Federpendel"], [284.1, "4 · Dämpfung und Resonanz"], [375.1, "5 · Von der Schwingung zur Welle"], [477.9, "6 · Superposition und stehende Wellen"], [595.3, "7 · Wellen in der Fläche: Huygens"], [731.9, "8 · Lärm reduzieren mit Interferenz"], [813.1, "Typische Fehler"], [827.8, "Das kannst du jetzt"]]}
+  ]}
+];
+
+/* ===== Darstellung ===== */
+const el = (t, c, txt) => { const e = document.createElement(t); if (c) e.className = c; if (txt != null) e.textContent = txt; return e; };
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+const list = document.getElementById("list"), jump = document.getElementById("jump");
+const players = [];
+
+for (const k of KURSE) {
+  const a = el("a", null, k.titel); a.href = `#${k.id}`; jump.append(a);
+  const sec = el("section", "grp"); sec.id = k.id; sec.setAttribute("aria-labelledby", `h-${k.id}`);
+  const head = el("div"); const h = el("h2", null, k.titel); h.id = `h-${k.id}`;
+  head.append(h, el("p", "sub", k.sub)); sec.append(head);
+
+  for (const v of k.videos) {
+    const card = el("article", "vid"); card.id = v.id;
+    card.append(el("span", "badge", v.badge), el("h3", null, v.titel),
+                el("p", "meta", `${v.dauer} Minuten${v.kapitel.length ? ` · ${v.kapitel.length} Kapitel` : ""}`));
+    const vid = document.createElement("video");
+    vid.controls = true; vid.preload = "none"; vid.playsInline = true;
+    vid.poster = `videos/${v.id}.jpg`; vid.src = `videos/${v.id}.mp4`;
+    vid.setAttribute("aria-label", v.titel);
+    vid.append("Dein Browser kann dieses Video nicht abspielen.");
+    card.append(vid); players.push(vid);
+
+    if (v.kapitel.length) {
+      const det = el("details", "kap"); det.append(el("summary", null, `Kapitel (${v.kapitel.length})`));
+      const ol = el("ol"); const btns = [];
+      v.kapitel.forEach(([start, titel]) => {
+        const li = el("li"); const b = el("button"); b.type = "button";
+        b.append(el("span", "t", mmss(start)), el("span", null, titel));
+        b.onclick = () => {
+          const go = () => { vid.currentTime = start; vid.play().catch(() => {}); };
+          if (vid.readyState >= 1) go(); else { vid.preload = "metadata"; vid.addEventListener("loadedmetadata", go, {once: true}); vid.load(); }
+          vid.scrollIntoView({block: "nearest"});
+        };
+        li.append(b); ol.append(li); btns.push([start, b]);
+      });
+      vid.addEventListener("timeupdate", () => {
+        let cur = -1; btns.forEach(([s], i) => { if (vid.currentTime >= s - 0.2) cur = i; });
+        btns.forEach(([, b], i) => b.classList.toggle("now", i === cur));
+      });
+      det.append(ol); card.append(det);
+    }
+    sec.append(card);
+  }
+  list.append(sec);
+}
+// Immer nur ein Video gleichzeitig
+players.forEach(p => p.addEventListener("play", () => players.forEach(q => { if (q !== p) q.pause(); })));
+// Sprungmarke aus dem Link (z. B. videos.html#mathe-lk) nach dem Aufbau anfahren
+if (location.hash) { const t = document.getElementById(decodeURIComponent(location.hash.slice(1))); if (t) t.scrollIntoView(); }
+</script>
+</body>
+</html>
