@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mathe-Apps GK Q2</title>
+<link rel="stylesheet" href="../fonts/caladea.css">
+<link rel="stylesheet" href="../fonts/carlito.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: navy Kopfband wie in den Web-Apps, darunter „So übst du“, Checklisten-Filter und je Reihe ein aufklappbarer Block mit Erklärvideo (Kapitelliste) und App-Karten in Stundenreihenfolge. */
+:root{
+  --bg:#F6F7FB; --card:#FFFFFF; --ink:#26314A; --navy:#1E2761; --band:#1E2761; --band-ink:#FFFFFF; --band-sub:#CADCFC;
+  --acc:#B85042; --acc-soft:#FBF3EE; --light:#EDEFF7; --cream:#F3EAD9; --grey:#5F6678; --line:#BFC5D2;
+  --ok:#2F7D4F; --ok-soft:#E7F3EC; --hi:#FFF4D6; --hi-line:#D9A21B;
+  --font-display:Cambria,Caladea,Georgia,serif; --font-body:Calibri,Carlito,"Segoe UI",Roboto,Arial,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1326; --card:#181D38; --ink:#E4E7F2; --navy:#C9D3FF; --band:#1A2147; --band-ink:#FFFFFF; --band-sub:#B8C6F5;
+    --acc:#E59484; --acc-soft:#2E1E22; --light:#232A4D; --cream:#2B2618; --grey:#A3ABBF; --line:#3A4266;
+    --ok:#6FCF97; --ok-soft:#16321F; --hi:#3A3016; --hi-line:#E0B54A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1326; --card:#181D38; --ink:#E4E7F2; --navy:#C9D3FF; --band:#1A2147; --band-ink:#FFFFFF; --band-sub:#B8C6F5;
+  --acc:#E59484; --acc-soft:#2E1E22; --light:#232A4D; --cream:#2B2618; --grey:#A3ABBF; --line:#3A4266;
+  --ok:#6FCF97; --ok-soft:#16321F; --hi:#3A3016; --hi-line:#E0B54A; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 var(--font-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--band)}
+header{background:var(--band);color:var(--band-ink);padding-block:24px 20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header .in,main{max-width:860px;margin:0 auto}
+.k{color:var(--band-sub);font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+h1{font:700 clamp(28px,5vw,34px)/1.15 var(--font-display);margin:6px 0 4px;text-wrap:balance}
+.u{color:var(--band-sub);font-style:italic;margin:0}
+main{display:flex;flex-direction:column;gap:16px;padding-block:18px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h2{font:700 21px/1.25 var(--font-display);color:var(--navy);margin:0;text-wrap:balance}
+.how{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.how ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+.lv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px}
+.lv div{border-radius:8px;padding:8px 12px;font-size:15px;background:var(--light)}
+.lv b{display:block;color:var(--navy);font-size:13px;letter-spacing:.1em;text-transform:uppercase}
+details.reihe{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}
+details.reihe>summary{cursor:pointer;list-style:none;padding:14px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+details.reihe>summary::-webkit-details-marker{display:none}
+details.reihe>summary::before{content:"▸";color:var(--acc);font-weight:700;transition:transform .15s}
+details.reihe[open]>summary::before{transform:rotate(90deg)}
+summary .meta{color:var(--grey);font-size:15px}
+.body{padding:0 18px 18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.filter{display:flex;flex-direction:column;gap:6px}
+.filter .lab,.video .lab{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:700 15px var(--font-body);min-width:40px;min-height:40px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.chips button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:var(--card)}
+.hint{margin:0;font-size:15px;color:var(--grey);min-height:1.5em}
+.video{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--acc-soft);min-width:0}
+.video .name{font:700 20px/1.2 var(--font-display);color:var(--navy)}
+.video p{margin:0}
+.video .wo{font-size:15px;color:var(--grey)}
+.video ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.video li{display:grid;grid-template-columns:3.2em 1fr;gap:2px 10px;padding:6px 10px;border-radius:8px;border:1.5px solid transparent;font-size:15px}
+.video li .t{font-variant-numeric:tabular-nums;color:var(--grey);font-weight:700}
+.video li .bsp{grid-column:2;color:var(--grey)}
+.video li.match{border-color:var(--hi-line);background:var(--hi)}
+.video video{width:100%;aspect-ratio:16/9;background:#0E1626;border-radius:8px;display:block}
+.video li[role="button"]{cursor:pointer}
+.video li[role="button"]:hover{border-color:var(--line)}
+.video li[role="button"]:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+.video li.now{border-color:var(--navy)}
+.video details>summary{cursor:pointer;font-weight:700;color:var(--navy);min-height:40px;display:flex;align-items:center;gap:8px;list-style:none}
+.video details>summary::-webkit-details-marker{display:none}
+.video details>summary::before{content:"▸";color:var(--acc);transition:transform .15s}
+.video details[open]>summary::before{transform:rotate(90deg)}
+.video details>summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.abschnitt{display:flex;flex-direction:column;gap:8px}
+.abschnitt h3{margin:4px 0 0;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--grey)}
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:10px}
+.app{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--card);color:inherit;text-decoration:none;min-width:0;transition:border-color .15s}
+a.app:hover{border-color:var(--navy)}
+a.app:focus-visible,.chips button:focus-visible,summary:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.app .name{font:700 20px/1.2 var(--font-display);color:var(--navy)}
+.app p{margin:0}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:4px}
+.tag{font-size:13px;padding:2px 10px;border-radius:999px;background:var(--light)}
+.tag.cl{background:var(--cream)}
+.tag.fm{background:transparent;border:1px solid var(--line);color:var(--grey)}
+.app.soon{border-style:dashed;opacity:.72}
+.app.soon .name{color:var(--grey)}
+.soonlab{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--acc)}
+.app.match{border-color:var(--hi-line);background:var(--hi);opacity:1}
+.note{font-size:15px;color:var(--grey);margin:0}
+footer{text-align:center;font-size:14px;color:var(--grey)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <div class="in">
+    <div class="k">Mathematik GK · Qualifikationsphase</div>
+    <h1>Mathe-Apps GK Q2</h1>
+    <p class="u">Alle Web-Apps und Erklärvideos der Reihen an einem Ort – für die Stunde und zum Üben zu Hause</p>
+  </div>
+</header>
+
+<main>
+  <section class="how" aria-labelledby="howT">
+    <h2 id="howT">So übst du</h2>
+    <ol>
+      <li>Schau dir zuerst das passende Kapitel im Erklärvideo an. Das Video läuft direkt hier auf der Seite – tippe auf ein Kapitel, dann springt es an die Stelle.</li>
+      <li>Tippe dann auf eine App. Sie öffnet sich in einem neuen Tab und merkt sich deinen Stand auf diesem Gerät. Oben in der App blätterst du durch die Abschnitte.</li>
+      <li>Nutze die Hilfen. Die Lösung erscheint nach zwei Fehlversuchen.</li>
+    </ol>
+    <div class="lv" aria-label="Wo fange ich an?">
+      <div><b>unsicher</b>Erst das Videokapitel, dann Abschnitt 1 der App mit jeder Hilfe.</div>
+      <div><b>teilweise</b>Bearbeite den Hauptteil ohne Hilfen. Erst bei Fehlern nachsehen.</div>
+      <div><b>sicher</b>Nimm die ★-Abschnitte und das Quiz.</div>
+    </div>
+  </section>
+
+  <div id="reihen"></div>
+
+  <p class="note">Die Apps sind nur zur Selbstkontrolle. Nichts wird übertragen – du kannst so oft üben, wie du willst.</p>
+  <footer>Erstellt mit KI von Christoph Kansy</footer>
+</main>
+
+<script>
+/* ===== Inhalte =====
+   Neue Reihe: ein Objekt OBEN in REIHEN einfügen (die neueste Reihe steht zuerst und ist aufgeklappt).
+   Neue App: in der passenden Reihe bei „apps“ ergänzen; ohne link erscheint sie als „folgt“.
+   checkliste = Nummern der Checkliste zur Reihe, die die App bzw. das Videokapitel abdeckt.
+   video (optional): Erklärvideo der Reihe – datei = Name im Ordner ../videos (ohne .mp4; Vorschaubild gleichnamig als .jpg). */
+const REIHEN = [
+ {
+  "nr": 3,
+  "titel": "Modellieren mit zusammengesetzten Funktionen",
+  "stufe": "Q2",
+  "stunden": "9 Stunden",
+  "abschnitte": [
+   {
+    "titel": "Wachstum, das zu- und wieder abnimmt",
+    "apps": [
+     {
+      "stunde": 3,
+      "name": "Medikamentenmodelle",
+      "link": "medikamentenmodelle.html",
+      "was": "Dosis a und Abbau k im Medikamentenmodell mit Schiebereglern entdecken, Graphen zuordnen, dann k und a aus Zeitpunkt und Höchstwert bestimmen.",
+      "formate": [
+       "Entdecken",
+       "Zuordnen",
+       "Üben"
+      ]
+     }
+    ]
+   },
+   {
+    "titel": "Neue Bausteine: Wurzel, Kehrwert, Sinus, Kosinus",
+    "apps": [
+     {
+      "stunde": 7,
+      "name": "Sinus ableiten",
+      "was": "Eine Tangente gleitet über den Sinusgraphen und zeichnet die Ableitung – danach Ableitungen üben.",
+      "formate": [
+       "Entdecken",
+       "Üben"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "nr": 2,
+  "titel": "Zusammengesetzte Funktionen und Ableitungsregeln",
+  "stufe": "Q2",
+  "stunden": "7 Stunden + Klausurtraining",
+  "video": {
+   "titel": "Zusammengesetzte Funktionen – die Reihe in zehn Minuten",
+   "dauer": "10:55",
+   "datei": "mathe-gk-zusammengesetzte-funktionen",
+   "kapitel": [
+    {
+     "zeit": "0:00",
+     "titel": "1 · Produktregel und Kettenregel"
+    },
+    {
+     "zeit": "1:28",
+     "titel": "2 · Was die Bausteine verraten"
+    },
+    {
+     "zeit": "2:34",
+     "titel": "3 · Verhalten für x → ±∞: „eˣ gewinnt“"
+    },
+    {
+     "zeit": "3:53",
+     "titel": "4 · Extrempunkte und Monotonie"
+    },
+    {
+     "zeit": "5:28",
+     "titel": "5 · Krümmung und Wendepunkte"
+    },
+    {
+     "zeit": "7:05",
+     "titel": "6 · Ableiten rückwärts: Stammfunktionen"
+    },
+    {
+     "zeit": "8:28",
+     "titel": "7 · Anwenden: das größte Rechteck"
+    },
+    {
+     "zeit": "9:59",
+     "titel": "Typische Fehler"
+    },
+    {
+     "zeit": "10:23",
+     "titel": "Das kannst du jetzt"
+    }
+   ]
+  },
+  "abschnitte": [
+   {
+    "titel": "Produkt- und Kettenregel",
+    "apps": [
+     {
+      "stunde": 1,
+      "name": "Ableitungstraining",
+      "link": "ableitungstraining.html",
+      "was": "Produkt- und Kettenregel üben: Ableitung eintippen, die App prüft sofort. Mit ★-Aufgaben zum Ausklammern.",
+      "formate": [
+       "Term eingeben",
+       "★ Weiter",
+       "★ Ausklammern"
+      ]
+     }
+    ]
+   },
+   {
+    "titel": "Krümmung und Wendepunkte",
+    "apps": [
+     {
+      "stunde": 5,
+      "name": "Wendepunkte",
+      "link": "wendepunkte.html",
+      "was": "Zusammenhänge zwischen f, f′ und f″, das Verfahren für Wendepunkte, Übungen, Fehlersuche und Blitzrunde.",
+      "formate": [
+       "Zuordnen",
+       "Reihenfolge",
+       "Üben",
+       "Fehlersuche",
+       "Quiz"
+      ]
+     }
+    ]
+   },
+   {
+    "titel": "Anwenden",
+    "apps": [
+     {
+      "stunde": 7,
+      "name": "Das größte Rechteck",
+      "link": "groesstes-rechteck.html",
+      "was": "Ein Rechteck unter dem Graphen mit dem Schieberegler optimieren, dann die Zielfunktion aufstellen und rechnen.",
+      "formate": [
+       "Entdecken",
+       "Rechnen"
+      ]
+     }
+    ]
+   },
+   {
+    "titel": "Klausurtraining",
+    "apps": [
+     {
+      "stunde": "Klausurtraining II",
+      "name": "Klausur-Fit ohne Hilfsmittel",
+      "link": "klausur-fit.html",
+      "was": "Fehlersuche und Blitzrunde zu den typischen Fehlern der Reihe – ohne Taschenrechner, vor der 2. Klausur.",
+      "formate": [
+       "Fehlersuche",
+       "Quiz"
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "nr": 1,
+  "titel": "Von Wachstumsprozessen zur natürlichen Exponentialfunktion",
+  "stufe": "Q2",
+  "stunden": "9 Stunden",
+  "video": {
+   "titel": "Exponentialfunktionen – die Reihe in zehn Minuten",
+   "dauer": "9:01",
+   "datei": "mathe-gk-exponentialfunktionen",
+   "kapitel": [
+    {
+     "zeit": "0:00",
+     "titel": "1 · Die allgemeine Exponentialfunktion"
+    },
+    {
+     "zeit": "1:31",
+     "titel": "2 · Der Logarithmus"
+    },
+    {
+     "zeit": "2:32",
+     "titel": "3 · Die Eulersche Zahl e und der natürliche Logarithmus"
+    },
+    {
+     "zeit": "3:27",
+     "titel": "4 · Umschreiben auf die Basis e"
+    },
+    {
+     "zeit": "4:25",
+     "titel": "5 · Ableiten von e-Funktionen"
+    },
+    {
+     "zeit": "5:34",
+     "titel": "6 · Halbwertszeit und Verdopplungszeit"
+    },
+    {
+     "zeit": "6:40",
+     "titel": "7 · Begrenztes Wachstum und begrenzte Abnahme"
+    },
+    {
+     "zeit": "8:15",
+     "titel": "Typische Fehler"
+    },
+    {
+     "zeit": "8:35",
+     "titel": "Das kannst du jetzt"
+    }
+   ]
+  },
+  "abschnitte": []
+ }
+];
+
+/* ===== Darstellung ===== */
+const $ = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[ch]));
+const root = document.getElementById("reihen");
+root.style.cssText = "display:flex;flex-direction:column;gap:16px";
+
+REIHEN.forEach((r, ri) => {
+  const all = r.abschnitte.flatMap(a => a.apps);
+  const fertig = all.filter(a => a.link).length;
+  const d = $("details", "reihe"); if (ri === 0) d.open = true;
+  const s = $("summary");
+  s.append($("h2", null, `Reihe ${r.nr}: ${esc(r.titel)}`),
+           $("span", "meta", [r.stufe, r.stunden, all.length ? `${fertig} von ${all.length} Apps online` : "nur Erklärvideo", all.length && r.video ? "Erklärvideo" : ""].filter(Boolean).map(esc).join(" · ")));
+  d.append(s);
+  const body = $("div", "body"); d.append(body);
+
+  // Checklisten-Filter (nur, wenn die Reihe eine Checkliste hat)
+  const f = $("div", "filter");
+  f.append($("span", "lab", "Checkliste – Nummern antippen"));
+  const chips = $("div", "chips"); const hint = $("p", "hint"); hint.setAttribute("aria-live", "polite");
+  const sel = new Set();
+  const cards = [], kapZeilen = []; let kapBox = null;
+  const update = () => {
+    let hits = 0, kHits = 0, missing = [];
+    cards.forEach(({el, app}) => {
+      const m = sel.size > 0 && app.checkliste && [...sel].some(n => app.checkliste === "alle" || app.checkliste.includes(n));
+      el.classList.toggle("match", m); if (m && app.link) hits++;
+    });
+    kapZeilen.forEach(({el, kap}) => {
+      const m = sel.size > 0 && kap.checkliste && [...sel].some(n => kap.checkliste.includes(n));
+      el.classList.toggle("match", m); if (m) kHits++;
+    });
+    if (kapBox && kHits) kapBox.open = true;
+    sel.forEach(n => { if (!all.some(a => a.link && a.checkliste && a.checkliste !== "alle" && a.checkliste.includes(n))) missing.push(n); });
+    hint.textContent = sel.size === 0 ? "" :
+      (kHits ? `${kHits} Videokapitel markiert. ` : "") +
+      (hits ? `${hits} App${hits > 1 ? "s" : ""} markiert. ` : "") +
+      (missing.length ? `Für Nr. ${missing.join(", ")} gibt es (noch) keine App – nutze das Video und „Hier üben“ auf der Checkliste.` : "");
+  };
+  for (let n = 1; n <= r.checklistePunkte; n++) {
+    const b = $("button", null, String(n)); b.type = "button"; b.id = `cl-${r.nr}-${n}`; b.setAttribute("aria-pressed", "false");
+    b.onclick = () => { sel.has(n) ? sel.delete(n) : sel.add(n); b.setAttribute("aria-pressed", sel.has(n)); update(); };
+    chips.append(b);
+  }
+  f.append(chips, hint); if (r.checklistePunkte) body.append(f);
+
+  // Erklärvideo mit Player; Kapitel antippen = an die Stelle springen
+  if (r.video) {
+    const v = $("section", "video"); v.setAttribute("aria-label", "Erklärvideo zur Reihe");
+    v.append($("span", "lab", "Erklärvideo"),
+             $("span", "name", esc(r.video.titel)),
+             $("p", "wo", `${esc(r.video.dauer)} Minuten. Jedes Kapitel erklärt einen Inhalt an einem Beispiel aus dem Unterricht.`));
+    // (Kapitel ohne Beispielzeile sind erlaubt)
+    let vid = null;
+    if (r.video.datei) {
+      vid = document.createElement("video");
+      vid.controls = true; vid.preload = "none"; vid.playsInline = true;
+      vid.poster = `../videos/${r.video.datei}.jpg`; vid.src = `../videos/${r.video.datei}.mp4`;
+      vid.setAttribute("aria-label", r.video.titel);
+      v.append(vid);
+    }
+    const sek = z => { const [m, s] = z.split(":").map(Number); return m * 60 + s; };
+    const ol = $("ol"); const zeilen = [];
+    r.video.kapitel.forEach(kap => {
+      const li = $("li");
+      li.append($("span", "t", esc(kap.zeit)), $("span", null, esc(kap.titel))); if (kap.bsp) li.append($("span", "bsp", esc(kap.bsp)));
+      if (vid) {
+        const start = sek(kap.zeit) + 1;
+        li.setAttribute("role", "button"); li.tabIndex = 0;
+        li.setAttribute("aria-label", `Video ab ${kap.zeit} abspielen: ${kap.titel}`);
+        const go = () => {
+          const spring = () => { vid.currentTime = start; vid.play().catch(() => {}); };
+          if (vid.readyState >= 1) spring(); else { vid.preload = "metadata"; vid.addEventListener("loadedmetadata", spring, {once: true}); vid.load(); }
+          vid.scrollIntoView({block: "nearest", behavior: "smooth"});
+        };
+        li.onclick = go;
+        li.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+        zeilen.push([start, li]);
+      }
+      ol.append(li); kapZeilen.push({el: li, kap});
+    });
+    if (vid) vid.addEventListener("timeupdate", () => {
+      let cur = -1; zeilen.forEach(([s], i) => { if (vid.currentTime >= s - 0.6) cur = i; });
+      zeilen.forEach(([, li], i) => li.classList.toggle("now", i === cur));
+    });
+    kapBox = $("details"); kapBox.append($("summary", null, `Kapitelliste (${r.video.kapitel.length} Kapitel)`), ol);
+    v.append(kapBox); body.append(v);
+  }
+
+  if (!r.abschnitte.length) body.append($("p", "note", "Zu dieser Reihe gibt es keine App. Nutze das Erklärvideo und die Aufgaben aus dem Unterricht."));
+  r.abschnitte.forEach(a => {
+    const sec = $("div", "abschnitt"); sec.append($("h3", null, esc(a.titel)));
+    const grid = $("div", "apps");
+    a.apps.forEach(app => {
+      const el = app.link ? $("a", "app") : $("div", "app soon");
+      if (app.link) { el.href = app.link; el.target = "_blank"; el.rel = "noopener"; }
+      if (!app.link) el.append($("span", "soonlab", "folgt"));
+      el.append($("span", "name", esc(app.name)), $("p", null, esc(app.was)));
+      const tags = $("span", "tags");
+      tags.append($("span", "tag", typeof app.stunde === "number" ? `Stunde ${app.stunde}` : (/^\d/.test(app.stunde) ? `Stunden ${esc(app.stunde)}` : esc(app.stunde))));
+      if (app.checkliste) tags.append($("span", "tag cl", app.checkliste === "alle" ? "Checkliste: alle" : `Checkliste ${app.checkliste.join(", ")}`));
+      (app.formate || []).forEach(fm => tags.append($("span", "tag fm", esc(fm))));
+      el.append(tags); grid.append(el); cards.push({el, app});
+    });
+    sec.append(grid); body.append(sec);
+  });
+  root.append(d);
+});
+</script>
+</body>
+</html>
