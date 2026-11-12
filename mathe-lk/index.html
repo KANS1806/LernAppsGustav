@@ -1,9 +1,14 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Mathe-Apps LK</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caladea:wght@400;700&family=Carlito:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../fonts/caladea.css">
+<link rel="stylesheet" href="../fonts/carlito.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
 <style>
 /* Layout: navy Kopfband wie in den Web-Apps, darunter „So übst du“, Checklisten-Filter und je Reihe ein aufklappbarer Block mit Erklärvideo (Kapitelliste) und App-Karten in Stundenreihenfolge. */
 :root{
@@ -62,6 +67,11 @@ summary .meta{color:var(--grey);font-size:15px}
 .video li .t{font-variant-numeric:tabular-nums;color:var(--grey);font-weight:700}
 .video li .bsp{grid-column:2;color:var(--grey)}
 .video li.match{border-color:var(--hi-line);background:var(--hi)}
+.video video{width:100%;aspect-ratio:16/9;background:#0E1626;border-radius:8px;display:block}
+.video li[role="button"]{cursor:pointer}
+.video li[role="button"]:hover{border-color:var(--line)}
+.video li[role="button"]:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+.video li.now{border-color:var(--navy)}
 .video details>summary{cursor:pointer;font-weight:700;color:var(--navy);min-height:40px;display:flex;align-items:center;gap:8px;list-style:none}
 .video details>summary::-webkit-details-marker{display:none}
 .video details>summary::before{content:"▸";color:var(--acc);transition:transform .15s}
@@ -101,7 +111,7 @@ footer{text-align:center;font-size:14px;color:var(--grey)}
     <h2 id="howT">So übst du</h2>
     <ol>
       <li>Nimm deine Checkliste zur Reihe. Tippe unten die Nummern an, bei denen du „teilweise“ oder „unsicher“ angekreuzt hast – die passenden Videokapitel und Apps werden markiert.</li>
-      <li>Schau dir zuerst das markierte Kapitel im Erklärvideo an. Das Video findest du in Teams; über die Kapitelmarken springst du direkt an die Stelle.</li>
+      <li>Schau dir zuerst das markierte Kapitel im Erklärvideo an. Das Video läuft direkt hier auf der Seite – tippe auf ein Kapitel, dann springt es an die Stelle.</li>
       <li>Tippe dann auf eine App. Sie öffnet sich in einem neuen Tab und merkt sich deinen Stand auf diesem Gerät.</li>
       <li>Nutze die Hilfen. Die Lösung erscheint nach zwei Fehlversuchen.</li>
     </ol>
@@ -123,11 +133,12 @@ footer{text-align:center;font-size:14px;color:var(--grey)}
    Neue Reihe: ein Objekt OBEN in REIHEN einfügen (die neueste Reihe steht zuerst und ist aufgeklappt).
    Neue App: in der passenden Reihe bei „apps“ ergänzen; ohne link erscheint sie als „folgt“.
    checkliste = Nummern der Checkliste zur Reihe, die die App bzw. das Videokapitel abdeckt.
-   video (optional): Erklärvideo der Reihe – liegt in Teams (Claude-Seiten hosten keine Videos), hier nur Kapitelliste. */
+   video (optional): Erklärvideo der Reihe – datei = Name im Ordner ../videos (ohne .mp4; Vorschaubild gleichnamig als .jpg).
+   Ohne datei (Video noch nicht im Ordner videos): wo = Ort des Videos, es erscheint dann nur die Kapitelliste. */
 const REIHEN = [
   {
     nr: 3, titel: "Von der Änderungsrate zum Bestand", stufe: "Q1", stunden: "10 Stunden", checklistePunkte: 10,
-    video: {titel: "Von der Änderungsrate zum Bestand – die Reihe in zehn Minuten", dauer: "8:21", wo: "in Teams, Kanal der Reihe",
+    video: {titel: "Von der Änderungsrate zum Bestand – die Reihe in zehn Minuten", dauer: "8:21", datei: "mathe-lk-von-der-aenderungsrate-zum-bestand",
       kapitel: [
         {zeit: "0:00", titel: "1 · Rate · Zeit = Bestand", bsp: "Hochwasser an der Ruhr (Std. 1)", checkliste: [1, 2]},
         {zeit: "1:30", titel: "2 · Orientierte Flächen und Bilanz", bsp: "Hochbehälter mit Zufluss und Entnahme (Std. 2–3)", checkliste: [3]},
@@ -141,26 +152,26 @@ const REIHEN = [
       ]},
     abschnitte: [
       {titel: "Von der Rate zum Bestand", apps: [
-        {stunde: 3, name: "Bilanz-Trainer", link: "https://kans1806.github.io/LernAppsGustav/mathe-lk/bilanz-trainer.html",
+        {stunde: 3, name: "Bilanz-Trainer", link: "bilanz-trainer.html",
          was: "Orientierte Flächen bestimmen, Bilanz und Bestand berechnen, Situation und Graph zuordnen, Fehler finden.",
          formate: ["Üben", "Zuordnen", "Fehlersuche", "Quiz"], checkliste: [1, 2, 3]}]},
       {titel: "Produktsummen, Summenzeichen, Grenzwert", apps: [
-        {stunde: 5, name: "Summen-Labor", link: "https://kans1806.github.io/LernAppsGustav/mathe-lk/summen-labor.html",
+        {stunde: 5, name: "Summen-Labor", link: "summen-labor.html",
          was: "Die Zahl der Streifen erhöhen: Unter- und Obersumme nähern sich demselben Wert. Dazu: Summenzeichen üben.",
          formate: ["Entdecken", "Üben", "Zuordnen"], checkliste: [4, 5, 6]}]},
       {titel: "Integral deuten und Bilanzgraph", apps: [
-        {stunde: 8, name: "Bilanzgraph-Werkstatt", link: "https://kans1806.github.io/LernAppsGustav/mathe-lk/bilanzgraph-werkstatt.html",
+        {stunde: 8, name: "Bilanzgraph-Werkstatt", link: "bilanzgraph-werkstatt.html",
          was: "Die obere Grenze verschieben und zusehen, wie der Bilanzgraph entsteht; Randfunktion und Bilanzgraph zuordnen.",
          formate: ["Entdecken", "Zuordnen", "Üben"], checkliste: [9]}]},
       {titel: "Klausurtraining", apps: [
-        {stunde: 10, name: "Abschluss-Quiz Reihe 3", link: "https://kans1806.github.io/LernAppsGustav/mathe-lk/abschluss-quiz-reihe3.html",
+        {stunde: 10, name: "Abschluss-Quiz Reihe 3", link: "abschluss-quiz-reihe3.html",
          was: "Quiz zur ganzen Reihe in drei Runden – in der Stunde oder allein zur Klausurvorbereitung.",
          formate: ["Quiz", "3 Runden"], checkliste: "alle"}]}
     ]
   },
   {
     nr: 2, titel: "Steckbriefaufgaben", stufe: "Q1", stunden: "15 Stunden", checklistePunkte: 19,
-    video: {titel: "Steckbriefaufgaben – die Reihe in zehn Minuten", dauer: "11:45", wo: "in Teams, Kanal der Reihe",
+    video: {titel: "Steckbriefaufgaben – die Reihe in zehn Minuten", dauer: "11:46", datei: "mathe-lk-steckbriefaufgaben",
       kapitel: [
         {zeit: "0:00", titel: "1 · Vom Steckbrief zum Gleichungssystem", bsp: "Pumptrack-Welle (Std. 1)", checkliste: [1, 2, 4]},
         {zeit: "1:28", titel: "2 · Geschickt ansetzen", bsp: "Brückenbogen (Std. 2)", checkliste: [2, 3, 4]},
@@ -176,27 +187,27 @@ const REIHEN = [
       ]},
     abschnitte: [
       {titel: "Vom Steckbrief zum Gleichungssystem", apps: [
-        {stunde: 2, name: "Steckbrief-Übersetzer", link: "https://kans1806.github.io/LernAppsGustav/mathe-lk/steckbrief-uebersetzer.html",
+        {stunde: 2, name: "Steckbrief-Übersetzer", link: "steckbrief-uebersetzer.html",
          was: "Eigenschaften in Bedingungen übersetzen, zuerst die Stelle 0 auswerten, Steckbriefe Schritt für Schritt lösen.",
          formate: ["Zuordnen", "Üben", "Entdecken ★"], checkliste: [1, 2, 3, 4]}]},
       {titel: "Gauß-Algorithmus und Lösungsmengen", apps: [
-        {stunde: 5, name: "Gauß-Werkstatt", link: "https://kans1806.github.io/LernAppsGustav/mathe-lk/gauss-werkstatt.html",
+        {stunde: 5, name: "Gauß-Werkstatt", link: "gauss-werkstatt.html",
          was: "Gauß Schritt für Schritt, Steckbriefe mit drei Unbekannten und Fehlersuche in Schülerlösungen.",
          formate: ["Üben", "Reihenfolge", "Fehlersuche"], checkliste: [6, 7, 8, 9]}]},
       {titel: "Modellieren im Sachkontext", apps: [
-        {stunde: 8, name: "Trassierungs-Labor", link: "https://kans1806.github.io/LernAppsGustav/mathe-lk/trassierungs-labor.html",
+        {stunde: 8, name: "Trassierungs-Labor", link: "trassierungs-labor.html",
          was: "Knickfreie und ruckfreie Übergänge vergleichen: f, f′ und f″ nebeneinander sehen.",
          formate: ["Entdecken", "Üben", "Zuordnen"], checkliste: [10, 11]}]},
       {titel: "Steckbriefaufgaben mit Parameter", apps: [
-        {stunde: 10, name: "Scharen-Labor", link: "https://kans1806.github.io/LernAppsGustav/mathe-lk/scharen-labor.html",
+        {stunde: 10, name: "Scharen-Labor", link: "scharen-labor.html",
          was: "Funktionenscharen mit dem Schieberegler erkunden, gemeinsame Punkte berechnen, ein Scharmitglied auswählen.",
          formate: ["Entdecken", "Üben"], checkliste: [13, 14]}]},
       {titel: "Sinusfunktion und Sinusmodelle", apps: [
-        {stunde: 13, name: "Sinusparameter", link: "https://kans1806.github.io/LernAppsGustav/mathe-lk/sinusparameter.html",
+        {stunde: 13, name: "Sinusparameter", link: "sinusparameter.html",
          was: "Wirkung von a, b, c und d entdecken, Sinusmodelle aufstellen, Blitzrunde.",
          formate: ["Entdecken", "Üben", "Quiz"], checkliste: [18]}]},
       {titel: "Klausurtraining", apps: [
-        {stunde: 15, name: "Abschluss-Quiz", link: "https://kans1806.github.io/LernAppsGustav/mathe-lk/abschluss-quiz.html",
+        {stunde: 15, name: "Abschluss-Quiz", link: "abschluss-quiz.html",
          was: "Quiz zur ganzen Reihe – als Wettbewerb in der Stunde oder allein zur Klausurvorbereitung.",
          formate: ["Quiz", "5 Runden"], checkliste: "alle"}]}
     ]
@@ -249,17 +260,44 @@ REIHEN.forEach((r, ri) => {
   }
   f.append(chips, hint); body.append(f);
 
-  // Erklärvideo (nur Kapitelliste – das Video selbst liegt in Teams)
+  // Erklärvideo mit Player; Kapitel antippen = an die Stelle springen
   if (r.video) {
     const v = $("section", "video"); v.setAttribute("aria-label", "Erklärvideo zur Reihe");
-    v.append($("span", "lab", "Erklärvideo · Video über Teams"),
+    const ort = !r.video.datei && r.video.wo ? r.video.wo : "";
+    v.append($("span", "lab", ort ? "Erklärvideo · Video über Teams" : "Erklärvideo"),
              $("span", "name", esc(r.video.titel)),
-             $("p", "wo", `${esc(r.video.dauer)} Minuten, ${esc(r.video.wo)}. Jedes Kapitel erklärt einen Inhalt an einem Beispiel aus dem Unterricht.`));
-    const ol = $("ol");
+             $("p", "wo", `${esc(r.video.dauer)} Minuten${ort ? ", " + esc(ort) : ""}. Jedes Kapitel erklärt einen Inhalt an einem Beispiel aus dem Unterricht.`));
+    let vid = null;
+    if (r.video.datei) {
+      vid = document.createElement("video");
+      vid.controls = true; vid.preload = "none"; vid.playsInline = true;
+      vid.poster = `../videos/${r.video.datei}.jpg`; vid.src = `../videos/${r.video.datei}.mp4`;
+      vid.setAttribute("aria-label", r.video.titel);
+      v.append(vid);
+    }
+    const sek = z => { const [m, s] = z.split(":").map(Number); return m * 60 + s; };
+    const ol = $("ol"); const zeilen = [];
     r.video.kapitel.forEach(kap => {
       const li = $("li");
       li.append($("span", "t", esc(kap.zeit)), $("span", null, esc(kap.titel)), $("span", "bsp", esc(kap.bsp)));
+      if (vid) {
+        const start = sek(kap.zeit) + 1;
+        li.setAttribute("role", "button"); li.tabIndex = 0;
+        li.setAttribute("aria-label", `Video ab ${kap.zeit} abspielen: ${kap.titel}`);
+        const go = () => {
+          const spring = () => { vid.currentTime = start; vid.play().catch(() => {}); };
+          if (vid.readyState >= 1) spring(); else { vid.preload = "metadata"; vid.addEventListener("loadedmetadata", spring, {once: true}); vid.load(); }
+          vid.scrollIntoView({block: "nearest", behavior: "smooth"});
+        };
+        li.onclick = go;
+        li.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+        zeilen.push([start, li]);
+      }
       ol.append(li); kapZeilen.push({el: li, kap});
+    });
+    if (vid) vid.addEventListener("timeupdate", () => {
+      let cur = -1; zeilen.forEach(([s], i) => { if (vid.currentTime >= s - 0.6) cur = i; });
+      zeilen.forEach(([, li], i) => li.classList.toggle("now", i === cur));
     });
     kapBox = $("details"); kapBox.append($("summary", null, `Kapitelliste (${r.video.kapitel.length} Kapitel)`), ol);
     v.append(kapBox); body.append(v);
@@ -284,4 +322,5 @@ REIHEN.forEach((r, ri) => {
   root.append(d);
 });
 </script>
-</body></html>
+</body>
+</html>
