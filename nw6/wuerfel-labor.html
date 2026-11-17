@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Würfel-Labor – Volumen und Dichte</title>
+<link rel="stylesheet" href="../fonts/baloo-2.css">
+<link rel="stylesheet" href="../fonts/nunito.css">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Würfel-Labor: ersetzt den Schülerversuch aus Std. 12 (Volumen durch Wasserverdrängung, Masse, Vergleich mit Wasser, schwimmt/sinkt). Gleiche Familie wie die anderen NW-6-Apps. */
+:root { --bg:#FBFAF7; --surface:#FFFFFF; --fg:#2B2B2B; --muted:#6B6480; --primary:#3A2560; --primary-soft:#F1ECF9; --accent:#E07B26; --accent-soft:#FDF3E8; --sand:#EFE9DC; --ok:#2E7D4F; --ok-soft:#E3F3E8; --err:#C0392B; --err-soft:#FBE7E4; --line:#C9BCE4; --font-display:'Baloo 2','Nunito',system-ui,sans-serif; --font-body:'Nunito',system-ui,sans-serif;
+  --glass:#7C7396; --water:#BFE0F5; --water-line:#2B6CB0; --tick:#2B2B2B; --metal:#D9D5E3; --display:#22301F; --display-fg:#B9F5A8;
+  --holz:#C99A5B; --holz-l:#8A6230; --alu:#CFD4DC; --alu-l:#8D95A3; --eisen:#5B606C; --eisen-l:#33363F; --wachs:#F2E2A0; --wachs-l:#B8A44E; --stein:#9A9288; --stein-l:#5E5850; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#1B1626; --surface:#272036; --fg:#F2EEF8; --muted:#B3A9C9; --primary:#CDB9F2; --primary-soft:#342A4A; --accent:#F0A05A; --accent-soft:#3F2E22; --sand:#3A3327; --ok:#7BD3A0; --ok-soft:#1F3A2B; --err:#F08C80; --err-soft:#45231F; --line:#4D4166;
+  --glass:#B3A9C9; --water:#2C5C80; --water-line:#8BBCF2; --tick:#F2EEF8; --metal:#4A4260; --display:#101A0E; color-scheme: dark } }
+:root[data-theme="dark"] { --bg:#1B1626; --surface:#272036; --fg:#F2EEF8; --muted:#B3A9C9; --primary:#CDB9F2; --primary-soft:#342A4A; --accent:#F0A05A; --accent-soft:#3F2E22; --sand:#3A3327; --ok:#7BD3A0; --ok-soft:#1F3A2B; --err:#F08C80; --err-soft:#45231F; --line:#4D4166;
+  --glass:#B3A9C9; --water:#2C5C80; --water-line:#8BBCF2; --tick:#F2EEF8; --metal:#4A4260; --display:#101A0E; color-scheme: dark }
+*{box-sizing:border-box}
+body{margin:0;font-size:18px;line-height:1.45;-webkit-text-size-adjust:100%;background:var(--bg);color:var(--fg);font-family:var(--font-body)}
+[hidden]{display:none!important}
+.wrap{max-width:920px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 48px}
+h1{font-family:var(--font-display);color:var(--primary);font-size:34px;line-height:1.1;margin:0}
+h2{font-family:var(--font-display);color:var(--primary);font-size:26px;line-height:1.2;margin:0 0 6px}
+h3{font-family:var(--font-display);font-size:21px;margin:0 0 6px;color:var(--primary)}
+p{margin:8px 0}
+.sub{color:var(--muted);font-size:16px;margin:4px 0 14px}
+.levels{display:flex;gap:8px;flex-wrap:wrap}
+.levels button{flex:1 1 110px;min-width:0;min-height:52px;border:1px solid var(--line);background:var(--surface);color:var(--primary);font:700 16px/1.1 var(--font-display);border-radius:12px;padding:8px 6px;cursor:pointer}
+.levels button[aria-current="true"]{background:var(--primary);color:var(--surface);border-color:var(--primary)}
+.levels button .tick{display:none}
+.levels button.done .tick{display:inline}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px;min-width:0}
+.box{border-radius:12px;padding:12px 14px;margin-top:12px;min-width:0}
+.box.p{background:var(--primary-soft)} .box.a{background:var(--accent-soft)} .box.s{background:var(--sand)} .box.g{background:var(--ok-soft)}
+.box b.lab{display:block;font-family:var(--font-display);color:var(--accent);font-size:16px;line-height:1.2}
+.task{border-radius:12px;padding:12px 14px;margin-top:12px;background:var(--primary-soft);font-weight:700;font-size:20px;min-height:58px}
+.fb{border-radius:12px;padding:12px 14px;margin-top:12px;font-weight:700;font-size:19px}
+.fb.ok{background:var(--ok-soft);color:var(--ok)} .fb.err{background:var(--err-soft);color:var(--err)} .fb.info{background:var(--primary-soft);color:var(--fg)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:52px;padding:8px 18px;border-radius:12px;border:2px solid transparent;font:700 18px var(--font-display);cursor:pointer;color:var(--primary);background:var(--surface);text-align:center}
+.btn.primary{background:var(--primary);color:var(--surface);border-color:var(--primary)}
+.btn.accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.ghost{border-color:var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.row>*{min-width:0}
+.stage{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:12px}
+.stage .vis{flex:1 1 300px;min-width:0;background:var(--sand);border-radius:12px;padding:8px;display:flex;gap:6px;align-items:center;justify-content:center}
+.stage .io{flex:1 1 280px;min-width:0}
+.vis svg{display:block;height:auto;max-width:100%}
+#cyl{width:42%;max-width:210px} #lupe{width:58%;max-width:270px}
+#scale,#scale3{width:100%;max-width:360px} #tank{width:100%;max-width:560px}
+svg text{font-family:var(--font-display);fill:var(--fg)}
+.glass{fill:none;stroke:var(--glass);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.water{fill:var(--water)} .wline{stroke:var(--water-line);stroke-width:2.5;fill:none}
+.tk{stroke:var(--tick);stroke-width:1.6} .tkb{stroke:var(--tick);stroke-width:2.4}
+.eye{stroke:var(--accent);stroke-width:2.5;stroke-dasharray:6 5;fill:none}
+.tray{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.tray button{flex:1 1 92px;min-width:0;min-height:92px;border:2px solid var(--line);background:var(--surface);color:var(--fg);border-radius:12px;font:700 17px var(--font-body);cursor:pointer;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tray button svg{width:44px;height:44px}
+.tray button:disabled{opacity:.5;cursor:default}
+.tray button.done{background:var(--ok-soft);border-color:var(--ok);opacity:1}
+.tray button.on{border-color:var(--accent);background:var(--accent-soft);opacity:1}
+.question{font-size:20px;font-weight:700;margin:12px 0 0}
+.answer{display:flex;align-items:center;justify-content:center;width:100%;max-width:320px;height:60px;font:800 32px var(--font-display);border:2px solid var(--line);border-radius:12px;background:var(--surface);color:var(--fg);margin-top:8px;letter-spacing:2px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:320px;margin-top:10px}
+.keypad button{min-height:56px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--fg);font:800 24px var(--font-display);cursor:pointer}
+.keypad button.del{font-size:18px;color:var(--err)}
+.keypad button.check{background:var(--primary);color:var(--surface);border-color:var(--primary);font-size:20px}
+table.data{border-collapse:collapse;width:100%;margin-top:12px;font-size:17px}
+table.data th{background:var(--primary);color:var(--surface);font-family:var(--font-display);font-weight:700;padding:8px 6px;text-align:center;border:1px solid var(--primary)}
+table.data td{border:1px solid var(--line);padding:8px 6px;text-align:center;background:var(--surface)}
+table.data td:first-child{font-weight:700;text-align:left}
+table.data td.v{font:800 19px var(--font-display);color:var(--accent)}
+.scroll{overflow-x:auto}
+.chip{min-height:48px;padding:6px 14px;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--fg);font:700 18px var(--font-body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--primary);color:var(--surface);border-color:var(--primary)}
+.chip:disabled{opacity:.5;cursor:default}
+.chip.right{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);opacity:1}
+.chip.wrong{background:var(--err-soft);border-color:var(--err);color:var(--err)}
+.opts{display:grid;gap:10px;margin-top:10px}
+.opts .btn{justify-content:flex-start;text-align:left;border-color:var(--line);font-family:var(--font-body);font-weight:700;padding:10px 16px}
+.opts .btn[aria-pressed="true"]{background:var(--primary-soft);border-color:var(--primary)}
+.opts .btn.right{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);opacity:1}
+.opts .btn.wrong{background:var(--err-soft);border-color:var(--err);color:var(--err)}
+.sentence{font-size:20px;line-height:2.5;margin:6px 0}
+.gap{display:inline-block;min-width:130px;min-height:46px;vertical-align:middle;border:2px dashed var(--line);border-radius:10px;background:var(--surface);color:var(--fg);font:700 19px var(--font-body);padding:4px 10px;cursor:pointer;text-align:center}
+.gap.act{border-style:solid;border-color:var(--accent);background:var(--accent-soft)}
+.gap.right{border-style:solid;border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.stop{border:3px solid var(--accent);background:var(--accent-soft);border-radius:14px;padding:14px 16px;margin-top:16px}
+.stop h3{color:var(--accent)}
+.cmpgrid{display:grid;gap:10px;margin-top:12px}
+.cmprow{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface)}
+.cmprow .head{font-weight:700;font-size:19px}
+.cmprow .pick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.cmprow .pick span{flex:0 0 auto;color:var(--muted);font-size:16px;min-width:108px}
+.small{font-size:15px;color:var(--muted)}
+footer{margin-top:22px;text-align:center}
+body.demo .levels, body.demo .hide-demo{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Würfel-Labor</h1>
+    <p class="sub" id="subline">Volumen und Dichte · NW 6 · Stunde 12 · Miss, wiege und vergleiche wie im echten Labor.</p>
+    <nav class="levels" aria-label="Teile">
+      <button data-level="l1"><span class="tick">✓ </span>1 Volumen</button>
+      <button data-level="l2"><span class="tick">✓ </span>2 Masse</button>
+      <button data-level="l3"><span class="tick">✓ </span>3 Wasser</button>
+      <button data-level="l4"><span class="tick">✓ </span>4 Schwimmen</button>
+      <button data-level="pro">Protokoll</button>
+    </nav>
+  </header>
+
+  <!-- ================= TEIL 1 ================= -->
+  <section class="card" id="l1">
+    <h2 id="l1title">Teil 1: Volumen messen</h2>
+    <div class="box a hide-demo"><b class="lab">Forschungsfrage</b>Sind gleich große Würfel auch gleich schwer?</div>
+    <div class="task" id="task1" aria-live="polite"></div>
+    <div class="stage">
+      <div class="vis">
+        <svg id="cyl" viewBox="34 0 170 424" role="img" aria-label="Messzylinder mit Wasser"></svg>
+        <svg id="lupe" viewBox="0 0 240 300" role="img" aria-label="Lupe: Wasserstand am Messzylinder vergrößert"></svg>
+      </div>
+      <div class="io">
+        <div id="fillCtl">
+          <div class="row">
+            <button class="btn ghost" data-add="50">+ 50 ml</button>
+            <button class="btn ghost" data-add="10">+ 10 ml</button>
+            <button class="btn ghost" data-add="2">+ 2 ml</button>
+            <button class="btn ghost" data-add="-2">− 2 ml</button>
+          </div>
+          <div class="row"><button class="btn primary" id="fillCheck">Fertig: Das sind 100 ml</button></div>
+        </div>
+        <div class="tray" id="tray1" aria-label="Gegenstände"></div>
+        <div class="row" id="pushRow" hidden><button class="btn accent" id="pushBtn">Mit der Büroklammer unter Wasser drücken</button></div>
+        <div id="kp1" hidden></div>
+        <div class="row" id="removeRow" hidden><button class="btn primary" id="removeBtn">Herausholen und abtrocknen</button></div>
+        <div class="fb" id="fb1" hidden aria-live="polite"></div>
+        <p class="small">Ablesen: auf Augenhöhe, am unteren Rand des Wasserbogens. Jeder kleine Strich in der Lupe bedeutet 2 ml.</p>
+      </div>
+    </div>
+    <div class="scroll"><table class="data" id="tab1"></table></div>
+    <div class="box g hide-demo" id="done1" hidden>
+      <b class="lab">Teil 1 geschafft</b>Alle drei Würfel sind gemessen. Weiter geht es mit der Waage.
+      <div class="row"><button class="btn primary" data-go="l2">Weiter zu Teil 2</button></div>
+      <p class="small" id="steinHint">Schon fertig mit allem? Dann miss hier noch das Volumen des Steins.</p>
+    </div>
+  </section>
+
+  <!-- ================= TEIL 2 ================= -->
+  <section class="card" id="l2" hidden>
+    <h2>Teil 2: Masse wiegen</h2>
+    <div class="task" id="task2" aria-live="polite"></div>
+    <div class="stage" id="stage2">
+      <div class="vis"><svg id="scale" viewBox="0 0 320 250" role="img" aria-label="Digitale Waage"></svg></div>
+      <div class="io">
+        <div class="tray" id="tray2" aria-label="Würfel"></div>
+        <div id="kp2" hidden></div>
+        <div class="fb" id="fb2" hidden aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="scroll"><table class="data" id="tab2"></table></div>
+
+    <div id="quiz2" hidden>
+      <h3 style="margin-top:16px">Schau dir deine Tabelle an. Tippe alle Sätze an, die stimmen.</h3>
+      <div class="opts" id="quizOpts">
+        <button class="btn" aria-pressed="false" data-i="0">Alle Würfel haben das gleiche Volumen.</button>
+        <button class="btn" aria-pressed="false" data-i="1">Alle Würfel sind gleich schwer.</button>
+        <button class="btn" aria-pressed="false" data-i="2">Der Würfel aus Eisen ist am schwersten.</button>
+        <button class="btn" aria-pressed="false" data-i="3">Der Würfel aus Holz ist am leichtesten.</button>
+      </div>
+      <div class="row"><button class="btn primary" id="quizCheck">Prüfen</button></div>
+      <div class="fb" id="fbQuiz" hidden aria-live="polite"></div>
+    </div>
+
+    <div class="stop" id="gate2" hidden>
+      <h3>Stopp – Tablet kurz weglegen</h3>
+      <p><b>1.</b> Übertrage deine Messwerte aus der Tabelle auf dein Arbeitsblatt M 1 (oder in deinen Hefter).</p>
+      <p><b>2.</b> Warte, bis deine Lehrkraft sagt, wie es weitergeht.</p>
+      <div class="row">
+        <button class="btn ghost" data-go="l1" id="toStein">Schon fertig? Stein messen</button>
+        <button class="btn primary" data-go="l3">Weiter zu Teil 3 (wenn deine Lehrkraft es sagt)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TEIL 3 ================= -->
+  <section class="card" id="l3" hidden>
+    <h2>Teil 3: Der Vergleich mit Wasser</h2>
+    <div class="box s" id="need3" hidden>Mach zuerst Teil 2 fertig. Du brauchst die Massen der drei Würfel.
+      <div class="row"><button class="btn primary" data-go="l2">Zu Teil 2</button></div></div>
+    <div id="body3">
+      <div class="task" id="task3" aria-live="polite"></div>
+      <div class="stage" id="stage3">
+        <div class="vis"><svg id="scale3" viewBox="0 0 320 250" role="img" aria-label="Waage mit Becher"></svg></div>
+        <div class="io">
+          <div class="row" id="taraRow"><button class="btn accent" id="taraBtn">TARA drücken (auf 0 stellen)</button></div>
+          <div class="row" id="pourRow" hidden><button class="btn accent" id="pourBtn">100 ml Wasser eingießen</button></div>
+          <div id="kp3" hidden></div>
+          <div class="fb" id="fb3" hidden aria-live="polite"></div>
+        </div>
+      </div>
+      <div id="cmp3" hidden>
+        <div class="box p"><b class="lab">Merke</b>1 ml Wasser wiegt 1 g. Unsere Würfel haben 8 ml. Gleich viel Wasser wiegt also 8 g.</div>
+        <h3 style="margin-top:16px">Vergleiche jeden Würfel mit gleich viel Wasser (8 g). Sage dann vorher: Schwimmt er oder sinkt er?</h3>
+        <div class="cmpgrid" id="cmpGrid"></div>
+        <div class="row"><button class="btn primary" id="cmpCheck">Prüfen</button></div>
+        <div class="fb" id="fbCmp" hidden aria-live="polite"></div>
+        <div class="row" id="go4Row" hidden><button class="btn primary" data-go="l4">Weiter zu Teil 4: Vorhersage prüfen</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TEIL 4 ================= -->
+  <section class="card" id="l4" hidden>
+    <h2>Teil 4: Schwimmt oder sinkt?</h2>
+    <div class="box s" id="need4" hidden>Mach zuerst Teil 3 fertig. Dort machst du deine Vorhersage.
+      <div class="row"><button class="btn primary" data-go="l3">Zu Teil 3</button></div></div>
+    <div id="body4">
+      <div class="task" id="task4" aria-live="polite"></div>
+      <div class="vis" style="background:var(--sand);border-radius:12px;padding:8px;margin-top:12px;display:flex;justify-content:center">
+        <svg id="tank" viewBox="0 24 520 250" role="img" aria-label="Wasserwanne"></svg>
+      </div>
+      <div class="tray" id="tray4" aria-label="Würfel"></div>
+      <div class="row" id="obsRow" hidden>
+        <span style="font-weight:700" id="obsQ"></span>
+        <button class="chip" data-obs="schwimmt">schwimmt</button>
+        <button class="chip" data-obs="sinkt">sinkt</button>
+      </div>
+      <div class="fb" id="fb4" hidden aria-live="polite"></div>
+
+      <div id="gapBlock" hidden>
+        <h3 style="margin-top:18px">Setze die Wörter richtig ein.</h3>
+        <div class="row" id="bank"></div>
+        <p class="sentence">Gleich große Würfel sind unterschiedlich schwer. Das liegt am <button class="gap" data-g="0" aria-label="Lücke 1"></button>, aus dem sie bestehen.</p>
+        <p class="sentence">Man sagt: Eisen hat eine große <button class="gap" data-g="1" aria-label="Lücke 2"></button>.</p>
+        <p class="sentence">Holz ist leichter als gleich viel Wasser – darum <button class="gap" data-g="2" aria-label="Lücke 3"></button> es.</p>
+        <p class="sentence">Eisen ist schwerer als gleich viel Wasser – darum <button class="gap" data-g="3" aria-label="Lücke 4"></button> es.</p>
+        <div class="row"><button class="btn primary" id="gapCheck">Prüfen</button></div>
+        <div class="fb" id="fbGap" hidden aria-live="polite"></div>
+      </div>
+
+      <div id="knobel" hidden>
+        <div class="box a" style="margin-top:18px"><b class="lab">Knobelaufgabe</b>Ein Würfel aus Kerzenwachs hat auch ein Volumen von 8 ml. Er wiegt 7 g. Schwimmt er oder geht er unter?</div>
+        <div class="row" id="knA">
+          <button class="chip" data-kn="schwimmt">Er schwimmt.</button>
+          <button class="chip" data-kn="sinkt">Er geht unter.</button>
+        </div>
+        <div id="knWhy" hidden>
+          <p class="question">Warum? Tippe die richtige Begründung an.</p>
+          <div class="opts" id="knOpts">
+            <button class="btn" data-w="0">Weil Wachs weich ist.</button>
+            <button class="btn" data-w="1">Weil 7 g weniger sind als 8 g. Der Würfel ist leichter als gleich viel Wasser.</button>
+            <button class="btn" data-w="2">Weil der Würfel klein ist.</button>
+          </div>
+        </div>
+        <div class="fb" id="fbKn" hidden aria-live="polite"></div>
+        <div class="row" id="goProRow" hidden><button class="btn primary" data-go="pro">Zum Protokoll</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PROTOKOLL ================= -->
+  <section class="card" id="pro" hidden>
+    <h2>Mein Protokoll</h2>
+    <p>Übertrage deine Werte auf die Arbeitsblätter M 1 und M 2 (oder in deinen Hefter).</p>
+    <h3 style="margin-top:14px">M 1 – Messwerte</h3>
+    <div class="scroll"><table class="data" id="proA"></table></div>
+    <p id="proStein" class="small"></p>
+    <h3 style="margin-top:14px">M 2 – Der Vergleich mit Wasser</h3>
+    <p id="proWater"></p>
+    <div class="scroll"><table class="data" id="proB"></table></div>
+    <div class="box g" id="proDone" hidden><b class="lab">Alles geschafft</b>Du hast alle vier Teile bearbeitet. Stark geforscht!</div>
+  </section>
+
+  <footer class="hide-demo">
+    <button class="btn ghost" id="resetBtn">Alles zurücksetzen</button>
+    <div class="row" id="resetAsk" hidden style="justify-content:center">
+      <span>Wirklich alle Messwerte löschen?</span>
+      <button class="btn accent" id="resetYes">Ja, löschen</button>
+      <button class="btn ghost" id="resetNo">Nein</button>
+    </div>
+    <p class="small">Die App speichert nur auf diesem Tablet. Es werden keine Daten gesendet.</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(s, r){ return (r || document).querySelector(s); };
+  var $$ = function(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(name, attrs, text){
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function clear(node){ while (node.firstChild) node.removeChild(node.firstChild); }
+  var reduced = false;
+  try { reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+  function tween(ms, step, done){
+    if (reduced || ms <= 0){ step(1); if (done) done(); return; }
+    var t0 = null;
+    function f(t){
+      if (t0 === null) t0 = t;
+      var p = Math.min(1, (t - t0) / ms);
+      step(p < .5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2) / 2);
+      if (p < 1) requestAnimationFrame(f); else if (done) done();
+    }
+    requestAnimationFrame(f);
+  }
+  function fb(node, kind, text){ node.hidden = false; node.className = 'fb ' + kind; node.textContent = text; }
+  function hide(node){ node.hidden = true; }
+
+  /* ---------- Stoffe ---------- */
+  var MAT = {
+    holz:  { name:'Holz',      short:'Holz',  mass:5,  floats:true,  sub:5/8, fill:'var(--holz)',  line:'var(--holz-l)',  ink:'#3B2A10' },
+    alu:   { name:'Aluminium', short:'Alu',   mass:22, floats:false, fill:'var(--alu)',   line:'var(--alu-l)',   ink:'#2B2B2B' },
+    eisen: { name:'Eisen',     short:'Eisen', mass:63, floats:false, fill:'var(--eisen)', line:'var(--eisen-l)', ink:'#FFFFFF' },
+    wachs: { name:'Wachs',     short:'Wachs', mass:7,  floats:true,  sub:7/8, fill:'var(--wachs)', line:'var(--wachs-l)', ink:'#4A3F10' },
+    stein: { name:'Stein',     short:'Stein', fill:'var(--stein)', line:'var(--stein-l)', ink:'#FFFFFF' }
+  };
+  var CUBES = ['holz','alu','eisen'];
+  var VOL = 8;
+
+  function drawObj(kind, s, label){
+    var m = MAT[kind], g = el('g', {});
+    if (kind === 'stein'){
+      var k = s / 44;
+      var pts = [[4,30],[1,17],[9,5],[24,0],[38,6],[44,19],[39,31],[22,34]].map(function(p){ return (p[0]*k).toFixed(1) + ',' + (p[1]*k).toFixed(1); }).join(' ');
+      g.appendChild(el('polygon', {points:pts, fill:m.fill, stroke:m.line, 'stroke-width':2, 'stroke-linejoin':'round'}));
+      g.appendChild(el('path', {d:'M'+(12*k)+' '+(12*k)+' l'+(8*k)+' '+(-4*k)+' M'+(26*k)+' '+(22*k)+' l'+(8*k)+' '+(-3*k), stroke:m.line, 'stroke-width':1.5, fill:'none', 'stroke-linecap':'round'}));
+      return g;
+    }
+    g.appendChild(el('rect', {x:0, y:0, width:s, height:s, rx:3, fill:m.fill, stroke:m.line, 'stroke-width':2}));
+    if (kind === 'holz'){
+      g.appendChild(el('path', {d:'M3 '+(s*.3)+' q'+(s*.25)+' -'+(s*.1)+' '+(s*.5)+' 0 t'+(s*.44)+' 0 M3 '+(s*.72)+' q'+(s*.25)+' -'+(s*.1)+' '+(s*.5)+' 0 t'+(s*.44)+' 0', stroke:m.line, 'stroke-width':1.2, fill:'none', opacity:.7}));
+    } else if (kind !== 'wachs'){
+      g.appendChild(el('path', {d:'M4 4 h'+(s*.45), stroke:'#FFFFFF', 'stroke-width':2, opacity:.55, 'stroke-linecap':'round'}));
+    }
+    if (label !== false){
+      var t = el('text', {x:s/2, y:s/2 + 1, 'text-anchor':'middle', 'dominant-baseline':'middle', 'font-size':Math.max(10, s*.27), 'font-weight':700}, m.short);
+      t.style.fill = m.ink;
+      g.appendChild(t);
+    }
+    return g;
+  }
+  function iconSvg(kind){
+    var svg = el('svg', {viewBox:'0 0 44 44', 'aria-hidden':'true'});
+    var g = drawObj(kind, kind === 'stein' ? 40 : 36, false);
+    g.setAttribute('transform', kind === 'stein' ? 'translate(2,6)' : 'translate(4,4)');
+    svg.appendChild(g);
+    return svg;
+  }
+
+  /* ---------- Speicher ---------- */
+  var DEMO = /stein/i.test(location.hash || '');
+  var STORE = 'nw6-wuerfel-labor';
+  function fresh(){
+    return { vol:{}, mass:{}, stein:null, steinVol:[12,14,16,18][Math.floor(Math.random()*4)], quiz:false, water:false, rel:false, pred:{}, obs:{}, gap:false, knobel:false };
+  }
+  var S = fresh();
+  if (!DEMO){
+    try {
+      var raw = JSON.parse(localStorage.getItem(STORE) || 'null');
+      if (raw && typeof raw === 'object'){ var base = fresh(); for (var key in base) if (raw[key] !== undefined && raw[key] !== null) base[key] = raw[key]; base.stein = raw.stein || null; S = base; }
+    } catch(e){ S = fresh(); }
+  }
+  function save(){ if (DEMO) return; try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e){} updateNav(); }
+  function allVol(){ return CUBES.every(function(k){ return !!S.vol[k]; }); }
+  function allMass(){ return CUBES.every(function(k){ return S.mass[k] != null; }); }
+  function allObs(){ return CUBES.every(function(k){ return !!S.obs[k]; }); }
+  function done1(){ return allVol(); }
+  function done2(){ return allMass() && S.quiz; }
+  function done3(){ return S.water && S.rel; }
+  function done4(){ return allObs() && S.gap && S.knobel; }
+
+  /* ---------- Zahlenfeld ---------- */
+  function Keypad(root, onOk){
+    var val = '';
+    var q = document.createElement('p'); q.className = 'question';
+    var out = document.createElement('output'); out.className = 'answer'; out.setAttribute('aria-live', 'polite');
+    var pad = document.createElement('div'); pad.className = 'keypad';
+    var unit = '';
+    function show(){ out.textContent = (val === '' ? '?' : val) + (unit ? ' ' + unit : ''); }
+    ['1','2','3','4','5','6','7','8','9','del','0','ok'].forEach(function(k){
+      var b = document.createElement('button'); b.type = 'button';
+      if (k === 'del'){ b.textContent = 'löschen'; b.className = 'del'; b.setAttribute('aria-label', 'letzte Ziffer löschen'); }
+      else if (k === 'ok'){ b.textContent = 'OK'; b.className = 'check'; }
+      else b.textContent = k;
+      b.addEventListener('click', function(){
+        if (k === 'del') val = val.slice(0, -1);
+        else if (k === 'ok'){ if (val !== '') onOk(parseInt(val, 10)); return; }
+        else if (val.length < 3) val = (val === '0' ? '' : val) + k;
+        show();
+      });
+      pad.appendChild(b);
+    });
+    root.appendChild(q); root.appendChild(out); root.appendChild(pad);
+    show();
+    return {
+      ask: function(text, u){ q.textContent = text; unit = u || ''; val = ''; show(); root.hidden = false; },
+      reset: function(){ val = ''; show(); },
+      close: function(){ root.hidden = true; }
+    };
+  }
+
+  /* ---------- Navigation ---------- */
+  var LEVELS = ['l1','l2','l3','l4','pro'];
+  var enter = {};
+  function showLevel(id){
+    LEVELS.forEach(function(l){ $('#' + l).hidden = (l !== id); });
+    $$('.levels button').forEach(function(b){ b.setAttribute('aria-current', b.dataset.level === id ? 'true' : 'false'); });
+    if (enter[id]) enter[id]();
+    try { window.scrollTo({top:0, behavior: reduced ? 'auto' : 'smooth'}); } catch(e){}
+  }
+  function updateNav(){
+    var d = { l1:done1(), l2:done2(), l3:done3(), l4:done4() };
+    $$('.levels button').forEach(function(b){ b.classList.toggle('done', !!d[b.dataset.level]); });
+  }
+  $$('.levels button').forEach(function(b){ b.addEventListener('click', function(){ showLevel(b.dataset.level); }); });
+  $$('[data-go]').forEach(function(b){ b.addEventListener('click', function(){ showLevel(b.dataset.go); }); });
+
+  function buildTray(root, kinds, onPick){
+    clear(root);
+    kinds.forEach(function(k){
+      var b = document.createElement('button'); b.type = 'button'; b.dataset.obj = k;
+      b.appendChild(iconSvg(k));
+      var s = document.createElement('span'); s.textContent = MAT[k].name; b.appendChild(s);
+      b.addEventListener('click', function(){ onPick(k); });
+      root.appendChild(b);
+    });
+  }
+
+  /* ================= TEIL 1: Messzylinder ================= */
+  var cyl = $('#cyl'), lupe = $('#lupe');
+  var P1 = { level:0, phase:'fill', cur:null, tries:0, busy:false, objY:0, clip:false, removed:0 };
+  function yml(ml){ return 400 - ml * 1.36; }
+  var cylWater, cylObjG, cylClip;
+  function buildCyl(){
+    clear(cyl);
+    cyl.appendChild(el('rect', {x:60, y:404, width:130, height:12, rx:4, fill:'var(--metal)', stroke:'var(--glass)', 'stroke-width':2}));
+    cylWater = el('rect', {x:86.5, y:400, width:77, height:0, 'class':'water'});
+    cyl.appendChild(cylWater);
+    cylObjG = el('g', {}); cyl.appendChild(cylObjG);
+    cylClip = el('path', {d:'', stroke:'var(--glass)', 'stroke-width':2.5, fill:'none', 'stroke-linecap':'round'});
+    cyl.appendChild(cylClip);
+    cyl.appendChild(el('path', {'class':'glass', d:'M85 30 L85 402 L165 402 L165 30 M78 30 L85 36 M165 30 L172 26'}));
+    for (var ml = 10; ml <= 250; ml += 10){
+      var big = ml % 50 === 0;
+      cyl.appendChild(el('line', {x1:85, x2: big ? 108 : 97, y1:yml(ml), y2:yml(ml), 'class': big ? 'tkb' : 'tk'}));
+      if (big) cyl.appendChild(el('text', {x:78, y:yml(ml) + 5, 'text-anchor':'end', 'font-size':15, 'font-weight':700}, String(ml)));
+    }
+    cyl.appendChild(el('text', {x:125, y:20, 'text-anchor':'middle', 'font-size':14, 'font-weight':700}, 'ml'));
+  }
+  function drawLupe(level){
+    clear(lupe);
+    var PX = 9, cy = 150;
+    var y = function(ml){ return cy - (ml - level) * PX; };
+    var defs = el('defs', {}); var cp = el('clipPath', {id:'lupeClip'});
+    cp.appendChild(el('rect', {x:6, y:6, width:228, height:288, rx:26}));
+    defs.appendChild(cp); lupe.appendChild(defs);
+    lupe.appendChild(el('rect', {x:6, y:6, width:228, height:288, rx:26, fill:'var(--surface)'}));
+    var g = el('g', {'clip-path':'url(#lupeClip)'});
+    var bottom = Math.min(300, y(0));
+    if (level > 0){
+      g.appendChild(el('path', {'class':'water', d:'M72 ' + (cy - 8) + ' C 92 ' + (cy + 3) + ', 172 ' + (cy + 3) + ', 192 ' + (cy - 8) + ' L192 ' + bottom + ' L72 ' + bottom + ' Z'}));
+      g.appendChild(el('path', {'class':'wline', d:'M72 ' + (cy - 8) + ' C 92 ' + (cy + 3) + ', 172 ' + (cy + 3) + ', 192 ' + (cy - 8)}));
+    }
+    g.appendChild(el('path', {'class':'glass', d:'M72 0 L72 ' + bottom + ' M192 0 L192 ' + bottom + (y(0) < 300 ? ' M72 ' + bottom + ' L192 ' + bottom : '')}));
+    var from = Math.max(0, Math.floor((level - 18) / 2) * 2), to = Math.ceil((level + 18) / 2) * 2;
+    for (var ml = from; ml <= to; ml += 2){
+      var big = ml % 10 === 0;
+      g.appendChild(el('line', {x1:72, x2: big ? 112 : 92, y1:y(ml), y2:y(ml), 'class': big ? 'tkb' : 'tk'}));
+      if (big) g.appendChild(el('text', {x:64, y:y(ml) + 7, 'text-anchor':'end', 'font-size':21, 'font-weight':700}, String(ml)));
+    }
+    if (level > 0){
+      g.appendChild(el('line', {x1:112, x2:226, y1:cy, y2:cy, 'class':'eye'}));
+      /* Auge */
+      g.appendChild(el('path', {d:'M200 ' + (cy - 26) + ' q13 -10 26 0 q-13 10 -26 0 Z', fill:'var(--surface)', stroke:'var(--accent)', 'stroke-width':2}));
+      g.appendChild(el('circle', {cx:213, cy:cy - 26, r:3.6, fill:'var(--accent)'}));
+    }
+    lupe.appendChild(g);
+    lupe.appendChild(el('rect', {x:6, y:6, width:228, height:288, rx:26, fill:'none', stroke:'var(--primary)', 'stroke-width':4}));
+    lupe.appendChild(el('rect', {x:150, y:14, width:74, height:28, rx:14, fill:'var(--primary)'}));
+    var lt = el('text', {x:187, y:33, 'text-anchor':'middle', 'font-size':16, 'font-weight':700}, 'Lupe'); lt.style.fill = 'var(--surface)'; lupe.appendChild(lt);
+  }
+  function renderCyl(){
+    var yw = yml(P1.level);
+    cylWater.setAttribute('y', yw); cylWater.setAttribute('height', Math.max(0, 400 - yw));
+    cylObjG.setAttribute('transform', 'translate(' + (P1.cur === 'stein' ? 103 : 105) + ',' + P1.objY + ')');
+    cylClip.setAttribute('d', P1.clip ? 'M125 8 L125 ' + (P1.objY - 1) + ' M119 ' + (P1.objY - 1) + ' h12' : '');
+    drawLupe(P1.level);
+  }
+  function objH(){ return P1.cur === 'stein' ? 34 : 40; }
+  function avail1(){
+    var list = [];
+    if (!DEMO) CUBES.forEach(function(k){ if (!S.vol[k]) list.push(k); });
+    if ((DEMO || allVol()) && !S.stein) list.push('stein');
+    return list;
+  }
+  var kp1 = Keypad($('#kp1'), onNum1);
+  function renderTray1(){
+    var kinds = DEMO ? ['stein'] : CUBES.concat(allVol() ? ['stein'] : []);
+    buildTray($('#tray1'), kinds, pick1);
+    $$('#tray1 button').forEach(function(b){
+      var k = b.dataset.obj, isDone = (k === 'stein') ? !!S.stein : !!S.vol[k];
+      b.classList.toggle('done', isDone); b.classList.toggle('on', P1.cur === k);
+      b.disabled = isDone || P1.phase !== 'pick';
+    });
+  }
+  function renderTab1(){
+    var t = $('#tab1'); clear(t);
+    var rows = DEMO ? [] : CUBES.slice(); if (S.stein || DEMO) rows.push('stein');
+    var h = '<tr><th>' + (DEMO ? 'Gegenstand' : 'Würfel aus') + '</th><th>vorher in ml</th><th>nachher in ml</th><th>Volumen in ml</th></tr>';
+    rows.forEach(function(k){
+      var v = k === 'stein' ? S.stein : S.vol[k];
+      h += '<tr><td>' + MAT[k].name + '</td><td>100</td><td class="v">' + (v ? v.nach : '') + '</td><td class="v">' + (v ? v.vol : '') + '</td></tr>';
+    });
+    t.innerHTML = h;
+  }
+  function setPhase1(ph){
+    P1.phase = ph; P1.tries = 0;
+    var a = avail1(), t = $('#task1'), name = P1.cur ? MAT[P1.cur].name : '';
+    $('#fillCtl').hidden = ph !== 'fill';
+    $('#pushRow').hidden = ph !== 'push';
+    $('#removeRow').hidden = ph !== 'remove';
+    if (ph !== 'read' && ph !== 'calc') kp1.close();
+    $('#done1').hidden = !allVol();
+    $('#steinHint').hidden = !!S.stein;
+    if (ph === 'fill'){
+      if (!a.length){
+        t.textContent = DEMO ? 'Fertig.' : 'Alles gemessen. Deine Werte stehen in der Tabelle.';
+        $('#fillCtl').hidden = true;
+      } else if (P1.removed > 0) t.textContent = 'Beim Herausholen ist etwas Wasser verloren gegangen. Fülle wieder genau bis 100 ml auf.';
+      else t.textContent = 'Schritt 1: Fülle den Messzylinder genau bis 100 ml. Schau dabei in die Lupe.';
+    }
+    if (ph === 'pick') t.textContent = a.length === 1 && a[0] === 'stein' ? 'Schritt 2: Tippe auf den Stein. Er gleitet vorsichtig ins Wasser.' : 'Schritt 2: Tippe auf einen Würfel. Er gleitet vorsichtig ins Wasser.';
+    if (ph === 'push') t.textContent = 'Der Holzwürfel schwimmt. So kannst du sein Volumen nicht messen. Drücke ihn ganz unter Wasser.';
+    if (ph === 'read'){ t.textContent = 'Schritt 3: Das Wasser ist gestiegen. Lies den neuen Wasserstand in der Lupe ab.'; kp1.ask('Wasserstand nachher:', 'ml'); }
+    if (ph === 'calc'){ t.textContent = 'Schritt 4: Rechne das Volumen aus. Volumen = nachher – vorher'; kp1.ask(P1.target + ' ml – 100 ml =', 'ml'); }
+    if (ph === 'remove') t.textContent = (P1.cur === 'stein' ? 'Der Stein' : 'Der Würfel aus ' + name) + ' hat ein Volumen von ' + (P1.target - 100) + ' ml. Hole ihn jetzt heraus.';
+    renderTray1(); renderTab1();
+  }
+  $$('#fillCtl [data-add]').forEach(function(b){
+    b.addEventListener('click', function(){
+      if (P1.phase !== 'fill' || P1.busy) return;
+      var from = P1.level, to = Math.max(0, Math.min(150, from + parseInt(b.dataset.add, 10)));
+      if (to === from) return;
+      hide($('#fb1')); P1.busy = true;
+      tween(Math.min(600, 120 + Math.abs(to - from) * 8), function(p){ P1.level = from + (to - from) * p; renderCyl(); }, function(){ P1.level = to; P1.busy = false; renderCyl(); });
+    });
+  });
+  $('#fillCheck').addEventListener('click', function(){
+    if (P1.phase !== 'fill' || P1.busy) return;
+    if (P1.level === 100){ fb($('#fb1'), 'ok', 'Genau 100 ml. Das ist dein Wasserstand vorher.'); setPhase1('pick'); }
+    else if (P1.level < 100) fb($('#fb1'), 'err', 'Das ist noch zu wenig Wasser. Schau in die Lupe: Du brauchst genau 100 ml.');
+    else fb($('#fb1'), 'err', 'Das ist zu viel Wasser. Gieße etwas aus (− 2 ml), bis es genau 100 ml sind.');
+  });
+  function pick1(k){
+    if (P1.phase !== 'pick' || P1.busy) return;
+    var isDone = (k === 'stein') ? !!S.stein : !!S.vol[k];
+    if (isDone) return;
+    hide($('#fb1'));
+    P1.cur = k; P1.busy = true; P1.clip = false;
+    var v = k === 'stein' ? S.steinVol : VOL;
+    P1.target = 100 + v;
+    clear(cylObjG); cylObjG.appendChild(drawObj(k, k === 'stein' ? 44 : 40));
+    renderTray1();
+    var floats = !!MAT[k].floats;
+    var toLevel = floats ? 100 + MAT[k].mass : P1.target;
+    var y0 = -50, y1 = floats ? yml(toLevel) - objH() * (1 - MAT[k].sub) : 400 - objH();
+    tween(1100, function(p){
+      P1.objY = y0 + (y1 - y0) * p;
+      var wet = Math.max(0, Math.min(1, (P1.objY + objH() - yml(100)) / objH()));
+      P1.level = 100 + (toLevel - 100) * wet; renderCyl();
+    }, function(){ P1.level = toLevel; P1.objY = y1; P1.busy = false; renderCyl(); setPhase1(floats ? 'push' : 'read'); });
+  }
+  $('#pushBtn').addEventListener('click', function(){
+    if (P1.phase !== 'push' || P1.busy) return;
+    P1.busy = true; P1.clip = true;
+    var l0 = P1.level, l1 = P1.target, y0 = P1.objY;
+    tween(700, function(p){ P1.level = l0 + (l1 - l0) * p; P1.objY = y0 + (yml(P1.level) + 10 - y0) * p; renderCyl(); },
+      function(){ P1.level = l1; P1.objY = yml(l1) + 10; P1.busy = false; renderCyl(); setPhase1('read'); });
+  });
+  function onNum1(n){
+    var f = $('#fb1');
+    if (P1.phase === 'read'){
+      if (n === P1.target){ fb(f, 'ok', 'Richtig abgelesen: ' + n + ' ml.'); setPhase1('calc'); return; }
+      P1.tries++; kp1.reset();
+      var lower = Math.floor(P1.target / 10) * 10, ticks = (P1.target - lower) / 2;
+      if (P1.tries === 1) fb(f, 'err', 'Schau noch einmal in die Lupe. Lies am unteren Rand des Wasserbogens ab. Jeder kleine Strich bedeutet 2 ml.');
+      else if (P1.tries === 2) fb(f, 'err', 'Tipp: Der Wasserstand liegt ' + ticks + ' kleine Striche über der ' + lower + '. Jeder Strich sind 2 ml.');
+      else fb(f, 'info', 'Der Wasserstand ist bei ' + P1.target + ' ml. Tippe ' + P1.target + ' ein.');
+    } else if (P1.phase === 'calc'){
+      var v = P1.target - 100;
+      if (n === v){
+        var rec = { nach:P1.target, vol:v };
+        if (P1.cur === 'stein') S.stein = rec; else S.vol[P1.cur] = rec;
+        save(); fb(f, 'ok', 'Richtig gerechnet: ' + P1.target + ' ml – 100 ml = ' + v + ' ml.'); setPhase1('remove'); return;
+      }
+      P1.tries++; kp1.reset();
+      if (P1.tries === 1) fb(f, 'err', 'Rechne noch einmal: nachher – vorher. Das sind ' + P1.target + ' – 100.');
+      else fb(f, 'info', 'Zähle von 100 weiter bis ' + P1.target + '. So viel ml sind dazugekommen.');
+    }
+  }
+  $('#removeBtn').addEventListener('click', function(){
+    if (P1.phase !== 'remove' || P1.busy) return;
+    P1.busy = true; P1.clip = false;
+    var loss = [4, 6, 2, 4][P1.removed % 4]; P1.removed++;
+    var l0 = P1.level, l1 = 100 - loss, y0 = P1.objY;
+    tween(900, function(p){ P1.objY = y0 + (-60 - y0) * p; P1.level = l0 + (l1 - l0) * p; renderCyl(); }, function(){
+      clear(cylObjG); P1.level = l1; P1.busy = false;
+      if (DEMO && P1.cur === 'stein'){ S.stein = null; S.steinVol = [12,14,16,18][Math.floor(Math.random()*4)]; }
+      P1.cur = null; renderCyl(); hide($('#fb1')); setPhase1('fill');
+    });
+  });
+  enter.l1 = function(){ renderCyl(); setPhase1(P1.phase); };
+
+  /* ================= TEIL 2: Waage ================= */
+  var P2 = { phase:'pick', cur:null, busy:false };
+  var sc = $('#scale'), scObj, scTxt;
+  function buildScale(svg, withBeaker){
+    clear(svg);
+    svg.appendChild(el('rect', {x:36, y:170, width:248, height:66, rx:12, fill:'var(--metal)', stroke:'var(--glass)', 'stroke-width':2.5}));
+    svg.appendChild(el('rect', {x:56, y:152, width:208, height:14, rx:5, fill:'var(--surface)', stroke:'var(--glass)', 'stroke-width':2.5}));
+    svg.appendChild(el('rect', {x:150, y:164, width:20, height:8, fill:'var(--glass)'}));
+    svg.appendChild(el('rect', {x:100, y:184, width:120, height:40, rx:6, fill:'var(--display)'}));
+    var t = el('text', {x:208, y:214, 'text-anchor':'end', 'font-size':28, 'font-weight':700}, '0 g');
+    t.style.fill = 'var(--display-fg)';
+    svg.appendChild(t);
+    var g = el('g', {}); svg.appendChild(g);
+    if (withBeaker){
+      var w = el('rect', {x:117.5, y:150, width:85, height:0, 'class':'water'}); svg.appendChild(w);
+      svg.appendChild(el('path', {'class':'glass', d:'M112 52 L116 58 L116 151 L204 151 L204 58 L208 52'}));
+      [50, 100].forEach(function(ml){
+        var yy = 150 - ml * 0.72;
+        svg.appendChild(el('line', {x1:116, x2:136, y1:yy, y2:yy, 'class':'tkb'}));
+        svg.appendChild(el('text', {x:140, y:yy + 5, 'font-size':13, 'font-weight':700}, ml + ' ml'));
+      });
+      return { txt:t, obj:g, water:w };
+    }
+    return { txt:t, obj:g };
+  }
+  var kp2 = Keypad($('#kp2'), onNum2);
+  function renderTray2(){
+    buildTray($('#tray2'), CUBES, pick2);
+    $$('#tray2 button').forEach(function(b){
+      var k = b.dataset.obj, isDone = S.mass[k] != null;
+      b.classList.toggle('done', isDone); b.classList.toggle('on', P2.cur === k);
+      b.disabled = isDone || P2.phase !== 'pick';
+    });
+  }
+  function tabVM(t){
+    var h = '<tr><th>Würfel aus</th><th>Volumen in ml</th><th>Masse in g</th></tr>';
+    CUBES.forEach(function(k){
+      h += '<tr><td>' + MAT[k].name + '</td><td class="v">' + (S.vol[k] ? S.vol[k].vol : '') + '</td><td class="v">' + (S.mass[k] != null ? S.mass[k] : '') + '</td></tr>';
+    });
+    t.innerHTML = h;
+  }
+  function setPhase2(ph){
+    P2.phase = ph;
+    var t = $('#task2');
+    if (ph !== 'read') kp2.close();
+    $('#stage2').hidden = allMass() && ph !== 'read';
+    $('#quiz2').hidden = !(allMass() && !S.quiz && ph !== 'read');
+    $('#gate2').hidden = !(allMass() && S.quiz);
+    $('#toStein').hidden = !allVol() || !!S.stein;
+    if (ph === 'pick'){
+      if (!allMass()) t.textContent = 'Tippe auf einen Würfel. Er wird auf die Waage gelegt.';
+      else if (!S.quiz) t.textContent = 'Alle Würfel sind gewogen. Was fällt dir auf?';
+      else t.textContent = 'Teil 2 geschafft. Gleich groß – aber verschieden schwer!';
+    }
+    if (ph === 'read'){ t.textContent = 'Lies die Masse auf der Waage ab und trage sie ein.'; kp2.ask('Masse des Würfels aus ' + MAT[P2.cur].name + ':', 'g'); }
+    renderTray2(); tabVM($('#tab2'));
+  }
+  function pick2(k){
+    if (P2.phase !== 'pick' || P2.busy || S.mass[k] != null) return;
+    hide($('#fb2'));
+    P2.cur = k; P2.busy = true; renderTray2();
+    clear(scObj); var g = drawObj(k, 56); scObj.appendChild(g);
+    tween(600, function(p){ g.setAttribute('transform', 'translate(132,' + (-70 + (95 + 70) * p) + ')'); }, function(){
+      tween(700, function(p){ scTxt.textContent = Math.round(MAT[k].mass * p) + ' g'; }, function(){ scTxt.textContent = MAT[k].mass + ' g'; P2.busy = false; setPhase2('read'); });
+    });
+  }
+  function onNum2(n){
+    var k = P2.cur, f = $('#fb2');
+    if (n === MAT[k].mass){
+      S.mass[k] = n; save();
+      fb(f, 'ok', 'Richtig: Der Würfel aus ' + MAT[k].name + ' wiegt ' + n + ' g.');
+      clear(scObj); scTxt.textContent = '0 g'; P2.cur = null; setPhase2('pick');
+    } else { kp2.reset(); fb(f, 'err', 'Schau noch einmal auf die Anzeige der Waage. Dort steht die Masse in Gramm.'); }
+  }
+  $$('#quizOpts button').forEach(function(b){
+    b.addEventListener('click', function(){ if (S.quiz) return; b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); b.classList.remove('wrong'); });
+  });
+  $('#quizCheck').addEventListener('click', function(){
+    var sel = $$('#quizOpts button').map(function(b){ return b.getAttribute('aria-pressed') === 'true'; });
+    var f = $('#fbQuiz');
+    if (sel[1]){ $$('#quizOpts button')[1].classList.add('wrong'); fb(f, 'err', 'Schau auf die Massen: ' + MAT.holz.mass + ' g, ' + MAT.alu.mass + ' g und ' + MAT.eisen.mass + ' g. Sind die Würfel wirklich gleich schwer?'); return; }
+    if (!(sel[0] && sel[2] && sel[3])){ fb(f, 'err', 'Da fehlt noch etwas. Es stimmen drei Sätze. Schau noch einmal in die Tabelle.'); return; }
+    S.quiz = true; save();
+    $$('#quizOpts button').forEach(function(b, i){ if (i !== 1) b.classList.add('right'); b.disabled = true; });
+    setPhase2('pick');
+    $('#quiz2').hidden = false; $('#quizCheck').hidden = true;
+    fb(f, 'ok', 'Genau: Die Würfel sind gleich groß, aber verschieden schwer.');
+  });
+  enter.l2 = function(){ setPhase2(P2.phase === 'read' ? 'read' : 'pick'); };
+
+  /* ================= TEIL 3: Vergleich mit Wasser ================= */
+  var P3 = { phase:'tara', q:0, tries:0, busy:false };
+  var s3 = null;
+  var kp3 = Keypad($('#kp3'), onNum3);
+  var Q3 = [
+    { t:'100 ml Wasser wiegen …', a:100, h:'Schau auf die Anzeige der Waage.' },
+    { t:'Also wiegt 1 ml Wasser …', a:1, h:'100 ml wiegen 100 g. Dann wiegt 1 ml genau …?' },
+    { t:'Unsere Würfel haben 8 ml. 8 ml Wasser wiegen …', a:8, h:'1 ml Wasser wiegt 1 g. Dann wiegen 8 ml …?' }
+  ];
+  function setPhase3(ph){
+    P3.phase = ph; P3.tries = 0;
+    var t = $('#task3');
+    $('#taraRow').hidden = ph !== 'tara';
+    $('#pourRow').hidden = ph !== 'pour';
+    if (ph !== 'q') kp3.close();
+    $('#stage3').hidden = ph === 'cmp';
+    $('#cmp3').hidden = ph !== 'cmp';
+    if (ph === 'tara'){ t.textContent = 'Auf der Waage steht ein leerer Becher. Stelle die Waage zuerst auf 0.'; s3.txt.textContent = '42 g'; s3.water.setAttribute('height', 0); s3.water.setAttribute('y', 150); }
+    if (ph === 'pour') t.textContent = 'Die Waage zeigt 0 g. Gieße jetzt 100 ml Wasser in den Becher.';
+    if (ph === 'q'){ t.textContent = 'Wie viel wiegt das Wasser? Lies ab und rechne.'; kp3.ask(Q3[P3.q].t, 'g'); }
+    if (ph === 'cmp'){ t.textContent = 'Jetzt vergleichst du: Würfel oder gleich viel Wasser – was ist schwerer?'; renderCmp(); }
+  }
+  $('#taraBtn').addEventListener('click', function(){
+    if (P3.phase !== 'tara') return;
+    s3.txt.textContent = '0 g'; setPhase3('pour');
+  });
+  $('#pourBtn').addEventListener('click', function(){
+    if (P3.phase !== 'pour' || P3.busy) return;
+    P3.busy = true;
+    tween(1500, function(p){ var h = 72 * p; s3.water.setAttribute('y', 150 - h); s3.water.setAttribute('height', h); s3.txt.textContent = Math.round(100 * p) + ' g'; },
+      function(){ s3.txt.textContent = '100 g'; P3.busy = false; P3.q = 0; setPhase3('q'); });
+  });
+  function onNum3(n){
+    var q = Q3[P3.q], f = $('#fb3');
+    if (n === q.a){
+      P3.q++; P3.tries = 0;
+      if (P3.q < Q3.length){ fb(f, 'ok', 'Richtig: ' + n + ' g.'); kp3.ask(Q3[P3.q].t, 'g'); }
+      else { S.water = true; save(); hide(f); setPhase3('cmp'); }
+    } else {
+      P3.tries++; kp3.reset();
+      fb(f, P3.tries < 3 ? 'err' : 'info', P3.tries < 3 ? q.h : 'Die Lösung ist ' + q.a + ' g. Tippe ' + q.a + ' ein.');
+    }
+  }
+  var cmpSel = {};
+  function renderCmp(){
+    var grid = $('#cmpGrid'); clear(grid);
+    CUBES.forEach(function(k){
+      if (!cmpSel[k]) cmpSel[k] = { rel: S.rel ? (MAT[k].mass < VOL ? 'leichter' : 'schwerer') : null, pred: S.pred[k] || null };
+      var row = document.createElement('div'); row.className = 'cmprow';
+      var head = document.createElement('div'); head.className = 'head';
+      head.textContent = 'Würfel aus ' + MAT[k].name + ': ' + S.mass[k] + ' g   ·   gleich viel Wasser: 8 g';
+      row.appendChild(head);
+      [['rel', 'Der Würfel ist …', ['leichter', 'schwerer']], ['pred', 'Vorhersage:', ['schwimmt', 'sinkt']]].forEach(function(def){
+        var line = document.createElement('div'); line.className = 'pick';
+        var lab = document.createElement('span'); lab.textContent = def[1]; line.appendChild(lab);
+        def[2].forEach(function(v){
+          var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = v;
+          b.dataset.k = k; b.dataset.f = def[0]; b.dataset.v = v;
+          b.setAttribute('aria-pressed', cmpSel[k][def[0]] === v ? 'true' : 'false');
+          b.disabled = S.rel;
+          b.addEventListener('click', function(){
+            if (S.rel) return;
+            cmpSel[k][def[0]] = v;
+            $$('#cmpGrid .chip').forEach(function(c){ if (c.dataset.k === k && c.dataset.f === def[0]){ c.setAttribute('aria-pressed', c.dataset.v === v ? 'true' : 'false'); c.classList.remove('wrong'); } });
+          });
+          line.appendChild(b);
+        });
+        row.appendChild(line);
+      });
+      grid.appendChild(row);
+    });
+    $('#cmpCheck').hidden = S.rel; $('#go4Row').hidden = !S.rel;
+    if (S.rel) fb($('#fbCmp'), 'ok', 'Deine Vorhersagen sind gespeichert. In Teil 4 prüfst du sie in der Wasserwanne.');
+  }
+  $('#cmpCheck').addEventListener('click', function(){
+    var f = $('#fbCmp'), wrong = [], missing = false;
+    CUBES.forEach(function(k){
+      var c = cmpSel[k], truth = MAT[k].mass < VOL ? 'leichter' : 'schwerer';
+      if (!c.rel || !c.pred) missing = true;
+      else if (c.rel !== truth) wrong.push(k);
+    });
+    if (missing){ fb(f, 'err', 'Wähle bei jedem Würfel zwei Dinge aus: leichter oder schwerer – und deine Vorhersage.'); return; }
+    if (wrong.length){
+      $$('#cmpGrid .chip').forEach(function(c){ if (c.dataset.f === 'rel' && wrong.indexOf(c.dataset.k) >= 0 && c.getAttribute('aria-pressed') === 'true') c.classList.add('wrong'); });
+      var k = wrong[0];
+      fb(f, 'err', 'Vergleiche noch einmal beim Würfel aus ' + MAT[k].name + ': ' + S.mass[k] + ' g und 8 g. Welche Zahl ist größer?'); return;
+    }
+    CUBES.forEach(function(k){ S.pred[k] = cmpSel[k].pred; });
+    S.rel = true; save(); renderCmp();
+  });
+  enter.l3 = function(){
+    var ok = allMass();
+    $('#need3').hidden = ok; $('#body3').hidden = !ok;
+    if (!ok) return;
+    if (S.water) setPhase3('cmp'); else setPhase3(P3.phase === 'cmp' ? 'tara' : P3.phase);
+  };
+
+  /* ================= TEIL 4: Wasserwanne ================= */
+  var tank = $('#tank'), tankObjs;
+  var SLOT = { holz:60, alu:175, eisen:290, wachs:405 }, SURF = 96, FLOOR = 262, CS = 56;
+  var P4 = { cur:null, busy:false, inTank:{} };
+  function buildTank(){
+    clear(tank);
+    tank.appendChild(el('rect', {x:22, y:SURF, width:476, height:FLOOR - SURF, 'class':'water'}));
+    tankObjs = el('g', {}); tank.appendChild(tankObjs);
+    tank.appendChild(el('line', {x1:22, x2:498, y1:SURF, y2:SURF, 'class':'wline'}));
+    tank.appendChild(el('path', {'class':'glass', d:'M20 44 L20 264 L500 264 L500 44'}));
+    tank.appendChild(el('text', {x:30, y:SURF - 8, 'font-size':14, 'font-weight':700}, 'Wasser'));
+    P4.inTank = {};
+  }
+  function restY(k){ return MAT[k].floats ? SURF - CS * (1 - MAT[k].sub) : FLOOR - CS; }
+  function putInTank(k, animate, done){
+    if (P4.inTank[k]){ if (done) done(); return; }
+    var g = drawObj(k, CS); tankObjs.appendChild(g); P4.inTank[k] = g;
+    var y1 = restY(k), y0 = -70, x = SLOT[k];
+    if (!animate){ g.setAttribute('transform', 'translate(' + x + ',' + y1 + ')'); if (done) done(); return; }
+    var over = MAT[k].floats ? 26 : 0;
+    tween(MAT[k].floats ? 900 : 1500, function(p){
+      var y = y0 + (y1 + over - y0) * p;
+      g.setAttribute('transform', 'translate(' + x + ',' + y + ')');
+    }, function(){
+      if (!over){ if (done) done(); return; }
+      tween(500, function(p){ g.setAttribute('transform', 'translate(' + x + ',' + (y1 + over * (1 - p)) + ')'); }, done);
+    });
+  }
+  function renderTray4(){
+    buildTray($('#tray4'), CUBES, pick4);
+    $$('#tray4 button').forEach(function(b){
+      var k = b.dataset.obj, isDone = !!S.obs[k];
+      b.classList.toggle('done', isDone); b.classList.toggle('on', P4.cur === k);
+      b.disabled = isDone || !!P4.cur;
+    });
+  }
+  function refresh4(){
+    var t = $('#task4');
+    $('#obsRow').hidden = !P4.cur || P4.busy;
+    if (P4.cur) $('#obsQ').textContent = 'Der Würfel aus ' + MAT[P4.cur].name + ' …';
+    if (!allObs()) t.textContent = P4.cur ? 'Beobachte genau: Was macht der Würfel?' : 'Prüfe deine Vorhersage. Tippe auf einen Würfel – er fällt in die Wasserwanne.';
+    else if (!S.gap) t.textContent = 'Alle Würfel sind geprüft. Jetzt kannst du es erklären.';
+    else if (!S.knobel) t.textContent = 'Fast fertig: Löse noch die Knobelaufgabe.';
+    else t.textContent = 'Teil 4 geschafft. Schau dir dein Protokoll an.';
+    $('#tray4').hidden = allObs();
+    $('#gapBlock').hidden = !allObs();
+    $('#knobel').hidden = !(allObs() && S.gap);
+    $('#goProRow').hidden = !S.knobel;
+    renderTray4();
+  }
+  function pick4(k){
+    if (P4.cur || P4.busy || S.obs[k]) return;
+    hide($('#fb4'));
+    P4.cur = k; P4.busy = true; refresh4();
+    putInTank(k, true, function(){ P4.busy = false; refresh4(); });
+  }
+  $$('#obsRow [data-obs]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var k = P4.cur; if (!k || P4.busy) return;
+      var truth = MAT[k].floats ? 'schwimmt' : 'sinkt', f = $('#fb4');
+      if (b.dataset.obs !== truth){ fb(f, 'err', 'Schau genau hin: Liegt der Würfel oben an der Wasseroberfläche oder unten am Boden?'); return; }
+      S.obs[k] = truth; save();
+      var was = S.pred[k] === truth ? 'Deine Vorhersage war richtig.' : 'Deine Vorhersage war anders – jetzt weißt du es genau.';
+      fb(f, 'ok', 'Der Würfel aus ' + MAT[k].name + ' ' + truth + '. ' + was + ' Er ist ' + (MAT[k].floats ? 'leichter' : 'schwerer') + ' als gleich viel Wasser.');
+      P4.cur = null; refresh4();
+    });
+  });
+  /* Lückentext */
+  var WORDS = ['Dichte', 'schwimmt', 'Stoff', 'geht unter'], SOL = ['Stoff', 'Dichte', 'schwimmt', 'geht unter'];
+  var gaps = [null, null, null, null], actGap = 0;
+  function renderGaps(){
+    var bank = $('#bank'); clear(bank);
+    WORDS.forEach(function(w){
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = w;
+      b.disabled = S.gap || gaps.indexOf(w) >= 0;
+      b.addEventListener('click', function(){
+        if (S.gap || actGap < 0) return;
+        gaps[actGap] = w; actGap = gaps.indexOf(null); hide($('#fbGap')); renderGaps();
+      });
+      bank.appendChild(b);
+    });
+    $$('.gap').forEach(function(g){
+      var i = parseInt(g.dataset.g, 10);
+      g.textContent = gaps[i] || ' ';
+      g.classList.toggle('act', !S.gap && i === actGap);
+      g.classList.toggle('right', S.gap);
+      g.disabled = S.gap;
+    });
+    $('#gapCheck').hidden = S.gap;
+  }
+  $$('.gap').forEach(function(g){
+    g.addEventListener('click', function(){ if (S.gap) return; var i = parseInt(g.dataset.g, 10); gaps[i] = null; actGap = i; renderGaps(); });
+  });
+  $('#gapCheck').addEventListener('click', function(){
+    var f = $('#fbGap');
+    if (gaps.indexOf(null) >= 0){ fb(f, 'err', 'Fülle zuerst alle vier Lücken.'); return; }
+    var bad = [];
+    gaps.forEach(function(w, i){ if (w !== SOL[i]) bad.push(i); });
+    if (!bad.length){ S.gap = true; save(); renderGaps(); fb(f, 'ok', 'Alles richtig eingesetzt.'); refresh4(); return; }
+    bad.forEach(function(i){ gaps[i] = null; }); actGap = bad[0]; renderGaps();
+    fb(f, 'err', bad.length === 1 ? 'Eine Lücke passt noch nicht. Sie ist wieder leer – versuch es noch einmal.' : bad.length + ' Lücken passen noch nicht. Sie sind wieder leer – lies die Sätze noch einmal.');
+  });
+  /* Knobelaufgabe */
+  function renderKn(){
+    if (!S.knobel) return;
+    $$('#knA .chip').forEach(function(b){ b.disabled = true; if (b.dataset.kn === 'schwimmt') b.classList.add('right'); });
+    $('#knWhy').hidden = false;
+    $$('#knOpts .btn').forEach(function(b){ b.disabled = true; if (b.dataset.w === '1') b.classList.add('right'); });
+    fb($('#fbKn'), 'ok', 'Richtig: 7 g sind weniger als 8 g. Der Wachswürfel ist leichter als gleich viel Wasser – er schwimmt.');
+  }
+  $$('#knA .chip').forEach(function(b){
+    b.addEventListener('click', function(){
+      if (S.knobel) return;
+      var f = $('#fbKn');
+      if (b.dataset.kn === 'schwimmt'){ b.classList.add('right'); $$('#knA .chip').forEach(function(c){ c.disabled = true; }); $('#knWhy').hidden = false; fb(f, 'ok', 'Richtig – er schwimmt. Aber warum?'); }
+      else { b.classList.add('wrong'); fb(f, 'err', 'Vergleiche: Der Wachswürfel wiegt 7 g. Gleich viel Wasser (8 ml) wiegt 8 g.'); }
+    });
+  });
+  $$('#knOpts .btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      if (S.knobel) return;
+      if (b.dataset.w === '1'){
+        S.knobel = true; save(); renderKn();
+        putInTank('wachs', true); refresh4();
+      } else { b.classList.add('wrong'); fb($('#fbKn'), 'err', 'Das ist nicht der Grund. Denk an den Vergleich mit gleich viel Wasser.'); }
+    });
+  });
+  enter.l4 = function(){
+    var ok = allMass() && S.rel;
+    $('#need4').hidden = ok; $('#body4').hidden = !ok;
+    if (!ok) return;
+    CUBES.forEach(function(k){ if (S.obs[k]) putInTank(k, false); });
+    if (S.knobel) putInTank('wachs', false);
+    renderGaps(); renderKn(); refresh4();
+  };
+
+  /* ================= PROTOKOLL ================= */
+  enter.pro = function(){
+    var h = '<tr><th>Würfel aus</th><th>vorher in ml</th><th>nachher in ml</th><th>Volumen in ml</th><th>Masse in g</th></tr>';
+    CUBES.forEach(function(k){
+      var v = S.vol[k];
+      h += '<tr><td>' + MAT[k].name + '</td><td>100</td><td class="v">' + (v ? v.nach : '') + '</td><td class="v">' + (v ? v.vol : '') + '</td><td class="v">' + (S.mass[k] != null ? S.mass[k] : '') + '</td></tr>';
+    });
+    $('#proA').innerHTML = h;
+    $('#proStein').textContent = S.stein ? 'Schon fertig? – Stein: vorher 100 ml, nachher ' + S.stein.nach + ' ml, Volumen ' + S.stein.vol + ' ml.' : '';
+    $('#proWater').textContent = S.water ? '1 ml Wasser wiegt 1 g. Die Würfel haben ein Volumen von 8 ml. Gleich viel Wasser wiegt also 8 g.' : 'Diesen Teil hast du noch nicht bearbeitet.';
+    var b = '<tr><th>Würfel aus</th><th>Masse des Würfels</th><th>gleich viel Wasser</th><th>Der Würfel ist …</th><th>Vorhersage</th><th>Beobachtung</th></tr>';
+    CUBES.forEach(function(k){
+      var m = S.mass[k];
+      b += '<tr><td>' + MAT[k].name + '</td><td class="v">' + (m != null ? m + ' g' : '') + '</td><td class="v">' + (S.water ? '8 g' : '') + '</td><td class="v">' + (S.rel ? (MAT[k].mass < VOL ? 'leichter' : 'schwerer') : '') + '</td><td class="v">' + (S.rel ? S.pred[k] : '') + '</td><td class="v">' + (S.obs[k] || '') + '</td></tr>';
+    });
+    $('#proB').innerHTML = b;
+    $('#proDone').hidden = !(done1() && done2() && done3() && done4());
+  };
+
+  /* ---------- Zurücksetzen ---------- */
+  $('#resetBtn').addEventListener('click', function(){ $('#resetAsk').hidden = false; $('#resetBtn').hidden = true; });
+  $('#resetNo').addEventListener('click', function(){ $('#resetAsk').hidden = true; $('#resetBtn').hidden = false; });
+  $('#resetYes').addEventListener('click', function(){ try { localStorage.removeItem(STORE); } catch(e){} location.reload(); });
+
+  /* ---------- Start ---------- */
+  buildCyl();
+  var s2 = buildScale(sc, false); scObj = s2.obj; scTxt = s2.txt;
+  s3 = buildScale($('#scale3'), true);
+  buildTank();
+  if (DEMO){
+    document.body.classList.add('demo');
+    $('#l1title').textContent = 'Wie misst man das Volumen eines Steins?';
+    $('#subline').textContent = 'Vorführung für alle · Volumen messen mit Wasser';
+  }
+  updateNav();
+  var start = 'l1';
+  if (!DEMO){
+    if (done1() && !done2()) start = 'l2';
+    else if (done1() && done2() && !done3()) start = 'l2';
+    else if (done3() && !done4()) start = 'l4';
+    else if (done4()) start = 'pro';
+  }
+  showLevel(start);
+})();
+</script>
+</body>
+</html>
